@@ -16,4 +16,18 @@ class PublicationController extends AbstractController
             'date' => date('Y-m-d'),
         ]);
     }
+
+    public function getFormMetadata(String $formCode, String $formVersionCode = null): JsonResponse
+    {
+
+        try {
+            //code...
+        } catch (\Exception $e) {
+
+        }
+
+        return $this->json([
+            'data' => ''
+        ]);
+    }
 }
