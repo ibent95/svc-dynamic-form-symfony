@@ -8,7 +8,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ResearchController extends AbstractController
 {
-    #[Route('/v1/research', name: 'app_v1_research')]
+    #[Route('/api/v1/research', name: 'app_v1_research')]
     public function index(): JsonResponse
     {
         return $this->json([

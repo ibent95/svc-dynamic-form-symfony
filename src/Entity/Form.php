@@ -8,9 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: FormRepository::class)]
 class Form
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
     private $id;
 
     #[ORM\Column(type: 'bigint')]
@@ -20,22 +18,25 @@ class Form
     private $id_form_parent;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    private $label_field;
-
-    #[ORM\Column(type: 'string', length: 100, nullable: true)]
-    private $field_name;
+    private $field_label;
 
     #[ORM\Column(type: 'string', length: 100)]
     private $field_type;
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
-    private $field_class;
+    private $field_name;
 
     #[ORM\Column(type: 'string', length: 100)]
     private $field_id;
 
+    #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    private $field_class;
+
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $field_placeholder;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private $description;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $error_message;
@@ -43,22 +44,37 @@ class Form
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $validation_config;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    private $description;
-
     #[ORM\Column(type: 'json', nullable: true)]
     private $dependency_child = [];
 
     #[ORM\Column(type: 'json', nullable: true)]
     private $dependency_parent = [];
 
-    #[ORM\Column(type: 'smallint')]
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private $flag_required;
 
-    #[ORM\Column(type: 'guid')]
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private $flag_active;
+
+    #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    private $created_user;
+
+    #[ORM\Column(type: 'datetime', nullable: false)]
+    private $created_at;
+
+    #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    private $updated_user;
+
+    #[ORM\Column(type: 'datetime', nullable: false)]
+    private $updated_at;
+
+    #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
-    public function getId(): ?int
+    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'form')]
+    private $publicationFormVersion;
+
+    public function getId(): ?string
     {
         return $this->id;
     }
@@ -87,26 +103,14 @@ class Form
         return $this;
     }
 
-    public function getLabelField(): ?string
+    public function getFieldLabel(): ?string
     {
-        return $this->label_field;
+        return $this->field_label;
     }
 
-    public function setLabelField(?string $label_field): self
+    public function setFieldLabel(?string $field_label): self
     {
-        $this->label_field = $label_field;
-
-        return $this;
-    }
-
-    public function getFieldName(): ?string
-    {
-        return $this->field_name;
-    }
-
-    public function setFieldName(?string $field_name): self
-    {
-        $this->field_name = $field_name;
+        $this->field_label = $field_label;
 
         return $this;
     }
@@ -123,14 +127,14 @@ class Form
         return $this;
     }
 
-    public function getFieldClass(): ?string
+    public function getFieldName(): ?string
     {
-        return $this->field_class;
+        return $this->field_name;
     }
 
-    public function setFieldClass(?string $field_class): self
+    public function setFieldName(?string $field_name): self
     {
-        $this->field_class = $field_class;
+        $this->field_name = $field_name;
 
         return $this;
     }
@@ -147,6 +151,18 @@ class Form
         return $this;
     }
 
+    public function getFieldClass(): ?string
+    {
+        return $this->field_class;
+    }
+
+    public function setFieldClass(?string $field_class): self
+    {
+        $this->field_class = $field_class;
+
+        return $this;
+    }
+
     public function getFieldPlaceholder(): ?string
     {
         return $this->field_placeholder;
@@ -155,6 +171,18 @@ class Form
     public function setFieldPlaceholder(?string $field_placeholder): self
     {
         $this->field_placeholder = $field_placeholder;
+
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): self
+    {
+        $this->description = $description;
 
         return $this;
     }
@@ -183,18 +211,6 @@ class Form
         return $this;
     }
 
-    public function getDescription(): ?string
-    {
-        return $this->description;
-    }
-
-    public function setDescription(?string $description): self
-    {
-        $this->description = $description;
-
-        return $this;
-    }
-
     public function getDependencyChild(): ?array
     {
         return $this->dependency_child;
@@ -219,14 +235,74 @@ class Form
         return $this;
     }
 
-    public function getFlagRequired(): ?int
+    public function getFlagRequired(): ?bool
     {
         return $this->flag_required;
     }
 
-    public function setFlagRequired(int $flag_required): self
+    public function setFlagRequired(bool $flag_required): self
     {
         $this->flag_required = $flag_required;
+
+        return $this;
+    }
+
+    public function getFlagActive(): ?bool
+    {
+        return $this->flag_active;
+    }
+
+    public function setFlagActive(bool $flag_active): self
+    {
+        $this->flag_active = $flag_active;
+
+        return $this;
+    }
+
+    public function getCreatedUser(): ?string
+    {
+        return $this->created_user;
+    }
+
+    public function setCreatedUser(?string $created_user): self
+    {
+        $this->created_user = $created_user;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeInterface
+    {
+        return $this->created_at;
+    }
+
+    public function setCreatedAt(\DateTimeInterface $created_at): self
+    {
+        $this->created_at = $created_at;
+
+        return $this;
+    }
+
+    public function getUpdatedUser(): ?string
+    {
+        return $this->updated_user;
+    }
+
+    public function setUpdatedUser(?string $updated_user): self
+    {
+        $this->updated_user = $updated_user;
+
+        return $this;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeInterface
+    {
+        return $this->updated_at;
+    }
+
+    public function setUpdatedAt(\DateTimeInterface $updated_at): self
+    {
+        $this->updated_at = $updated_at;
 
         return $this;
     }
@@ -242,4 +318,29 @@ class Form
 
         return $this;
     }
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        $this->created_at = new \DateTime("now");
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updated_at = new \DateTime("now");
+    }
+
+    public function getPublicationFormVersion(): ?PublicationFormVersion
+    {
+        return $this->publicationFormVersion;
+    }
+
+    public function setPublicationFormVersion(?PublicationFormVersion $publicationFormVersion): self
+    {
+        $this->publicationFormVersion = $publicationFormVersion;
+
+        return $this;
+    }
+
 }

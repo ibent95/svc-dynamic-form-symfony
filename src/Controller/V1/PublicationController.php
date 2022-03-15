@@ -21,7 +21,8 @@ class PublicationController extends AbstractController
     private $connection;
     private $entityManager;
 
-    public function __construct(LoggerInterface $logger, ManagerRegistry $doctrine) {
+    public function __construct(LoggerInterface $logger, ManagerRegistry $doctrine)
+    {
         $this->logger = $logger;
         $this->responseData = [
             'info' => '',
@@ -34,16 +35,25 @@ class PublicationController extends AbstractController
         $this->entityManager = $this->doctrine->getManager();
     }
 
-    #[Route('/api/v1/publication', name: 'app_v1_publication')]
+    #[Route('/api/v1/publication', methods: ['GET'], name: 'app_v1_publication')]
     public function index(): JsonResponse
     {
-        return $this->json([
+        $this->logger->info('The publication menu has been accessed!');
+
+        $this->responseData['info'] = 'success';
+        $this->responseData['message'] = 'Success to access the publication menu!';
+        $this->responseData['data'] = [
             'message' => 'Welcome to publication!',
             'date' => date('Y-m-d'),
-        ]);
+        ];
+
+        $this->responseStatusCode = 200;
+
+        return $this->json($this->responseData, $this->responseStatusCode);
     }
 
-    public function getFormMetadata(String $formCode, String $formVersionCode = null): JsonResponse
+    #[Route('/api/v1/publication/form', methods: ['GET'], name: 'app_v1_publication_form_metadata')]
+    public function getFormMetadata(String $formCode = null, String $formVersionCode = null): JsonResponse
     {
         $this->responseData['info'] = 'success';
         $this->responseData['message'] = '';
@@ -54,11 +64,36 @@ class PublicationController extends AbstractController
         try {
             //$this->connection->beginTransaction();
 
+            $this->responseData['data'] = $publication->findAll();
+            $this->responseData['message'] = 'Success to get publication form metadata!';
 
-
+            $this->logger->info('Get publication form!', $this->responseData['data']);
             //$this->connection->commit();
         } catch (\Exception $e) {
             //$this->connection->rollBack();
+            $this->logger->error('Get form metadata exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(), $e->getTrace());
+        }
+
+        return $this->json($this->responseData, $this->responseStatusCode);
+    }
+
+    #[Route('/api/v1/publication', methods: ['POST'], name: 'app_v1_publication_insert')]
+    public function insertBy(): JsonResponse
+    {
+        $this->responseData['info'] = 'success';
+        $this->responseData['message'] = '';
+        $this->responseStatusCode = 200;
+
+        $publication = $this->entityManager->getRepository(Publication::class);
+
+        try {
+            $this->connection->beginTransaction();
+
+            $this->responseData['data'] = $publication->findAll();
+
+            $this->connection->commit();
+        } catch (\Exception $e) {
+            $this->connection->rollBack();
             $this->logger->error('Get form metadata exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(), $e->getTrace());
         }
 
