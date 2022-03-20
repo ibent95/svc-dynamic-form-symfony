@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\PublicationMetaRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: PublicationMetaRepository::class)]
 class PublicationMeta
@@ -39,7 +40,20 @@ class PublicationMeta
     private $uuid;
 
     #[ORM\ManyToOne(targetEntity: Publication::class, inversedBy: 'publication_meta')]
+    #[Ignore]
     private $publication;
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        $this->created_at = new \DateTime("now");
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updated_at = new \DateTime("now");
+    }
 
     public function getId(): ?string
     {
@@ -152,18 +166,6 @@ class PublicationMeta
         $this->uuid = $uuid;
 
         return $this;
-    }
-
-    #[ORM\PrePersist]
-    public function onPrePersist(): void
-    {
-        $this->created_at = new \DateTime("now");
-    }
-
-    #[ORM\PreUpdate]
-    public function onPreUpdate(): void
-    {
-        $this->updated_at = new \DateTime("now");
     }
 
     public function getPublication(): ?Publication

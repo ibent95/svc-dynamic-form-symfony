@@ -6,6 +6,7 @@ use App\Repository\PublicationRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: PublicationRepository::class)]
 class Publication
@@ -51,26 +52,43 @@ class Publication
 
     #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class)]
     #[ORM\JoinColumn(nullable: false)]
+    #[Ignore]
     private $publication_general_type;
 
     #[ORM\ManyToOne(targetEntity: PublicationType::class)]
     #[ORM\JoinColumn(nullable: false)]
+    #[Ignore]
     private $publication_type;
 
     #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class)]
     #[ORM\JoinColumn(nullable: false)]
+    #[Ignore]
     private $publication_form_version;
 
     #[ORM\ManyToOne(targetEntity: PublicationStatus::class)]
     #[ORM\JoinColumn(nullable: false)]
+    #[Ignore]
     private $publication_status;
 
     #[ORM\OneToMany(mappedBy: 'publication', targetEntity: PublicationMeta::class)]
+    #[Ignore]
     private $publication_meta;
 
     public function __construct()
     {
         $this->publication_meta = new ArrayCollection();
+    }
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        $this->created_at = new \DateTime("now");
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updated_at = new \DateTime("now");
     }
 
     public function getId(): ?string
@@ -86,6 +104,18 @@ class Publication
     public function setTitle(?string $title): self
     {
         $this->title = $title;
+
+        return $this;
+    }
+
+    public function getIdPublicationGeneralType(): ?string
+    {
+        return $this->id_publication_general_type;
+    }
+
+    public function setIdPublicationGeneralType(string $id_publication_general_type): self
+    {
+        $this->id_publication_general_type = $id_publication_general_type;
 
         return $this;
     }
@@ -210,18 +240,6 @@ class Publication
         return $this;
     }
 
-    #[ORM\PrePersist]
-    public function onPrePersist(): void
-    {
-        $this->created_at = new \DateTime("now");
-    }
-
-    #[ORM\PreUpdate]
-    public function onPreUpdate(): void
-    {
-        $this->updated_at = new \DateTime("now");
-    }
-
     public function getPublicationGeneralType(): ?PublicationGeneralType
     {
         return $this->publication_general_type;
@@ -296,18 +314,6 @@ class Publication
                 $publicationMetum->setPublication(null);
             }
         }
-
-        return $this;
-    }
-
-    public function getIdPublicationGeneralType(): ?string
-    {
-        return $this->id_publication_general_type;
-    }
-
-    public function setIdPublicationGeneralType(string $id_publication_general_type): self
-    {
-        $this->id_publication_general_type = $id_publication_general_type;
 
         return $this;
     }

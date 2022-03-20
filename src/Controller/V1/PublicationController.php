@@ -2,15 +2,28 @@
 
 namespace App\Controller\V1;
 
+use App\Entity\PublicationFormVersion;
 use App\Entity\Publication;
-
+use App\Entity\PublicationGeneralType;
+use App\Entity\PublicationStatus;
+use App\Entity\PublicationType;
+use App\Repository\PublicationFormVersionRepository;
 use App\Repository\PublicationRepository;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 class PublicationController extends AbstractController
 {
@@ -20,6 +33,10 @@ class PublicationController extends AbstractController
     private $doctrine;
     private $connection;
     private $entityManager;
+    private $encoders;
+    private $normalizers;
+    private $serializer;
+    private $datetimeSerializer;
 
     public function __construct(LoggerInterface $logger, ManagerRegistry $doctrine)
     {
@@ -33,6 +50,9 @@ class PublicationController extends AbstractController
         $this->doctrine = $doctrine;
         $this->connection = $doctrine->getConnection();
         $this->entityManager = $this->doctrine->getManager();
+
+        $this->serializer = new Serializer([new ObjectNormalizer(), new DateTimeNormalizer()], [new JsonEncoder()]);
+        //$this->datetimeSerializer = $datetimeSerializer;
     }
 
     #[Route('/api/v1/publication', methods: ['GET'], name: 'app_v1_publication')]
@@ -52,29 +72,45 @@ class PublicationController extends AbstractController
         return $this->json($this->responseData, $this->responseStatusCode);
     }
 
-    #[Route('/api/v1/publication/form', methods: ['GET'], name: 'app_v1_publication_form_metadata')]
+    #[Route('/api/v1/publication/form-metadata', methods: ['GET'], name: 'app_v1_publication_form_metadata')]
     public function getFormMetadata(String $formCode = null, String $formVersionCode = null): JsonResponse
     {
-        $this->responseData['info'] = 'success';
-        $this->responseData['message'] = '';
-        $this->responseStatusCode = 200;
+        $this->responseData['info']     = 'error';
+        $this->responseData['message']  = '';
+        $this->responseStatusCode       = 400;
 
-        $publication = $this->entityManager->getRepository(Publication::class);
+        $result = NULL;
 
         try {
             //$this->connection->beginTransaction();
+            $publications           = $this->entityManager->getRepository(Publication::class)->findAll();
+            $publicationGeneralType = $this->entityManager->getRepository(PublicationGeneralType::class)->findOneBy(['id' => 1]);
+            $publicationType        = $this->entityManager->getRepository(PublicationType::class)->findOneBy(['id' => 1]);
+            $publicationStatus      = $this->entityManager->getRepository(PublicationStatus::class)->findOneBy(['id' => 1]);
+            $formVersion            = $this->entityManager->getRepository(PublicationFormVersion::class)->findOneBy(['id' => 1]);
 
-            $this->responseData['data'] = $publication->findAll();
-            $this->responseData['message'] = 'Success to get publication form metadata!';
+            $this->responseData['data']     = [
+                'publications'              => $publications,
+                'publication_general_type'  => $publicationGeneralType,
+                'publication_type'          => $publicationType,
+                'publication_status'        => $publicationStatus,
+                'form_metadata'             => $formVersion,
+            ];
+            $this->responseData['info']     = 'success';
+            $this->responseData['message']  = 'Success to get publication form metadata!';
+            $this->responseStatusCode       = 200;
 
             $this->logger->info('Get publication form!', $this->responseData['data']);
+
             //$this->connection->commit();
         } catch (\Exception $e) {
             //$this->connection->rollBack();
-            $this->logger->error('Get form metadata exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(), $e->getTrace());
+            $this->responseData['message']  = 'Error on get publication form metadata!';
+            $this->responseStatusCode       = 500;
+            $this->logger->error('Get form metadata exception log: ' . $e->getMessage() . ', line: ' . $e->getLine());
         }
 
-        return $this->json($this->responseData, $this->responseStatusCode);
+        return $this->json($this->responseData, $this->responseStatusCode); // new JsonResponse($this->responseData, $this->responseStatusCode, ["Content-Type" => "application/json"])
     }
 
     #[Route('/api/v1/publication', methods: ['POST'], name: 'app_v1_publication_insert')]
@@ -99,4 +135,5 @@ class PublicationController extends AbstractController
 
         return $this->json($this->responseData, $this->responseStatusCode);
     }
+
 }

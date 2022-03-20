@@ -6,11 +6,13 @@ use App\Repository\PublicationTypeRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: PublicationTypeRepository::class)]
+#[ORM\Table(name: "publication_type")]
 class PublicationType
 {
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[ORM\Id, ORM\GeneratedValue(strategy: "IDENTITY"), ORM\Column(type: 'bigint', options: ["unsigned" => true])]
     private $id;
 
     #[ORM\Column(type: 'string', length: 255)]
@@ -41,14 +43,28 @@ class PublicationType
     private $uuid;
 
     #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class, inversedBy: 'publication_type')]
+    #[Ignore]
     private $publicationGeneralType;
 
     #[ORM\OneToMany(mappedBy: 'publicationType', targetEntity: PublicationFormVersion::class)]
+    #[Ignore]
     private $form_version;
 
     public function __construct()
     {
         $this->form_version = new ArrayCollection();
+    }
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        $this->created_at = new \DateTime("now");
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updated_at = new \DateTime("now");
     }
 
     public function getId(): ?string
@@ -162,18 +178,6 @@ class PublicationType
         $this->uuid = $uuid;
 
         return $this;
-    }
-
-    #[ORM\PrePersist]
-    public function onPrePersist(): void
-    {
-        $this->created_at = new \DateTime("now");
-    }
-
-    #[ORM\PreUpdate]
-    public function onPreUpdate(): void
-    {
-        $this->updated_at = new \DateTime("now");
     }
 
     public function getPublicationGeneralType(): ?PublicationGeneralType

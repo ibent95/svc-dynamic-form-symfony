@@ -6,46 +6,62 @@ use App\Repository\PublicationFormVersionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Ignore;
 
-#[ORM\Entity(repositoryClass: PublicationFormVersionRepository::class)]
+#[ORM\Entity(repositoryClass: PublicationFormVersionRepository::class), ORM\HasLifecycleCallbacks]
+#[ORM\Table(name: "publication_form_version")]
 class PublicationFormVersion
 {
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
-    private $id;
+    #[ORM\Id, ORM\GeneratedValue(strategy: "IDENTITY"), ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    protected $id;
 
     #[ORM\Column(type: 'string', length: 255)]
-    private $publication_form_version_name;
+    protected $publication_form_version_name;
 
     #[ORM\Column(type: 'string', length: 50)]
-    private $publication_form_version_code;
+    protected $publication_form_version_code;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
-    private $flag_active;
+    protected $flag_active;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
-    private $created_user;
+    protected $created_user;
 
     #[ORM\Column(type: 'datetime')]
-    private $created_at;
+    protected $created_at;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
-    private $updated_user;
+    protected $updated_user;
 
     #[ORM\Column(type: 'datetime')]
-    private $updated_at;
+    protected $updated_at;
 
     #[ORM\Column(type: 'guid')]
-    private $uuid;
+    protected $uuid;
 
     #[ORM\ManyToOne(targetEntity: PublicationType::class, inversedBy: 'form_version')]
-    private $publicationType;
+    #[Ignore]
+    protected $publicationType;
 
     #[ORM\OneToMany(mappedBy: 'publicationFormVersion', targetEntity: Form::class)]
-    private $form;
+    #[Ignore]
+    protected $form;
 
     public function __construct()
     {
         $this->form = new ArrayCollection();
+    }
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        $this->created_at = new \DateTime("now");
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updated_at = new \DateTime("now");
     }
 
     public function getId(): ?string
@@ -147,18 +163,6 @@ class PublicationFormVersion
         $this->uuid = $uuid;
 
         return $this;
-    }
-
-    #[ORM\PrePersist]
-    public function onPrePersist(): void
-    {
-        $this->created_at = new \DateTime("now");
-    }
-
-    #[ORM\PreUpdate]
-    public function onPreUpdate(): void
-    {
-        $this->updated_at = new \DateTime("now");
     }
 
     public function getPublicationType(): ?PublicationType

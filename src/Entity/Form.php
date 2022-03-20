@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\FormRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: FormRepository::class)]
 class Form
@@ -72,7 +73,20 @@ class Form
     private $uuid;
 
     #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'form')]
+    #[Ignore]
     private $publicationFormVersion;
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        $this->created_at = new \DateTime("now");
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updated_at = new \DateTime("now");
+    }
 
     public function getId(): ?string
     {
@@ -317,18 +331,6 @@ class Form
         $this->uuid = $uuid;
 
         return $this;
-    }
-
-    #[ORM\PrePersist]
-    public function onPrePersist(): void
-    {
-        $this->created_at = new \DateTime("now");
-    }
-
-    #[ORM\PreUpdate]
-    public function onPreUpdate(): void
-    {
-        $this->updated_at = new \DateTime("now");
     }
 
     public function getPublicationFormVersion(): ?PublicationFormVersion

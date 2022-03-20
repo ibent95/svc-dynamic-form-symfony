@@ -45,22 +45,15 @@ class PublicationFormVersionRepository extends ServiceEntityRepository
         }
     }
 
-    // /**
-    //  * @return PublicationFormVersion[] Returns an array of PublicationFormVersion objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    public function findFormVersionWithForm(Int $publicationFormVersionId, String $publicationFormVersionCode = NULL): ?Array
     {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('p.id', 'ASC')
-            ->setMaxResults(10)
+        return $this->createQueryBuilder('fv')
+            ->andWhere('fv.id = :id')
+            ->setParameter('id', $publicationFormVersionId)
             ->getQuery()
-            ->getResult()
+            ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_ARRAY)
         ;
     }
-    */
 
     /*
     public function findOneBySomeField($value): ?PublicationFormVersion
@@ -68,6 +61,8 @@ class PublicationFormVersionRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('p')
             ->andWhere('p.exampleField = :val')
             ->setParameter('val', $value)
+            ->orderBy('fv.id', 'ASC')
+            ->setMaxResults(10)
             ->getQuery()
             ->getOneOrNullResult()
         ;

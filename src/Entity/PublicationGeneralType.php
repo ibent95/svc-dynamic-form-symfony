@@ -6,6 +6,7 @@ use App\Repository\PublicationGeneralTypeRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: PublicationGeneralTypeRepository::class)]
 class PublicationGeneralType
@@ -38,11 +39,24 @@ class PublicationGeneralType
     private $uuid;
 
     #[ORM\OneToMany(mappedBy: 'publicationGeneralType', targetEntity: PublicationType::class)]
+    #[Ignore]
     private $publication_type;
 
     public function __construct()
     {
         $this->publication_type = new ArrayCollection();
+    }
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        $this->created_at = new \DateTime("now");
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updated_at = new \DateTime("now");
     }
 
     public function getId(): ?string
@@ -144,18 +158,6 @@ class PublicationGeneralType
         $this->uuid = $uuid;
 
         return $this;
-    }
-
-    #[ORM\PrePersist]
-    public function onPrePersist(): void
-    {
-        $this->created_at = new \DateTime("now");
-    }
-
-    #[ORM\PreUpdate]
-    public function onPreUpdate(): void
-    {
-        $this->updated_at = new \DateTime("now");
     }
 
     /**

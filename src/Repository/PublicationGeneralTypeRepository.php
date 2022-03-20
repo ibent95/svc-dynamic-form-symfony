@@ -11,7 +11,7 @@ use Doctrine\Persistence\ManagerRegistry;
 /**
  * @method PublicationGeneralType|null find($id, $lockMode = null, $lockVersion = null)
  * @method PublicationGeneralType|null findOneBy(array $criteria, array $orderBy = null)
- * @method PublicationGeneralType[]    findAll()
+ * @method Array    findAll()
  * @method PublicationGeneralType[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
 class PublicationGeneralTypeRepository extends ServiceEntityRepository

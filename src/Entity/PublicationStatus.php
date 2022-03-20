@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\PublicationStatusRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: PublicationStatusRepository::class)]
 class PublicationStatus
@@ -34,6 +35,18 @@ class PublicationStatus
 
     #[ORM\Column(type: 'guid')]
     private $uuid;
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        $this->created_at = new \DateTime("now");
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updated_at = new \DateTime("now");
+    }
 
     public function getId(): ?string
     {
@@ -134,18 +147,6 @@ class PublicationStatus
         $this->uuid = $uuid;
 
         return $this;
-    }
-
-    #[ORM\PrePersist]
-    public function onPrePersist(): void
-    {
-        $this->created_at = new \DateTime("now");
-    }
-
-    #[ORM\PreUpdate]
-    public function onPreUpdate(): void
-    {
-        $this->updated_at = new \DateTime("now");
     }
 
 }
