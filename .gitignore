@@ -1,7 +1,7 @@
 
 ###> Devilbox settings ###
 .devilbox/
-.htdocs/
+.htdocs
 ###< Devilbox settings ###
 
 ###> symfony/framework-bundle ###
