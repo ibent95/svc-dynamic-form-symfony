@@ -157,7 +157,7 @@ class PublicationController extends AbstractController
             $doctrine->connection->rollBack();
             $this->responseData['message']  = 'Error on get publication form metadata!';
             $this->responseStatusCode       = 400;
-            $this->logger->error('Insert publication data exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(), $e->getTrace());
+            $this->logger->error('Insert publication data exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(), [$e->getFile(), $e->getTraceAsString()]);
         }
 
         return $this->json($this->responseData, $this->responseStatusCode);
