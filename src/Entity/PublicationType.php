@@ -49,7 +49,6 @@ class PublicationType
     private $updated_at;
 
     #[ORM\Column(type: 'guid')]
-    #[Ignore]
     private $uuid;
 
     #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class, inversedBy: 'publication_type')]
@@ -106,6 +105,7 @@ class PublicationType
         return $this;
     }
 
+    #[Ignore]
     public function getIdPublicationGeneralType(): ?string
     {
         return $this->id_publication_general_type;
@@ -118,6 +118,7 @@ class PublicationType
         return $this;
     }
 
+    #[Ignore]
     public function getFlagActive(): ?bool
     {
         return $this->flag_active;
@@ -130,6 +131,7 @@ class PublicationType
         return $this;
     }
 
+    #[Ignore]
     public function getCreatedUser(): ?string
     {
         return $this->created_user;
@@ -142,6 +144,7 @@ class PublicationType
         return $this;
     }
 
+    #[Ignore]
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -154,6 +157,7 @@ class PublicationType
         return $this;
     }
 
+    #[Ignore]
     public function getUpdatedUser(): ?string
     {
         return $this->updated_user;
@@ -166,6 +170,7 @@ class PublicationType
         return $this;
     }
 
+    #[Ignore]
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updated_at;

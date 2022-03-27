@@ -45,7 +45,6 @@ class PublicationFormVersion
     protected $updated_at;
 
     #[ORM\Column(type: 'guid')]
-    #[Ignore]
     protected $uuid;
 
     #[ORM\ManyToOne(targetEntity: PublicationType::class, inversedBy: 'form_version')]
@@ -102,6 +101,7 @@ class PublicationFormVersion
         return $this;
     }
 
+    #[Ignore]
     public function getFlagActive(): ?bool
     {
         return $this->flag_active;
@@ -114,6 +114,7 @@ class PublicationFormVersion
         return $this;
     }
 
+    #[Ignore]
     public function getCreatedUser(): ?string
     {
         return $this->created_user;
@@ -126,6 +127,7 @@ class PublicationFormVersion
         return $this;
     }
 
+    #[Ignore]
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -138,6 +140,7 @@ class PublicationFormVersion
         return $this;
     }
 
+    #[Ignore]
     public function getUpdatedUser(): ?string
     {
         return $this->updated_user;
@@ -150,6 +153,7 @@ class PublicationFormVersion
         return $this;
     }
 
+    #[Ignore]
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updated_at;
