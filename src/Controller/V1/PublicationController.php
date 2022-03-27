@@ -9,11 +9,18 @@ use App\Entity\PublicationStatus;
 use App\Entity\PublicationType;
 use App\Repository\PublicationFormVersionRepository;
 use App\Repository\PublicationRepository;
+use App\Service\Common;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
+use Doctrine\Common\Collections\Expr\Comparison;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\Query;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\PropertyAccess\PropertyAccess;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -35,24 +42,35 @@ class PublicationController extends AbstractController
     private $entityManager;
     private $encoders;
     private $normalizers;
-    private $serializer;
+    //private $serializer;
     private $datetimeSerializer;
+    private $request;
+    private $exprBuilder;
+    private $criteria;
 
-    public function __construct(LoggerInterface $logger, ManagerRegistry $doctrine)
+    public function __construct(LoggerInterface $logger)
     {
-        $this->logger = $logger;
-        $this->responseData = [
-            'info' => '',
-            'message' => '',
-            'data' => [],
-        ];
-        $this->responseStatusCode = 400;
-        $this->doctrine = $doctrine;
-        $this->connection = $doctrine->getConnection();
-        $this->entityManager = $this->doctrine->getManager();
+        $this->logger               = $logger;
 
-        $this->serializer = new Serializer([new ObjectNormalizer(), new DateTimeNormalizer()], [new JsonEncoder()]);
-        //$this->datetimeSerializer = $datetimeSerializer;
+        // Doctrine initial value (unused)
+        //$this->doctrine             = $doctrine;
+        //$this->connection           = $doctrine->getConnection();
+        //$this->entityManager        = $this->doctrine->getManager();
+
+        //$this->serializer           = $serializer;
+        //$propertyAccessor           = PropertyAccess::createPropertyAccessor();
+        $this->request              = Request::createFromGlobals();
+
+        $this->exprBuilder          = Criteria::expr();
+        $this->criteria             = new Criteria();
+
+        // Response initial value
+        $this->responseData         = [
+            'info'      => '',
+            'message'   => '',
+            'data'      => [],
+        ];
+        $this->responseStatusCode   = 400;
     }
 
     #[Route('/api/v1/publication', methods: ['GET'], name: 'app_v1_publication')]
@@ -72,68 +90,89 @@ class PublicationController extends AbstractController
         return $this->json($this->responseData, $this->responseStatusCode);
     }
 
-    #[Route('/api/v1/publication/form-metadata', methods: ['GET'], name: 'app_v1_publication_form_metadata')]
-    public function getFormMetadata(String $formCode = null, String $formVersionCode = null): JsonResponse
+    #[Route('/api/v1/publication/form-metadata/{publicationTypeCode}', methods: ['GET'], name: 'app_v1_publication_form_metadata')]
+    public function getFormMetadata(ManagerRegistry $doctrine, Common $common, String $publicationTypeCode): JsonResponse
     {
+        $entityManager                  = $doctrine->getManager();
+        //$this->serializer               = $serializer;
+
         $this->responseData['info']     = 'error';
         $this->responseData['message']  = '';
-        $this->responseStatusCode       = 400;
+        $this->responseStatusCode       = 500;
 
-        $result = NULL;
+        $result                         = NULL;
+
+        $formVersionCode                = $this->request->query->get('form-version-code');
 
         try {
-            //$this->connection->beginTransaction();
-            $publications           = $this->entityManager->getRepository(Publication::class)->findAll();
-            $publicationGeneralType = $this->entityManager->getRepository(PublicationGeneralType::class)->findOneBy(['id' => 1]);
-            $publicationType        = $this->entityManager->getRepository(PublicationType::class)->findOneBy(['id' => 1]);
-            $publicationStatus      = $this->entityManager->getRepository(PublicationStatus::class)->findOneBy(['id' => 1]);
-            $formVersion            = $this->entityManager->getRepository(PublicationFormVersion::class)->findOneBy(['id' => 1]);
+            // PublicationType
+            $publicationTypeParams          = ['publication_type_code' => $publicationTypeCode];
+            $publicationType                = $entityManager->getRepository(PublicationType::class)->findOneBy($publicationTypeParams);
 
-            $this->responseData['data']     = [
-                'publications'              => $publications,
-                'publication_general_type'  => $publicationGeneralType,
-                'publication_type'          => $publicationType,
-                'publication_status'        => $publicationStatus,
-                'form_metadata'             => $formVersion,
-            ];
+            // FormVersion
+            $formVersionRaw                 = $publicationType->getFormVersion();
+            $this->criteria->where($this->exprBuilder->eq('flag_active', true));
+            if ($formVersionCode) $this->criteria->orWhere($this->exprBuilder->eq('id', $publicationType->getId()));
+            $formVersionMatchFirst          = $formVersionRaw->matching($this->criteria)->first();
+            $formVersion                    = $common->normalizeObject($formVersionMatchFirst);
+
+            // Forms of FormVersion
+            $formVersion['forms']           = $formVersionMatchFirst->getForm();
+
+            // Response data
+            $this->responseData['data']     = $formVersion;
             $this->responseData['info']     = 'success';
             $this->responseData['message']  = 'Success to get publication form metadata!';
             $this->responseStatusCode       = 200;
 
-            $this->logger->info('Get publication form!', $this->responseData['data']);
+            $this->logger->info('Get publication form: ' . json_encode($this->responseData['data']));
 
-            //$this->connection->commit();
         } catch (\Exception $e) {
-            //$this->connection->rollBack();
             $this->responseData['message']  = 'Error on get publication form metadata!';
-            $this->responseStatusCode       = 500;
-            $this->logger->error('Get form metadata exception log: ' . $e->getMessage() . ', line: ' . $e->getLine());
+            $this->responseStatusCode       = 400;
+            $this->logger->error('Get form metadata exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(), [$e->getFile(), $e->getTraceAsString()]);
         }
 
         return $this->json($this->responseData, $this->responseStatusCode); // new JsonResponse($this->responseData, $this->responseStatusCode, ["Content-Type" => "application/json"])
     }
 
     #[Route('/api/v1/publication', methods: ['POST'], name: 'app_v1_publication_insert')]
-    public function insertBy(): JsonResponse
+    public function insert(ManagerRegistry $doctrine): JsonResponse
     {
-        $this->responseData['info'] = 'success';
-        $this->responseData['message'] = '';
-        $this->responseStatusCode = 200;
+        $entityManager = $doctrine->getManager();
 
-        $publication = $this->entityManager->getRepository(Publication::class);
+        $this->responseData['info']     = 'error';
+        $this->responseData['message']  = '';
+        $this->responseStatusCode       = 500;
+
+        $publication = $entityManager->getRepository(Publication::class);
 
         try {
-            $this->connection->beginTransaction();
+            $doctrine->connection->beginTransaction();
 
             $this->responseData['data'] = $publication->findAll();
 
-            $this->connection->commit();
+            $doctrine->connection->commit();
         } catch (\Exception $e) {
-            $this->connection->rollBack();
-            $this->logger->error('Get form metadata exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(), $e->getTrace());
+            $doctrine->connection->rollBack();
+            $this->responseData['message']  = 'Error on get publication form metadata!';
+            $this->responseStatusCode       = 400;
+            $this->logger->error('Insert publication data exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(), $e->getTrace());
         }
 
         return $this->json($this->responseData, $this->responseStatusCode);
+    }
+
+    public function template(ManagerRegistry $doctrine)
+    {
+        $entityManager              = $doctrine->getManager();
+
+        $publications               = $entityManager->getRepository(Publication::class)->findAll();
+        $publicationGeneralType     = $entityManager->getRepository(PublicationGeneralType::class)->findOneBy(['id' => 1]);
+        $publicationType            = $entityManager->getRepository(PublicationType::class)->findOneBy(['id' => 1]);
+        $publicationStatus          = $entityManager->getRepository(PublicationStatus::class)->findOneBy(['id' => 1]);
+
+        $this->responseData['data'] = $publications;
     }
 
 }

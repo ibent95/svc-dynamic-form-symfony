@@ -13,30 +13,39 @@ use Symfony\Component\Serializer\Annotation\Ignore;
 class PublicationFormVersion
 {
     #[ORM\Id, ORM\GeneratedValue(strategy: "IDENTITY"), ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[Ignore]
     protected $id;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Ignore]
     protected $publication_form_version_name;
 
     #[ORM\Column(type: 'string', length: 50)]
+    #[Ignore]
     protected $publication_form_version_code;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    #[Ignore]
     protected $flag_active;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    #[Ignore]
     protected $created_user;
 
     #[ORM\Column(type: 'datetime')]
+    #[Ignore]
     protected $created_at;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    #[Ignore]
     protected $updated_user;
 
     #[ORM\Column(type: 'datetime')]
+    #[Ignore]
     protected $updated_at;
 
     #[ORM\Column(type: 'guid')]
+    #[Ignore]
     protected $uuid;
 
     #[ORM\ManyToOne(targetEntity: PublicationType::class, inversedBy: 'form_version')]

@@ -10,66 +10,87 @@ use Symfony\Component\Serializer\Annotation\Ignore;
 class Form
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[Ignore]
     private $id;
 
     #[ORM\Column(type: 'bigint')]
+    #[Ignore]
     private $id_form_version;
 
     #[ORM\Column(type: 'bigint', nullable: true)]
+    #[Ignore]
     private $id_form_parent;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Ignore]
     private $field_label;
 
     #[ORM\Column(type: 'string', length: 100)]
+    #[Ignore]
     private $field_type;
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    #[Ignore]
     private $field_name;
 
     #[ORM\Column(type: 'string', length: 100)]
+    #[Ignore]
     private $field_id;
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    #[Ignore]
     private $field_class;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Ignore]
     private $field_placeholder;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Ignore]
     private $description;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Ignore]
     private $error_message;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Ignore]
     private $validation_config;
 
     #[ORM\Column(type: 'json', nullable: true)]
+    #[Ignore]
     private $dependency_child = [];
 
     #[ORM\Column(type: 'json', nullable: true)]
+    #[Ignore]
     private $dependency_parent = [];
 
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    #[Ignore]
     private $flag_required;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    #[Ignore]
     private $flag_active;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    #[Ignore]
     private $created_user;
 
     #[ORM\Column(type: 'datetime', nullable: false)]
+    #[Ignore]
     private $created_at;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    #[Ignore]
     private $updated_user;
 
     #[ORM\Column(type: 'datetime', nullable: false)]
+    #[Ignore]
     private $updated_at;
 
     #[ORM\Column(type: 'guid', nullable: false)]
+    #[Ignore]
     private $uuid;
 
     #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'form')]

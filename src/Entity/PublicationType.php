@@ -13,33 +13,43 @@ use Symfony\Component\Serializer\Annotation\Ignore;
 class PublicationType
 {
     #[ORM\Id, ORM\GeneratedValue(strategy: "IDENTITY"), ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[Ignore]
     private $id;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Ignore]
     private $publication_type_name;
 
     #[ORM\Column(type: 'string', length: 50)]
+    #[Ignore]
     private $publication_type_code;
 
     #[ORM\Column(type: 'bigint')]
+    #[Ignore]
     private $id_publication_general_type;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    #[Ignore]
     private $flag_active;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    #[Ignore]
     private $created_user;
 
     #[ORM\Column(type: 'datetime')]
+    #[Ignore]
     private $created_at;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    #[Ignore]
     private $updated_user;
 
     #[ORM\Column(type: 'datetime')]
+    #[Ignore]
     private $updated_at;
 
     #[ORM\Column(type: 'guid')]
+    #[Ignore]
     private $uuid;
 
     #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class, inversedBy: 'publication_type')]
@@ -195,7 +205,7 @@ class PublicationType
     /**
      * @return Collection<int, PublicationFormVersion>
      */
-    public function getFormVersion(): Collection
+    public function getFormVersion(): ?Collection
     {
         return $this->form_version;
     }
