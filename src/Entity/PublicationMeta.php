@@ -10,9 +10,11 @@ use Symfony\Component\Serializer\Annotation\Ignore;
 class PublicationMeta
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[Ignore]
     private $id;
 
     #[ORM\Column(type: 'bigint')]
+    #[Ignore]
     private $id_publication;
 
     #[ORM\Column(type: 'string', length: 150)]
@@ -22,25 +24,29 @@ class PublicationMeta
     private $field_value;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    #[Ignore]
     private $flag_active;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    #[Ignore]
     private $created_user;
 
     #[ORM\Column(type: 'datetime')]
+    #[Ignore]
     private $created_at;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    #[Ignore]
     private $updated_user;
 
     #[ORM\Column(type: 'datetime')]
+    #[Ignore]
     private $updated_at;
 
     #[ORM\Column(type: 'guid')]
     private $uuid;
 
     #[ORM\ManyToOne(targetEntity: Publication::class, inversedBy: 'publication_meta')]
-    #[Ignore]
     private $publication;
 
     #[ORM\PrePersist]
@@ -96,6 +102,7 @@ class PublicationMeta
         return $this;
     }
 
+    #[Ignore]
     public function getFlagActive(): ?bool
     {
         return $this->flag_active;
@@ -108,6 +115,7 @@ class PublicationMeta
         return $this;
     }
 
+    #[Ignore]
     public function getCreatedUser(): ?string
     {
         return $this->created_user;
@@ -120,6 +128,7 @@ class PublicationMeta
         return $this;
     }
 
+    #[Ignore]
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -132,6 +141,7 @@ class PublicationMeta
         return $this;
     }
 
+    #[Ignore]
     public function getUpdatedUser(): ?string
     {
         return $this->updated_user;
@@ -144,6 +154,7 @@ class PublicationMeta
         return $this;
     }
 
+    #[Ignore]
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updated_at;

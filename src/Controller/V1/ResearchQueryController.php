@@ -7,7 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
-class MainController extends AbstractController
+class ResearchQueryController extends AbstractController
 {
     private $logger;
     private $responseData;
@@ -24,15 +24,15 @@ class MainController extends AbstractController
         $this->responseStatusCode = 400;
     }
 
-    #[Route('/api/v1', name: 'app_v1_main')]
+    #[Route('/api/v1/research', name: 'app_v1_research')]
     public function index(): JsonResponse
     {
         $this->logger->info('The root route has been accessed!');
 
         $this->responseData['info'] = 'success';
-        $this->responseData['message'] = 'Welcome to Dynamic Form service with Symfony 6.';
+        $this->responseData['message'] = 'Success to access the research menu!';
         $this->responseData['data'] = [
-            'message' => 'Welcome to Dynamic Form service with Symfony 6.',
+            'message' => 'Welcome to research!',
             'date' => date('Y-m-d'),
         ];
 

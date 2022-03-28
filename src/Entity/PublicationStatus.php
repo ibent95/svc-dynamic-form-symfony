@@ -36,6 +36,9 @@ class PublicationStatus
     #[ORM\Column(type: 'guid')]
     private $uuid;
 
+    #[ORM\OneToOne(mappedBy: 'publication_status', targetEntity: Publication::class, cascade: ['persist', 'remove'])]
+    private $publication;
+
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {
@@ -145,6 +148,23 @@ class PublicationStatus
     public function setUuid(string $uuid): self
     {
         $this->uuid = $uuid;
+
+        return $this;
+    }
+
+    public function getPublication(): ?Publication
+    {
+        return $this->publication;
+    }
+
+    public function setPublication(?Publication $publication): self
+    {
+        // set the owning side of the relation if necessary
+        if ($publication !== null && $publication->getPublicationStatus() !== $this) {
+            $publication->setPublicationStatus($this);
+        }
+
+        $this->publication = $publication;
 
         return $this;
     }

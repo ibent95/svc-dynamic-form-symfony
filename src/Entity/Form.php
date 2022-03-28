@@ -113,7 +113,6 @@ class Form
         return $this->id;
     }
 
-    #[Ignore]
     public function getIdFormVersion(): ?string
     {
         return $this->id_form_version;
@@ -126,7 +125,6 @@ class Form
         return $this;
     }
 
-    #[Ignore]
     public function getIdFormParent(): ?string
     {
         return $this->id_form_parent;
@@ -283,7 +281,6 @@ class Form
         return $this;
     }
 
-    #[Ignore]
     public function getFlagActive(): ?bool
     {
         return $this->flag_active;
@@ -296,7 +293,6 @@ class Form
         return $this;
     }
 
-    #[Ignore]
     public function getCreatedUser(): ?string
     {
         return $this->created_user;
@@ -309,7 +305,6 @@ class Form
         return $this;
     }
 
-    #[Ignore]
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -322,7 +317,6 @@ class Form
         return $this;
     }
 
-    #[Ignore]
     public function getUpdatedUser(): ?string
     {
         return $this->updated_user;
@@ -335,7 +329,6 @@ class Form
         return $this;
     }
 
-    #[Ignore]
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updated_at;

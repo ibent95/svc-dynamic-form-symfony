@@ -50,6 +50,9 @@ class PublicationGeneralType
     #[Ignore]
     private $publication_type;
 
+    #[ORM\OneToOne(mappedBy: 'publication_general_type', targetEntity: Publication::class, cascade: ['persist', 'remove'])]
+    private $publication;
+
     public function __construct()
     {
         $this->publication_type = new ArrayCollection();
@@ -96,7 +99,6 @@ class PublicationGeneralType
         return $this;
     }
 
-    #[Ignore]
     public function getFlagActive(): ?bool
     {
         return $this->flag_active;
@@ -109,7 +111,6 @@ class PublicationGeneralType
         return $this;
     }
 
-    #[Ignore]
     public function getCreatedUser(): ?string
     {
         return $this->created_user;
@@ -122,7 +123,6 @@ class PublicationGeneralType
         return $this;
     }
 
-    #[Ignore]
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -135,7 +135,6 @@ class PublicationGeneralType
         return $this;
     }
 
-    #[Ignore]
     public function getUpdatedUser(): ?string
     {
         return $this->updated_user;
@@ -148,7 +147,6 @@ class PublicationGeneralType
         return $this;
     }
 
-    #[Ignore]
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updated_at;
@@ -199,6 +197,23 @@ class PublicationGeneralType
                 $publicationType->setPublicationGeneralType(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getPublication(): ?Publication
+    {
+        return $this->publication;
+    }
+
+    public function setPublication(?Publication $publication): self
+    {
+        // set the owning side of the relation if necessary
+        if ($publication !== null && $publication->getPublicationGeneralType() !== $this) {
+            $publication->setPublicationGeneralType($this);
+        }
+
+        $this->publication = $publication;
 
         return $this;
     }

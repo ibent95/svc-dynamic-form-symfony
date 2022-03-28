@@ -7,7 +7,7 @@ class CustomCircularReferenceHandler
 
 	public function __invoke($object, $format, $context)
 	{
-		return $object->getName();
+		return $object->getId();
 	}
 
 }

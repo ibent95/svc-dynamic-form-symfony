@@ -59,6 +59,10 @@ class PublicationType
     #[Ignore]
     private $form_version;
 
+    #[ORM\OneToOne(mappedBy: 'publication_type', targetEntity: Publication::class, cascade: ['persist', 'remove'])]
+    #[Ignore]
+    private $publication;
+
     public function __construct()
     {
         $this->form_version = new ArrayCollection();
@@ -210,7 +214,8 @@ class PublicationType
     /**
      * @return Collection<int, PublicationFormVersion>
      */
-    public function getFormVersion(): ?Collection
+    #[Ignore]
+    public function getFormVersion(): Collection
     {
         return $this->form_version;
     }
@@ -233,6 +238,23 @@ class PublicationType
                 $formVersion->setPublicationType(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getPublication(): ?Publication
+    {
+        return $this->publication;
+    }
+
+    public function setPublication(?Publication $publication): self
+    {
+        // set the owning side of the relation if necessary
+        if ($publication !== null && $publication->getPublicationType() !== $this) {
+            $publication->setPublicationType($this);
+        }
+
+        $this->publication = $publication;
 
         return $this;
     }

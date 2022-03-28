@@ -12,60 +12,70 @@ use Symfony\Component\Serializer\Annotation\Ignore;
 class Publication
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[Ignore]
     private $id;
 
     #[ORM\Column(type: 'string', length: 500, nullable: true)]
     private $title;
 
     #[ORM\Column(type: 'bigint')]
+    #[Ignore]
     private $id_publication_general_type;
 
     #[ORM\Column(type: 'bigint')]
+    #[Ignore]
     private $id_publication_type;
 
     #[ORM\Column(type: 'bigint')]
+    #[Ignore]
     private $id_publication_form_version;
 
     #[ORM\Column(type: 'bigint')]
+    #[Ignore]
     private $id_publication_status;
 
     #[ORM\Column(type: 'datetime', nullable: true)]
     private $publication_date;
 
     #[ORM\Column(type:'boolean', options: ['default' => true])]
+    #[Ignore]
     private $flag_active;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    #[Ignore]
     private $created_user;
 
     #[ORM\Column(type: 'datetime', nullable: false)]
+    #[Ignore]
     private $created_at;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    #[Ignore]
     private $updated_user;
 
     #[ORM\Column(type: 'datetime', nullable: false)]
+    #[Ignore]
     private $updated_at;
 
     #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
-    #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class)]
+    #[ORM\OneToOne(inversedBy: 'publication', targetEntity: PublicationGeneralType::class, cascade: ['persist', 'remove'])]
     #[ORM\JoinColumn(nullable: false)]
     #[Ignore]
     private $publication_general_type;
 
-    #[ORM\ManyToOne(targetEntity: PublicationType::class)]
+    #[ORM\OneToOne(inversedBy: 'publication', targetEntity: PublicationType::class, cascade: ['persist', 'remove'])]
     #[ORM\JoinColumn(nullable: false)]
     #[Ignore]
     private $publication_type;
 
-    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class)]
+    #[ORM\OneToOne(inversedBy: 'publication', targetEntity: PublicationFormVersion::class, cascade: ['persist', 'remove'])]
     #[ORM\JoinColumn(nullable: false)]
     #[Ignore]
     private $publication_form_version;
 
-    #[ORM\ManyToOne(targetEntity: PublicationStatus::class)]
+    #[ORM\OneToOne(inversedBy: 'publication', targetEntity: PublicationStatus::class, cascade: ['persist', 'remove'])]
     #[ORM\JoinColumn(nullable: false)]
     #[Ignore]
     private $publication_status;
@@ -108,6 +118,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getIdPublicationGeneralType(): ?string
     {
         return $this->id_publication_general_type;
@@ -120,6 +131,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getIdPublicationType(): ?string
     {
         return $this->id_publication_type;
@@ -132,6 +144,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getIdPublicationFormVersion(): ?string
     {
         return $this->id_publication_form_version;
@@ -144,6 +157,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getIdPublicationStatus(): ?string
     {
         return $this->id_publication_status;
@@ -168,6 +182,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getFlagActive(): ?bool
     {
         return $this->flag_active;
@@ -180,6 +195,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getCreatedUser(): ?string
     {
         return $this->created_user;
@@ -192,6 +208,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -204,6 +221,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getUpdatedUser(): ?string
     {
         return $this->updated_user;
@@ -216,6 +234,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updated_at;
@@ -240,48 +259,52 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getPublicationGeneralType(): ?PublicationGeneralType
     {
         return $this->publication_general_type;
     }
 
-    public function setPublicationGeneralType(?PublicationGeneralType $publication_general_type): self
+    public function setPublicationGeneralType(PublicationGeneralType $publication_general_type): self
     {
         $this->publication_general_type = $publication_general_type;
 
         return $this;
     }
 
+    #[Ignore]
     public function getPublicationType(): ?PublicationType
     {
         return $this->publication_type;
     }
 
-    public function setPublicationType(?PublicationType $publication_type): self
+    public function setPublicationType(PublicationType $publication_type): self
     {
         $this->publication_type = $publication_type;
 
         return $this;
     }
 
+    #[Ignore]
     public function getPublicationFormVersion(): ?PublicationFormVersion
     {
         return $this->publication_form_version;
     }
 
-    public function setPublicationFormVersion(?PublicationFormVersion $publication_form_version): self
+    public function setPublicationFormVersion(PublicationFormVersion $publication_form_version): self
     {
         $this->publication_form_version = $publication_form_version;
 
         return $this;
     }
 
+    #[Ignore]
     public function getPublicationStatus(): ?PublicationStatus
     {
         return $this->publication_status;
     }
 
-    public function setPublicationStatus(?PublicationStatus $publication_status): self
+    public function setPublicationStatus(PublicationStatus $publication_status): self
     {
         $this->publication_status = $publication_status;
 
@@ -291,6 +314,7 @@ class Publication
     /**
      * @return Collection<int, PublicationMeta>
      */
+    #[Ignore]
     public function getPublicationMeta(): Collection
     {
         return $this->publication_meta;

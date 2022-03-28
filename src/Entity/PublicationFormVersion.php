@@ -55,6 +55,10 @@ class PublicationFormVersion
     #[Ignore]
     protected $form;
 
+    #[ORM\OneToOne(mappedBy: 'publication_form_version', targetEntity: Publication::class, cascade: ['persist', 'remove'])]
+    #[Ignore]
+    private $publication;
+
     public function __construct()
     {
         $this->form = new ArrayCollection();
@@ -101,7 +105,6 @@ class PublicationFormVersion
         return $this;
     }
 
-    #[Ignore]
     public function getFlagActive(): ?bool
     {
         return $this->flag_active;
@@ -114,7 +117,6 @@ class PublicationFormVersion
         return $this;
     }
 
-    #[Ignore]
     public function getCreatedUser(): ?string
     {
         return $this->created_user;
@@ -127,7 +129,6 @@ class PublicationFormVersion
         return $this;
     }
 
-    #[Ignore]
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -140,7 +141,6 @@ class PublicationFormVersion
         return $this;
     }
 
-    #[Ignore]
     public function getUpdatedUser(): ?string
     {
         return $this->updated_user;
@@ -153,7 +153,6 @@ class PublicationFormVersion
         return $this;
     }
 
-    #[Ignore]
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updated_at;
@@ -216,6 +215,23 @@ class PublicationFormVersion
                 $form->setPublicationFormVersion(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getPublication(): ?Publication
+    {
+        return $this->publication;
+    }
+
+    public function setPublication(?Publication $publication): self
+    {
+        // set the owning side of the relation if necessary
+        if ($publication !== null && $publication->getPublicationFormVersion() !== $this) {
+            $publication->setPublicationFormVersion($this);
+        }
+
+        $this->publication = $publication;
 
         return $this;
     }
