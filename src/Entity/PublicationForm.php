@@ -2,12 +2,14 @@
 
 namespace App\Entity;
 
-use App\Repository\FormRepository;
+use App\Repository\PublicationFormRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\Table;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
-#[ORM\Entity(repositoryClass: FormRepository::class)]
-class Form
+#[ORM\Entity(repositoryClass: PublicationFormRepository::class)]
+#[Table(name: 'publication_form')]
+class PublicationForm
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
     //#[Ignore]

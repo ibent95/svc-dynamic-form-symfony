@@ -51,9 +51,9 @@ class PublicationFormVersion
     #[Ignore]
     protected $publicationType;
 
-    #[ORM\OneToMany(mappedBy: 'publicationFormVersion', targetEntity: Form::class)]
+    #[ORM\OneToMany(mappedBy: 'publicationFormVersion', targetEntity: PublicationForm::class)]
     #[Ignore]
-    protected $form;
+    protected $publicationForms;
 
     #[ORM\OneToMany(mappedBy: 'publication_form_version', targetEntity: Publication::class)]
     #[Ignore]
@@ -62,7 +62,7 @@ class PublicationFormVersion
     public function __construct()
     {
         $this->publications = new ArrayCollection();
-        $this->form = new ArrayCollection();
+        $this->publicationForms = new ArrayCollection();
     }
 
     #[ORM\PrePersist]
@@ -223,27 +223,27 @@ class PublicationFormVersion
     /**
      * @return Collection<int, Form>
      */
-    public function getForm(): Collection
+    public function getPublicationForms(): Collection
     {
-        return $this->form;
+        return $this->publicationForms;
     }
 
-    public function addForm(Form $form): self
+    public function addPublicationForm(PublicationForm $publicationForms): self
     {
-        if (!$this->form->contains($form)) {
-            $this->form[] = $form;
-            $form->setPublicationFormVersion($this);
+        if (!$this->publicationForms->contains($publicationForms)) {
+            $this->publicationForms[] = $publicationForms;
+            $publicationForms->setPublicationFormVersion($this);
         }
 
         return $this;
     }
 
-    public function removeForm(Form $form): self
+    public function removePublicationForm(PublicationForm $publicationForms): self
     {
-        if ($this->form->removeElement($form)) {
+        if ($this->publicationForms->removeElement($publicationForms)) {
             // set the owning side to null (unless already changed)
-            if ($form->getPublicationFormVersion() === $this) {
-                $form->setPublicationFormVersion(null);
+            if ($publicationForms->getPublicationFormVersion() === $this) {
+                $publicationForms->setPublicationFormVersion(null);
             }
         }
 

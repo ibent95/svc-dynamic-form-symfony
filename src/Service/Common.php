@@ -186,7 +186,7 @@ class Common {
 						"default_value" => NULL, "validation_config" => NULL,
 						"tabel" => "publication_meta", "flag_multiple_field" => 0,
 						"order" => 1, "uuid_form" => NULL,
-						"children" => []
+						"options" => [], "children" => []
 					];
 				}
 
