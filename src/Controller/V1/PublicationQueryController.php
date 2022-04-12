@@ -178,6 +178,7 @@ class PublicationQueryController extends AbstractController
             $formVersionMatchFirst          = $formVersionRaw->matching($this->criteria)->first();
             $formVersion                    = ($formVersionMatchFirst) ? $common->normalizeObject($formVersionMatchFirst) : NULL;
 
+            // Set fields in recursive pattern
             $formsNormalize                 = $common->normalizeObject($formVersionMatchFirst->getForm());
             $forms                          = $common->setFields($formsNormalize);
 
