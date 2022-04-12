@@ -178,12 +178,8 @@ class PublicationQueryController extends AbstractController
             $formVersionMatchFirst          = $formVersionRaw->matching($this->criteria)->first();
             $formVersion                    = ($formVersionMatchFirst) ? $common->normalizeObject($formVersionMatchFirst) : NULL;
 
-            //$formsNormalizeCollection       = new ArrayCollection($common->normalizeObject($formVersionMatchFirst->getForm()));
-            //$formsNormalize                 = $formsNormalizeCollection->all();
             $formsNormalize                 = $common->normalizeObject($formVersionMatchFirst->getForm());
             $forms                          = $common->setFields($formsNormalize);
-
-            dd('forms', $forms);
 
             // Forms of FormVersion
             if ($formVersion) $formVersion['forms']           = $forms;
