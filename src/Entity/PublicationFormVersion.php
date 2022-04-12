@@ -55,12 +55,13 @@ class PublicationFormVersion
     #[Ignore]
     protected $form;
 
-    #[ORM\OneToOne(mappedBy: 'publication_form_version', targetEntity: Publication::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'publication_form_version', targetEntity: Publication::class)]
     #[Ignore]
-    private $publication;
+    private $publications;
 
     public function __construct()
     {
+        $this->publications = new ArrayCollection();
         $this->form = new ArrayCollection();
     }
 
@@ -74,6 +75,36 @@ class PublicationFormVersion
     public function onPreUpdate(): void
     {
         $this->updated_at = new \DateTime("now");
+    }
+
+    /**
+     * @return Collection<int, Publication>
+     */
+    public function getPublications(): Collection
+    {
+        return $this->publications;
+    }
+
+    public function addPublication(Publication $publication): self
+    {
+        if (!$this->publications->contains($publication)) {
+            $this->publications[] = $publication;
+            $publication->setPublicationFormVersion($this);
+        }
+
+        return $this;
+    }
+
+    public function removePublication(Publication $publication): self
+    {
+        if ($this->publications->removeElement($publication)) {
+            // set the owning side to null (unless already changed)
+            if ($publication->getPublicationFormVersion() === $this) {
+                $publication->setPublicationFormVersion(null);
+            }
+        }
+
+        return $this;
     }
 
     public function getId(): ?string
@@ -215,23 +246,6 @@ class PublicationFormVersion
                 $form->setPublicationFormVersion(null);
             }
         }
-
-        return $this;
-    }
-
-    public function getPublication(): ?Publication
-    {
-        return $this->publication;
-    }
-
-    public function setPublication(?Publication $publication): self
-    {
-        // set the owning side of the relation if necessary
-        if ($publication !== null && $publication->getPublicationFormVersion() !== $this) {
-            $publication->setPublicationFormVersion($this);
-        }
-
-        $this->publication = $publication;
 
         return $this;
     }

@@ -10,16 +10,16 @@ use Symfony\Component\Serializer\Annotation\Ignore;
 class Form
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
-    #[Ignore]
+    //#[Ignore]
     private $id;
 
     #[ORM\Column(type: 'bigint')]
-    #[Ignore]
-    private $id_form_version;
+    //#[Ignore]
+    private $form_version_id;
 
     #[ORM\Column(type: 'bigint', nullable: true)]
-    #[Ignore]
-    private $id_form_parent;
+    //#[Ignore]
+    private $form_parent_id;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     #[Ignore]
@@ -44,6 +44,10 @@ class Form
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     #[Ignore]
     private $field_placeholder;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Ignore]
+    private $field_options;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     #[Ignore]
@@ -113,26 +117,26 @@ class Form
         return $this->id;
     }
 
-    public function getIdFormVersion(): ?string
+    public function getFormVersionId(): ?string
     {
-        return $this->id_form_version;
+        return $this->form_version_id;
     }
 
-    public function setIdFormVersion(string $id_form_version): self
+    public function setFormVersionId(string $form_version_id): self
     {
-        $this->id_form_version = $id_form_version;
+        $this->form_version_id = $form_version_id;
 
         return $this;
     }
 
-    public function getIdFormParent(): ?string
+    public function getFormParentId(): ?string
     {
-        return $this->id_form_parent;
+        return $this->form_parent_id;
     }
 
-    public function setIdFormParent(?string $id_form_parent): self
+    public function setFormParentId(?string $form_parent_id): self
     {
-        $this->id_form_parent = $id_form_parent;
+        $this->form_parent_id = $form_parent_id;
 
         return $this;
     }
@@ -209,6 +213,18 @@ class Form
         return $this;
     }
 
+    public function getFieldOptions(): ?string
+    {
+        return $this->field_options;
+    }
+
+    public function setFieldOptions(?string $field_options): self
+    {
+        $this->field_options = $field_options;
+
+        return $this;
+    }
+
     public function getDescription(): ?string
     {
         return $this->description;
@@ -281,6 +297,7 @@ class Form
         return $this;
     }
 
+    #[Ignore]
     public function getFlagActive(): ?bool
     {
         return $this->flag_active;
@@ -293,6 +310,7 @@ class Form
         return $this;
     }
 
+    #[Ignore]
     public function getCreatedUser(): ?string
     {
         return $this->created_user;
@@ -305,6 +323,7 @@ class Form
         return $this;
     }
 
+    #[Ignore]
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -317,6 +336,7 @@ class Form
         return $this;
     }
 
+    #[Ignore]
     public function getUpdatedUser(): ?string
     {
         return $this->updated_user;
@@ -329,6 +349,7 @@ class Form
         return $this;
     }
 
+    #[Ignore]
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updated_at;
@@ -353,6 +374,7 @@ class Form
         return $this;
     }
 
+    #[Ignore]
     public function getPublicationFormVersion(): ?PublicationFormVersion
     {
         return $this->publicationFormVersion;

@@ -91,8 +91,22 @@ class PublicationQueryController extends AbstractController
 
         try {
             // PublicationType
-            $publicationsParams          = []; // 'publication_type_code' => $publicationTypeCode
-            $publications                = $entityManager->getRepository(Publication::class)->findBy($publicationsParams);
+            $publicationsParams         = []; // 'publication_type_code' => $publicationTypeCode
+            $publicationsRaw            = new ArrayCollection($entityManager->getRepository(Publication::class)->findBy($publicationsParams));
+
+            $index = 0;
+            $publications               = ($publicationsRaw) ? $publicationsRaw->map(function ($item) use ($common, &$index) {
+                $resultItem                             = $common->normalizeObject($item);
+
+                $resultItem['no']                       = $index + 1;
+                $resultItem['metadata']                 = $common->normalizeObject($item->getPublicationMeta());
+                $resultItem['publication_general_type'] = $common->normalizeObject($item->getPublicationGeneralType());
+                $resultItem['publication_type']         = $common->normalizeObject($item->getPublicationType());
+                $resultItem['publication_status']       = $common->normalizeObject($item->getPublicationStatus());
+
+                $index++;
+                return $resultItem;
+            })->toArray() : NULL;
 
             // Response data
             $this->responseData['data']     = $publications;
@@ -164,8 +178,15 @@ class PublicationQueryController extends AbstractController
             $formVersionMatchFirst          = $formVersionRaw->matching($this->criteria)->first();
             $formVersion                    = ($formVersionMatchFirst) ? $common->normalizeObject($formVersionMatchFirst) : NULL;
 
+            //$formsNormalizeCollection       = new ArrayCollection($common->normalizeObject($formVersionMatchFirst->getForm()));
+            //$formsNormalize                 = $formsNormalizeCollection->all();
+            $formsNormalize                 = $common->normalizeObject($formVersionMatchFirst->getForm());
+            $forms                          = $common->setFields($formsNormalize);
+
+            dd('forms', $forms);
+
             // Forms of FormVersion
-            if ($formVersion) $formVersion['forms']           =  $formVersionMatchFirst->getForm();
+            if ($formVersion) $formVersion['forms']           = $forms;
 
             // Response data
             $this->responseData['data']     = $formVersion ?: [];

@@ -59,13 +59,14 @@ class PublicationType
     #[Ignore]
     private $form_version;
 
-    #[ORM\OneToOne(mappedBy: 'publication_type', targetEntity: Publication::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'publication_type', targetEntity: Publication::class)]
     #[Ignore]
-    private $publication;
+    private $publications;
 
     public function __construct()
     {
         $this->form_version = new ArrayCollection();
+        $this->publications = new ArrayCollection();
     }
 
     #[ORM\PrePersist]
@@ -78,6 +79,36 @@ class PublicationType
     public function onPreUpdate(): void
     {
         $this->updated_at = new \DateTime("now");
+    }
+
+    /**
+     * @return Collection<int, Publication>
+     */
+    public function getPublications(): Collection
+    {
+        return $this->publications;
+    }
+
+    public function addPublication(Publication $publication): self
+    {
+        if (!$this->publications->contains($publication)) {
+            $this->publications[] = $publication;
+            $publication->setPublicationType($this);
+        }
+
+        return $this;
+    }
+
+    public function removePublication(Publication $publication): self
+    {
+        if ($this->publications->removeElement($publication)) {
+            // set the owning side to null (unless already changed)
+            if ($publication->getPublicationType() === $this) {
+                $publication->setPublicationType(null);
+            }
+        }
+
+        return $this;
     }
 
     public function getId(): ?string
@@ -109,7 +140,6 @@ class PublicationType
         return $this;
     }
 
-    #[Ignore]
     public function getIdPublicationGeneralType(): ?string
     {
         return $this->id_publication_general_type;
@@ -122,7 +152,6 @@ class PublicationType
         return $this;
     }
 
-    #[Ignore]
     public function getFlagActive(): ?bool
     {
         return $this->flag_active;
@@ -135,7 +164,6 @@ class PublicationType
         return $this;
     }
 
-    #[Ignore]
     public function getCreatedUser(): ?string
     {
         return $this->created_user;
@@ -148,7 +176,6 @@ class PublicationType
         return $this;
     }
 
-    #[Ignore]
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -161,7 +188,6 @@ class PublicationType
         return $this;
     }
 
-    #[Ignore]
     public function getUpdatedUser(): ?string
     {
         return $this->updated_user;
@@ -174,7 +200,6 @@ class PublicationType
         return $this;
     }
 
-    #[Ignore]
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updated_at;
@@ -214,7 +239,6 @@ class PublicationType
     /**
      * @return Collection<int, PublicationFormVersion>
      */
-    #[Ignore]
     public function getFormVersion(): Collection
     {
         return $this->form_version;
@@ -238,23 +262,6 @@ class PublicationType
                 $formVersion->setPublicationType(null);
             }
         }
-
-        return $this;
-    }
-
-    public function getPublication(): ?Publication
-    {
-        return $this->publication;
-    }
-
-    public function setPublication(?Publication $publication): self
-    {
-        // set the owning side of the relation if necessary
-        if ($publication !== null && $publication->getPublicationType() !== $this) {
-            $publication->setPublicationType($this);
-        }
-
-        $this->publication = $publication;
 
         return $this;
     }

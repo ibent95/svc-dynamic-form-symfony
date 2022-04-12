@@ -47,6 +47,7 @@ class PublicationMeta
     private $uuid;
 
     #[ORM\ManyToOne(targetEntity: Publication::class, inversedBy: 'publication_meta')]
+    #[Ignore]
     private $publication;
 
     #[ORM\PrePersist]
@@ -102,7 +103,6 @@ class PublicationMeta
         return $this;
     }
 
-    #[Ignore]
     public function getFlagActive(): ?bool
     {
         return $this->flag_active;
@@ -115,7 +115,6 @@ class PublicationMeta
         return $this;
     }
 
-    #[Ignore]
     public function getCreatedUser(): ?string
     {
         return $this->created_user;
@@ -128,7 +127,6 @@ class PublicationMeta
         return $this;
     }
 
-    #[Ignore]
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -141,7 +139,6 @@ class PublicationMeta
         return $this;
     }
 
-    #[Ignore]
     public function getUpdatedUser(): ?string
     {
         return $this->updated_user;
@@ -154,7 +151,6 @@ class PublicationMeta
         return $this;
     }
 
-    #[Ignore]
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updated_at;

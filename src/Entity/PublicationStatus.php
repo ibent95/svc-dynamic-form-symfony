@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\PublicationStatusRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
@@ -10,6 +12,7 @@ use Symfony\Component\Serializer\Annotation\Ignore;
 class PublicationStatus
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[Ignore]
     private $id;
 
     #[ORM\Column(type: 'string', length: 255)]
@@ -19,25 +22,36 @@ class PublicationStatus
     private $publication_status_code;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    #[Ignore]
     private $flag_active;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    #[Ignore]
     private $created_user;
 
     #[ORM\Column(type: 'datetime')]
+    #[Ignore]
     private $created_at;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    #[Ignore]
     private $updated_user;
 
     #[ORM\Column(type: 'datetime')]
+    #[Ignore]
     private $updated_at;
 
     #[ORM\Column(type: 'guid')]
     private $uuid;
 
-    #[ORM\OneToOne(mappedBy: 'publication_status', targetEntity: Publication::class, cascade: ['persist', 'remove'])]
-    private $publication;
+    #[ORM\OneToMany(mappedBy: 'publication_status', targetEntity: Publication::class)]
+    #[Ignore]
+    private $publications;
+
+    public function __construct()
+    {
+        $this->publications = new ArrayCollection();
+    }
 
     #[ORM\PrePersist]
     public function onPrePersist(): void
@@ -49,6 +63,36 @@ class PublicationStatus
     public function onPreUpdate(): void
     {
         $this->updated_at = new \DateTime("now");
+    }
+
+    /**
+     * @return Collection<int, Publication>
+     */
+    public function getPublications(): Collection
+    {
+        return $this->publications;
+    }
+
+    public function addPublication(Publication $publication): self
+    {
+        if (!$this->publications->contains($publication)) {
+            $this->publications[] = $publication;
+            $publication->setPublicationStatus($this);
+        }
+
+        return $this;
+    }
+
+    public function removePublication(Publication $publication): self
+    {
+        if ($this->publications->removeElement($publication)) {
+            // set the owning side to null (unless already changed)
+            if ($publication->getPublicationStatus() === $this) {
+                $publication->setPublicationStatus(null);
+            }
+        }
+
+        return $this;
     }
 
     public function getId(): ?string
@@ -148,23 +192,6 @@ class PublicationStatus
     public function setUuid(string $uuid): self
     {
         $this->uuid = $uuid;
-
-        return $this;
-    }
-
-    public function getPublication(): ?Publication
-    {
-        return $this->publication;
-    }
-
-    public function setPublication(?Publication $publication): self
-    {
-        // set the owning side of the relation if necessary
-        if ($publication !== null && $publication->getPublicationStatus() !== $this) {
-            $publication->setPublicationStatus($this);
-        }
-
-        $this->publication = $publication;
 
         return $this;
     }

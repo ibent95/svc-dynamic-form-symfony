@@ -50,11 +50,13 @@ class PublicationGeneralType
     #[Ignore]
     private $publication_type;
 
-    #[ORM\OneToOne(mappedBy: 'publication_general_type', targetEntity: Publication::class, cascade: ['persist', 'remove'])]
-    private $publication;
+    #[ORM\OneToMany(mappedBy: 'publication_general_type', targetEntity: Publication::class)]
+    #[Ignore]
+    private $publications;
 
     public function __construct()
     {
+        $this->publications = new ArrayCollection();
         $this->publication_type = new ArrayCollection();
     }
 
@@ -68,6 +70,36 @@ class PublicationGeneralType
     public function onPreUpdate(): void
     {
         $this->updated_at = new \DateTime("now");
+    }
+
+    /**
+     * @return Collection<int, Publication>
+     */
+    public function getPublications(): Collection
+    {
+        return $this->publications;
+    }
+
+    public function addPublication(Publication $publication): self
+    {
+        if (!$this->publications->contains($publication)) {
+            $this->publications[] = $publication;
+            $publication->setPublicationGeneralType($this);
+        }
+
+        return $this;
+    }
+
+    public function removePublication(Publication $publication): self
+    {
+        if ($this->publications->removeElement($publication)) {
+            // set the owning side to null (unless already changed)
+            if ($publication->getPublicationGeneralType() === $this) {
+                $publication->setPublicationGeneralType(null);
+            }
+        }
+
+        return $this;
     }
 
     public function getId(): ?string
@@ -197,23 +229,6 @@ class PublicationGeneralType
                 $publicationType->setPublicationGeneralType(null);
             }
         }
-
-        return $this;
-    }
-
-    public function getPublication(): ?Publication
-    {
-        return $this->publication;
-    }
-
-    public function setPublication(?Publication $publication): self
-    {
-        // set the owning side of the relation if necessary
-        if ($publication !== null && $publication->getPublicationGeneralType() !== $this) {
-            $publication->setPublicationGeneralType($this);
-        }
-
-        $this->publication = $publication;
 
         return $this;
     }
