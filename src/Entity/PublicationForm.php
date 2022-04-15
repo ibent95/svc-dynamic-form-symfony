@@ -24,55 +24,63 @@ class PublicationForm
     private $form_parent_id;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    #[Ignore]
+    //#[Ignore]
     private $field_label;
 
     #[ORM\Column(type: 'string', length: 100)]
-    #[Ignore]
+    //#[Ignore]
     private $field_type;
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
-    #[Ignore]
+    //#[Ignore]
     private $field_name;
 
     #[ORM\Column(type: 'string', length: 100)]
-    #[Ignore]
+    //#[Ignore]
     private $field_id;
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
-    #[Ignore]
+    //#[Ignore]
     private $field_class;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    #[Ignore]
+    //#[Ignore]
     private $field_placeholder;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     #[Ignore]
     private $field_options;
 
+    #[ORM\Column(type: 'json', nullable: true)]
+    //#[Ignore]
+    private $field_configs = [];
+
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    #[Ignore]
+    //#[Ignore]
     private $description;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    #[Ignore]
-    private $error_message;
-
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    #[Ignore]
-    private $validation_config;
+    #[ORM\Column(type: 'integer', nullable: true)]
+    //#[Ignore]
+    private $order_position;
 
     #[ORM\Column(type: 'json', nullable: true)]
-    #[Ignore]
+    //#[Ignore]
+    private $validation_config = [];
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    //#[Ignore]
+    private $error_message;
+
+    #[ORM\Column(type: 'json', nullable: true)]
+    //#[Ignore]
     private $dependency_child = [];
 
     #[ORM\Column(type: 'json', nullable: true)]
-    #[Ignore]
+    //#[Ignore]
     private $dependency_parent = [];
 
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
-    #[Ignore]
+    //#[Ignore]
     private $flag_required;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
@@ -227,6 +235,18 @@ class PublicationForm
         return $this;
     }
 
+    public function getFieldConfigs(): ?array
+    {
+        return $this->field_configs;
+    }
+
+    public function setFieldConfigs(?array $field_configs): self
+    {
+        $this->field_configs = $field_configs;
+
+        return $this;
+    }
+
     public function getDescription(): ?string
     {
         return $this->description;
@@ -239,6 +259,30 @@ class PublicationForm
         return $this;
     }
 
+    public function getOrderPosition(): ?int
+    {
+        return $this->order_position;
+    }
+
+    public function setOrderPosition(?int $order_position): self
+    {
+        $this->order_position = $order_position;
+
+        return $this;
+    }
+
+    public function getValidationConfig(): ?array
+    {
+        return $this->validation_config;
+    }
+
+    public function setValidationConfig(?array $validation_config): self
+    {
+        $this->validation_config = $validation_config;
+
+        return $this;
+    }
+
     public function getErrorMessage(): ?string
     {
         return $this->error_message;
@@ -247,18 +291,6 @@ class PublicationForm
     public function setErrorMessage(?string $error_message): self
     {
         $this->error_message = $error_message;
-
-        return $this;
-    }
-
-    public function getValidationConfig(): ?string
-    {
-        return $this->validation_config;
-    }
-
-    public function setValidationConfig(?string $validation_config): self
-    {
-        $this->validation_config = $validation_config;
 
         return $this;
     }
@@ -376,7 +408,6 @@ class PublicationForm
         return $this;
     }
 
-    #[Ignore]
     public function getPublicationFormVersion(): ?PublicationFormVersion
     {
         return $this->publicationFormVersion;

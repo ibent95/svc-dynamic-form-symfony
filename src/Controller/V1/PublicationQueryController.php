@@ -59,6 +59,16 @@ class PublicationQueryController extends AbstractController
 			'data'      => [],
 		];
 		$this->responseStatusCode   = 400;
+
+		$field_config = [
+			'orientation' => 'horizontal',
+			'linear' => true,
+		];
+
+		$validation_config = [
+			'pattern' => 'horizontal',
+			'error_message' => true,
+		];
 	}
 
 	/** ================================ Required functions for publication ================================ */

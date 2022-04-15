@@ -152,6 +152,7 @@ class PublicationType
         return $this;
     }
 
+    #[Ignore]
     public function getFlagActive(): ?bool
     {
         return $this->flag_active;
@@ -164,6 +165,7 @@ class PublicationType
         return $this;
     }
 
+    #[Ignore]
     public function getCreatedUser(): ?string
     {
         return $this->created_user;
@@ -176,6 +178,7 @@ class PublicationType
         return $this;
     }
 
+    #[Ignore]
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -188,6 +191,7 @@ class PublicationType
         return $this;
     }
 
+    #[Ignore]
     public function getUpdatedUser(): ?string
     {
         return $this->updated_user;
@@ -200,6 +204,7 @@ class PublicationType
         return $this;
     }
 
+    #[Ignore]
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updated_at;

@@ -51,7 +51,7 @@ class PublicationFormVersion
     #[Ignore]
     protected $publicationType;
 
-    #[ORM\OneToMany(mappedBy: 'publicationFormVersion', targetEntity: PublicationForm::class)]
+    #[ORM\OneToMany(mappedBy: 'publicationFormVersion', targetEntity: PublicationForm::class)] // $element['field_type'] === 'wizard'
     #[Ignore]
     protected $publicationForms;
 
@@ -136,6 +136,7 @@ class PublicationFormVersion
         return $this;
     }
 
+    #[Ignore]
     public function getFlagActive(): ?bool
     {
         return $this->flag_active;
@@ -148,6 +149,7 @@ class PublicationFormVersion
         return $this;
     }
 
+    #[Ignore]
     public function getCreatedUser(): ?string
     {
         return $this->created_user;
@@ -160,6 +162,7 @@ class PublicationFormVersion
         return $this;
     }
 
+    #[Ignore]
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -172,6 +175,7 @@ class PublicationFormVersion
         return $this;
     }
 
+    #[Ignore]
     public function getUpdatedUser(): ?string
     {
         return $this->updated_user;
@@ -184,6 +188,7 @@ class PublicationFormVersion
         return $this;
     }
 
+    #[Ignore]
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updated_at;
@@ -221,29 +226,29 @@ class PublicationFormVersion
     }
 
     /**
-     * @return Collection<int, Form>
+     * @return Collection<int, PublicationForm>
      */
     public function getPublicationForms(): Collection
     {
         return $this->publicationForms;
     }
 
-    public function addPublicationForm(PublicationForm $publicationForms): self
+    public function addPublicationForm(PublicationForm $publicationForm): self
     {
-        if (!$this->publicationForms->contains($publicationForms)) {
-            $this->publicationForms[] = $publicationForms;
-            $publicationForms->setPublicationFormVersion($this);
+        if (!$this->publicationForms->contains($publicationForm)) {
+            $this->publicationForms[] = $publicationForm;
+            $publicationForm->setPublicationFormVersion($this);
         }
 
         return $this;
     }
 
-    public function removePublicationForm(PublicationForm $publicationForms): self
+    public function removePublicationForm(PublicationForm $publicationForm): self
     {
-        if ($this->publicationForms->removeElement($publicationForms)) {
+        if ($this->publicationForms->removeElement($publicationForm)) {
             // set the owning side to null (unless already changed)
-            if ($publicationForms->getPublicationFormVersion() === $this) {
-                $publicationForms->setPublicationFormVersion(null);
+            if ($publicationForm->getPublicationFormVersion() === $this) {
+                $publicationForm->setPublicationFormVersion(null);
             }
         }
 
