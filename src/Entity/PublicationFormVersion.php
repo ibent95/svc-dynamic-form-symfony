@@ -24,6 +24,9 @@ class PublicationFormVersion
     #[Ignore]
     protected $publication_form_version_code;
 
+    #[ORM\Column(type: 'json', nullable: true, options: ['default' => '{"type":"no_grid_system","cols":12,"config":{}}'])] // '{"type":"no_grid_system","cols":12,"config":{}}'
+    private $grid_system = [];
+
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
     #[Ignore]
     protected $flag_active;
@@ -132,6 +135,18 @@ class PublicationFormVersion
     public function setPublicationFormVersionCode(string $publication_form_version_code): self
     {
         $this->publication_form_version_code = $publication_form_version_code;
+
+        return $this;
+    }
+
+    public function getGridSystem(): ?array
+    {
+        return $this->grid_system;
+    }
+
+    public function setGridSystem(?array $grid_system): self
+    {
+        $this->grid_system = $grid_system;
 
         return $this;
     }

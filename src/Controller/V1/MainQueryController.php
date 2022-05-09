@@ -17,9 +17,9 @@ class MainQueryController extends AbstractController
     {
         $this->logger = $logger;
         $this->responseData = [
-            'info' => '',
-            'message' => '',
-            'data' => [],
+            'info'      => '',
+            'message'   => '',
+            'data'      => [],
         ];
         $this->responseStatusCode = 400;
     }
@@ -29,11 +29,11 @@ class MainQueryController extends AbstractController
     {
         $this->logger->info('The root route has been accessed!');
 
-        $this->responseData['info'] = 'success';
-        $this->responseData['message'] = 'Welcome to Dynamic Form service with Symfony 6.';
-        $this->responseData['data'] = [
-            'message' => 'Welcome to Dynamic Form service with Symfony 6.',
-            'date' => date('Y-m-d'),
+        $this->responseData['info']     = 'success';
+        $this->responseData['message']  = 'Welcome to Dynamic Form service with Symfony 6.';
+        $this->responseData['data']     = [
+            'message'   => 'Welcome to Dynamic Form service with Symfony 6.',
+            'date'      => date('Y-m-d'),
         ];
 
         $this->responseStatusCode = 200;

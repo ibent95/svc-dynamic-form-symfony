@@ -53,7 +53,7 @@ class PublicationForm
 
     #[ORM\Column(type: 'json', nullable: true)]
     //#[Ignore]
-    private $field_configs = [];
+    private $field_config = [];
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     //#[Ignore]
@@ -235,14 +235,14 @@ class PublicationForm
         return $this;
     }
 
-    public function getFieldConfigs(): ?array
+    public function getFieldConfig(): ?array
     {
-        return $this->field_configs;
+        return $this->field_config;
     }
 
-    public function setFieldConfigs(?array $field_configs): self
+    public function setFieldConfig(?array $field_config): self
     {
-        $this->field_configs = $field_configs;
+        $this->field_configs = $field_config;
 
         return $this;
     }
