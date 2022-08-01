@@ -53,7 +53,7 @@ class PublicationForm
 
     #[ORM\Column(type: 'json', nullable: true)]
     //#[Ignore]
-    private $field_config = [];
+    private $field_configs = [];
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     //#[Ignore]
@@ -65,7 +65,7 @@ class PublicationForm
 
     #[ORM\Column(type: 'json', nullable: true)]
     //#[Ignore]
-    private $validation_config = [];
+    private $validation_configs = [];
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     //#[Ignore]
@@ -235,14 +235,14 @@ class PublicationForm
         return $this;
     }
 
-    public function getFieldConfig(): ?array
+    public function getFieldConfigs(): ?array
     {
-        return $this->field_config;
+        return $this->field_configs;
     }
 
-    public function setFieldConfig(?array $field_config): self
+    public function setFieldConfigs(?array $field_configs): self
     {
-        $this->field_configs = $field_config;
+        $this->field_configss = $field_configs;
 
         return $this;
     }
@@ -271,14 +271,14 @@ class PublicationForm
         return $this;
     }
 
-    public function getValidationConfig(): ?array
+    public function getValidationConfigs(): ?array
     {
-        return $this->validation_config;
+        return $this->validation_configs;
     }
 
-    public function setValidationConfig(?array $validation_config): self
+    public function setValidationConfigs(?array $validation_configs): self
     {
-        $this->validation_config = $validation_config;
+        $this->validation_configs = $validation_configs;
 
         return $this;
     }

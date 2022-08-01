@@ -167,7 +167,7 @@ class Common {
 		foreach ($elements as $element) {
 
 			// Set grid config
-			$element['field_config'] = $this->setGridConfig($element, $gridSystem) ;
+			$element['field_configs'] = $this->setGridConfig($element, $gridSystem) ;
 
 			/**
 			 * Main command in this recursive function.
@@ -287,7 +287,7 @@ class Common {
 		$elementGridConfig = $gridSystem['config'][$element['field_id']] ?? NULL;
 
 		// Merge current element`s or field`s config with grid system config
-		$result = ($element && $elementGridConfig) ? array_merge($element['field_config'] ?: [], $elementGridConfig ?: []) : $element['field_config'] ;
+		$result = ($element && $elementGridConfig) ? array_merge($element['field_config'] ?: [], $elementGridConfig ?: []) : $element['field_configs'] ;
 
 		return $result;
 	}
