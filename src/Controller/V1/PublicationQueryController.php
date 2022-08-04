@@ -60,7 +60,282 @@ class PublicationQueryController extends AbstractController
         ];
         $this->responseStatusCode   = 400;
 
-        $field_config = [
+        $formVersion['grid_system']['bootstrap'] = [
+            'type' => 'bootstrap',
+            'cols' => 12,
+            'config' => [
+                'text_1' => [
+                    'colspan' => 3,
+                    'rowspan' => 2,
+                ],
+                'select_1' => [
+                    'colspan' => 3,
+                    'rowspan' => 2,
+                ],
+                'try_stepper_1' => [
+                    'colspan' => 6,
+                    'rowspan' => 6,
+                ],
+                'try_stepper_1_step_1' => [
+                    'colspan' => 12,
+                    'rowspan' => 1,
+                ],
+                'date_2' => [
+                    'colspan' => 6,
+                    'rowspan' => 1,
+                ],
+                'month_2' => [
+                    'colspan' => 6,
+                    'rowspan' => 1,
+                ],
+                'year_2' => [
+                    'colspan' => 6,
+                    'rowspan' => 1,
+                ],
+                'time_1' => [
+                    'colspan' => 6,
+                    'rowspan' => 1,
+                ],
+                'datetime_1' => [
+                    'colspan' => 6,
+                    'rowspan' => 1,
+                ],
+                'daterange_1' => [
+                    'colspan' => 6,
+                    'rowspan' => 1,
+                ],
+                'timerange_1' => [
+                    'colspan' => 6,
+                    'rowspan' => 1,
+                ],
+                'datetimerange_1' => [
+                    'colspan' => 6,
+                    'rowspan' => 1,
+                ],
+                'try_stepper_1_step_2' => [
+                    'colspan' => 12,
+                    'rowspan' => 1,
+                ],
+                'text_2' => [
+                    'colspan' => 6,
+                    'rowspan' => 1,
+                ],
+                'url_1' => [
+                    'colspan' => 6,
+                    'rowspan' => 1,
+                ],
+                'select_2' => [
+                    'colspan' => 6,
+                    'rowspan' => 1,
+                ],
+                'date_1' => [
+                    'colspan' => 6,
+                    'rowspan' => 1,
+                ],
+                'month_1' => [
+                    'colspan' => 6,
+                    'rowspan' => 1,
+                ],
+                'year_1' => [
+                    'colspan' => 6,
+                    'rowspan' => 1,
+                ],
+                'try_stepper_1_step_3' => [
+                    'colspan' => 12,
+                    'rowspan' => 1,
+                ],
+                'select_3' => [
+                    'colspan' => 6,
+                    'rowspan' => 1,
+                ],
+                'select_4' => [
+                    'colspan' => 6,
+                    'rowspan' => 1,
+                ],
+                'select_5' => [
+                    'colspan' => 6,
+                    'rowspan' => 1,
+                ],
+                'number_1' => [
+                    'colspan' => 6,
+                    'rowspan' => 1,
+                ],
+                'url_2' => [
+                    'colspan' => 3,
+                    'rowspan' => 1,
+                ],
+                'number_2' => [
+                    'colspan' => 3,
+                    'rowspan' => 1,
+                ],
+                'try_accordion_1' => [
+                    'colspan' => 6,
+                    'rowspan' => 12,
+                ],
+                'try_accordion_1_panel_1' => [
+                    'colspan' => 12,
+                    'rowspan' => 1,
+                ],
+                'text_3' => [
+                    'colspan' => 4,
+                    'rowspan' => 1,
+                ],
+                'url_3' => [
+                    'colspan' => 4,
+                    'rowspan' => 1,
+                ],
+                'number_3' => [
+                    'colspan' => 4,
+                    'rowspan' => 1,
+                ],
+                'try_accordion_1_panel_2' => [
+                    'colspan' => 12,
+                    'rowspan' => 1,
+                ],
+                'select_6' => [
+                    'colspan' => 4,
+                    'rowspan' => 1,
+                ],
+                'select_7' => [
+                    'colspan' => 4,
+                    'rowspan' => 1,
+                ],
+                'try_accordion_1_panel_3' => [
+                    'colspan' => 12,
+                    'rowspan' => 1,
+                ],
+                'select_8' => [
+                    'colspan' => 4,
+                    'rowspan' => 1,
+                ],
+                'select_9' => [
+                    'colspan' => 4,
+                    'rowspan' => 1,
+                ],
+            ],
+        ];
+
+        $formVersion['grid_system']['tailwind'] = [
+            'type' => 'tailwind',
+            'cols' => 12,
+            'config' => [
+                'text_1' => [
+                    'colspan' => 3,
+                ],
+                'select_1' => [
+                    'colspan' => 3,
+                ],
+                'try_stepper_1' => [
+                    'colspan' => 6,
+                    'rowspan' => 6,
+                ],
+                'try_stepper_1_step_1' => [
+                    'colspan' => 12,
+                ],
+                'date_2' => [
+                    'colspan' => 6,
+                ],
+                'month_2' => [
+                    'colspan' => 6,
+                ],
+                'year_2' => [
+                    'colspan' => 6,
+                ],
+                'time_1' => [
+                    'colspan' => 6,
+                ],
+                'datetime_1' => [
+                    'colspan' => 6,
+                ],
+                'daterange_1' => [
+                    'colspan' => 6,
+                ],
+                'timerange_1' => [
+                    'colspan' => 6,
+                ],
+                'datetimerange_1' => [
+                    'colspan' => 6,
+                ],
+                'try_stepper_1_step_2' => [
+                    'colspan' => 12,
+                ],
+                'text_2' => [
+                    'colspan' => 6,
+                ],
+                'url_1' => [
+                    'colspan' => 6,
+                ],
+                'select_2' => [
+                    'colspan' => 6,
+                ],
+                'date_1' => [
+                    'colspan' => 6,
+                ],
+                'month_1' => [
+                    'colspan' => 6,
+                ],
+                'year_1' => [
+                    'colspan' => 6,
+                ],
+                'try_stepper_1_step_3' => [
+                    'colspan' => 12,
+                ],
+                'select_3' => [
+                    'colspan' => 6,
+                ],
+                'select_4' => [
+                    'colspan' => 6,
+                ],
+                'select_5' => [
+                    'colspan' => 6,
+                ],
+                'number_1' => [
+                    'colspan' => 6,
+                ],
+                'url_2' => [
+                    'colspan' => 3,
+                ],
+                'number_2' => [
+                    'colspan' => 3,
+                ],
+                'try_accordion_1' => [
+                    'colspan' => 6,
+                    'rowspan' => 12,
+                ],
+                'try_accordion_1_panel_1' => [
+                    'colspan' => 12,
+                ],
+                'text_3' => [
+                    'colspan' => 4,
+                ],
+                'url_3' => [
+                    'colspan' => 4,
+                ],
+                'number_3' => [
+                    'colspan' => 4,
+                ],
+                'try_accordion_1_panel_2' => [
+                    'colspan' => 12,
+                ],
+                'select_6' => [
+                    'colspan' => 4,
+                ],
+                'select_7' => [
+                    'colspan' => 4,
+                ],
+                'try_accordion_1_panel_3' => [
+                    'colspan' => 12,
+                ],
+                'select_8' => [
+                    'colspan' => 4,
+                ],
+                'select_9' => [
+                    'colspan' => 4,
+                ],
+            ],
+        ];
+
+        $field_configs = [
             'orientation'   => 'horizontal',
             'linear'        => true,
         ];
@@ -224,7 +499,7 @@ class PublicationQueryController extends AbstractController
             $this->responseData['message']  = 'Success to get publication form metadata!';
             $this->responseStatusCode       = 200;
 
-            $this->logger->info('Get publication form: ' . json_encode($this->responseData['data']));
+            $this->logger->info('Get publication form: ' . $publicationType->getPublicationTypeName()); // . json_encode($this->responseData['data'])
         } catch (\Exception $e) {
             $this->responseData['message']  = 'Error on get publication form metadata!';
             $this->responseStatusCode       = 400;

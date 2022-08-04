@@ -287,7 +287,7 @@ class Common {
 		$elementGridConfig = $gridSystem['config'][$element['field_id']] ?? NULL;
 
 		// Merge current element`s or field`s config with grid system config
-		$result = ($element && $elementGridConfig) ? array_merge($element['field_config'] ?: [], $elementGridConfig ?: []) : $element['field_configs'] ;
+		$result = ($element && $elementGridConfig) ? array_merge($element['field_configs'] ?: [], $elementGridConfig ?: []) : $element['field_configs'] ;
 
 		return $result;
 	}
