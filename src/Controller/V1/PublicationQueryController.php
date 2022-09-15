@@ -220,10 +220,10 @@ class PublicationQueryController extends AbstractController
             'cols' => 12,
             'config' => [
                 'text_1' => [
-                    'colspan' => 3,
+                    'colspan' => 6,
                 ],
                 'select_1' => [
-                    'colspan' => 3,
+                    'colspan' => 6,
                 ],
                 'try_stepper_1' => [
                     'colspan' => 6,
