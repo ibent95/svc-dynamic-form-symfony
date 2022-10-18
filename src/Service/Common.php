@@ -142,36 +142,51 @@ class Common {
 		return $result;
 	}
 
-	function setFields(array $flatArray)
+	/**
+	 * Function to set grid system, organize array recursive data from flat array data, also clean the array recursive data
+	 */
+	function setFields(Array $flatArray, Array $gridSystem = NULL): Array
 	{
+
 		// Set the array from flat to recursive
-		$recursive = $this->setRecursiveFields('id', 'form_parent_id', $flatArray);
+		$recursiveData = $this->setRecursiveFields('id', 'form_parent_id', $flatArray, NULL, $gridSystem);
 
 		// Clean property of recursive data
-		$data = $this->cleanFields(["id", "form_version_id", "form_parent_id", "order", "flag_judul_publikasi", "flag_tgl_publikasi", "flag_peran"], $recursive);
+		$data = $this->cleanFields(["id", "form_version_id", "form_parent_id", "order", "flag_judul_publikasi", "flag_tgl_publikasi", "flag_peran"], $recursiveData);
 
 		// Return data
 		return $data;
 	}
 
-	function setRecursiveFields($idField, $idParentField, array &$elements = [], String $parentId = NULL)
+	/**
+	 * Recursive function to set array recursive data from flat array data
+	 */
+	function setRecursiveFields(String $uniqueField, String $idParentField, Array &$elements = [], String $parentId = NULL, Array $gridSystem = NULL): Array
 	{
 		$branch = [];
 		foreach ($elements as $element) {
+
+			// Set grid config
+			$element['field_configs'] = $this->setGridConfig($element, $gridSystem) ;
+
+			/**
+			 * Main command in this recursive function.
+			 * If the id of current element equal to the id of parent element,
+			 * then run recursive function and other command.
+			 */
 			if ($element[$idParentField] == $parentId) {
-				$exprBuilder 			= Criteria::expr();
-				//$criteria 				= new Criteria();
+				$exprBuilder			= Criteria::expr();
 
 				// Run recursive search
-				$children 				= $this->setRecursiveFields($idField, $idParentField, $elements, $element[$idField]);
+				$children				= $this->setRecursiveFields($uniqueField, $idParentField, $elements, $element[$uniqueField], $gridSystem);
 
 				//
 				if ($element['dependency_parent'] || $element['dependency_child']) {
-					$dependencyParent 				= json_decode($element['dependency_parent']);
-					$dependencyChild 				= json_decode($element['dependency_child'])	;
+					$dependencyParent				= json_decode($element['dependency_parent']);
+					$dependencyChild				= json_decode($element['dependency_child'])	;
 
-					$element['dependency_parent'] 	= (is_array($dependencyParent)) ? $dependencyParent : $element['dependency_parent']	;
-					$element['dependency_child'] 	= (is_array($dependencyChild)) 	? $dependencyChild 	: $element['dependency_child']	;
+					$element['dependency_parent']	= (is_array($dependencyParent)) ? $dependencyParent : $element['dependency_parent'] ;
+					$element['dependency_child']	= (is_array($dependencyChild))	? $dependencyChild	: $element['dependency_child'] ;
 				}
 
 				$element['children'] = ($children) ? $children : [];
@@ -189,20 +204,20 @@ class Common {
 					//];
 
 					$element['children'][] = [
-						"field_label" 			=> NULL,
-						"field_id" 				=> NULL,
-						"field_type" 			=> "hidden",
-						"field_class" 			=> NULL,
-						"field_name" 			=> "uuid_" . $element['field_name'],
-						"field_placeholder" 	=> NULL,
-						"field_options" 		=> NULL,
-						"default_value" 		=> NULL,
-						"validation_config" 	=> NULL,
-						"flag_multiple_field" 	=> 0,
-						"order_position" 		=> 1,
-						"uuid" 					=> NULL,
-						"options" 				=> [],
-						"children" 				=> []
+						"field_label"			=> NULL,
+						"field_id"				=> NULL,
+						"field_type"			=> "hidden",
+						"field_class"			=> NULL,
+						"field_name"			=> "uuid_" . $element['field_name'],
+						"field_placeholder"		=> NULL,
+						"field_options"			=> NULL,
+						"default_value"			=> NULL,
+						"validation_config"		=> NULL,
+						"flag_multiple_field"	=> 0,
+						"order_position"		=> 1,
+						"uuid"					=> NULL,
+						"options"				=> [],
+						"children"				=> []
 					];
 				}
 
@@ -213,23 +228,27 @@ class Common {
 				);
 
 				// Search multiple field in children data
-				$childrenCollection 			= new ArrayCollection($children);
-				$childrenCollectionMatch 		= $childrenCollection->matching(new Criteria($criteria));
-				$childrenCount 					= $childrenCollectionMatch->count();
+				$childrenCollection				= new ArrayCollection($children);
+				$childrenCollectionMatch		= $childrenCollection->matching(new Criteria($criteria));
+				$childrenCount					= $childrenCollectionMatch->count();
 
 				// Define flag_multiple_field set it`s value to true if multiple field found in children data
 				$element['flag_multiple_field'] = (($element['field_type'] == 'wizard' || $element['field_type'] == 'stepper') && (count($children) > 0) && ($childrenCount > 0)) ? TRUE : FALSE ;
 
 				// Handling or setting grid configuration
 
-				$branch[] 						= $element;
-				//unset($elements[$element[$idField]]);
+				$branch[]						= $element;
+				//unset($elements[$element[$uniqueField]]);
+
 			}
 		}
 		return $branch;
 	}
 
-	function cleanFields(array $acceptableFields, array &$elements = [])
+	/**
+	 * Recursive function to remove unwanted property in array recursive data
+	 */
+	function cleanFields(Array $acceptableFields, Array &$elements = []): Array
 	{
 		// Initial result variable
 		$result = [];
@@ -253,6 +272,23 @@ class Common {
 
 			$result[] = $elementCollections;
 		}
+		return $result;
+	}
+
+	/**
+	 * Set grid config (grid system)
+	 */
+	function setGridConfig(Array $element, $gridSystem): Array | NULL
+	{
+		// Initial result data
+		$result = NULL;
+
+		// Get element`s or field`s grid system config
+		$elementGridConfig = $gridSystem['config'][$element['field_id']] ?? NULL;
+
+		// Merge current element`s or field`s config with grid system config
+		$result = ($element && $elementGridConfig) ? array_merge($element['field_configs'] ?: [], $elementGridConfig ?: []) : $element['field_configs'] ;
+
 		return $result;
 	}
 
