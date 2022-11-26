@@ -62,15 +62,35 @@ class PublicationTypeRepository extends ServiceEntityRepository
     }
     */
 
-    /*
-    public function findOneBySomeField($value): ?PublicationType
+    public function findByCode($code): ?PublicationType
     {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.exampleField = :val')
-            ->setParameter('val', $value)
+        return $this->createQueryBuilder('pt')
+            ->andWhere('pt. = :code')
+            ->setParameter('code', $code)
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+
+    public function findOneByCode($code): ?PublicationType
+    {
+        return $this->createQueryBuilder('pt')
+            ->andWhere('pt.publication_type_code = :code')
+            ->setParameter('code', $code)
             ->getQuery()
             ->getOneOrNullResult()
         ;
     }
-    */
+
+    public function findActiveOneByCode($code): ?PublicationType
+    {
+        return $this->createQueryBuilder('pt')
+            ->andWhere('pt.publication_type_code = :code')
+            ->andWhere('pt.flag_active = true')
+            ->setParameter('code', $code)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+    }
+
 }

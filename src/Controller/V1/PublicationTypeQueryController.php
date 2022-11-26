@@ -3,7 +3,7 @@
 namespace App\Controller\V1;
 
 use App\Entity\PublicationType;
-use App\Service\Common;
+use App\Service\CommonService;
 
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Persistence\ManagerRegistry;
@@ -57,7 +57,7 @@ class PublicationTypeQueryController extends AbstractController
     }
 
     #[Route('/api/v1/publication-types', methods: ['GET'], name: 'app_v1_publication_types')]
-    public function getAll(ManagerRegistry $doctrine, Common $common): JsonResponse
+    public function getAll(ManagerRegistry $doctrine, CommonService $common): JsonResponse
     {
         $entityManager                  = $doctrine->getManager();
 
@@ -88,7 +88,7 @@ class PublicationTypeQueryController extends AbstractController
     }
 
     #[Route('/api/v1/master/publication-type', methods: ['GET'], name: 'app_v1_master_publication_type')]
-    public function getMasterDataAll(ManagerRegistry $doctrine, Common $common): JsonResponse
+    public function getMasterDataAll(ManagerRegistry $doctrine, CommonService $common): JsonResponse
     {
         $entityManager                  = $doctrine->getManager();
 

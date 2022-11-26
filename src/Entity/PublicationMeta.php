@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\PublicationMetaRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
@@ -190,6 +191,11 @@ class PublicationMeta
         $this->publication = $publication;
 
         return $this;
+    }
+
+    public function isFlagActive(): ?bool
+    {
+        return $this->flag_active;
     }
 
 }
