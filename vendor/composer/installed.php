@@ -5,7 +5,7 @@
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => '055e09a6569c63b96be771a22d9260bee812bd5c',
+        'reference' => 'a7dc03522a329ca0e762f5950757fb4c8e157365',
         'name' => '__root__',
         'dev' => true,
     ),
@@ -16,7 +16,7 @@
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => '055e09a6569c63b96be771a22d9260bee812bd5c',
+            'reference' => 'a7dc03522a329ca0e762f5950757fb4c8e157365',
             'dev_requirement' => false,
         ),
         'doctrine/annotations' => array(
@@ -642,6 +642,15 @@
             'install_path' => __DIR__ . '/../symfony/proxy-manager-bridge',
             'aliases' => array(),
             'reference' => 'bcb3e7a28ee373bd64ecd2a2289a64c5860716af',
+            'dev_requirement' => false,
+        ),
+        'symfony/requirements-checker' => array(
+            'pretty_version' => 'v2.0.1',
+            'version' => '2.0.1.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../symfony/requirements-checker',
+            'aliases' => array(),
+            'reference' => 'cf8893f384348a338157d637e170fe8fb2356016',
             'dev_requirement' => false,
         ),
         'symfony/routing' => array(

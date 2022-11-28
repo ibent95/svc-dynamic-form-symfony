@@ -33,6 +33,7 @@ class ComposerStaticInit9d30e14add22c29681fea677ff4ed27a
         'S' => 
         array (
             'Symfony\\Runtime\\Symfony\\Component\\' => 34,
+            'Symfony\\Requirements\\' => 21,
             'Symfony\\Polyfill\\Uuid\\' => 22,
             'Symfony\\Polyfill\\Mbstring\\' => 26,
             'Symfony\\Polyfill\\Intl\\Normalizer\\' => 33,
@@ -147,6 +148,10 @@ class ComposerStaticInit9d30e14add22c29681fea677ff4ed27a
         'Symfony\\Runtime\\Symfony\\Component\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/runtime/Internal',
+        ),
+        'Symfony\\Requirements\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/symfony/requirements-checker/src',
         ),
         'Symfony\\Polyfill\\Uuid\\' => 
         array (
@@ -4321,6 +4326,11 @@ class ComposerStaticInit9d30e14add22c29681fea677ff4ed27a
         'Symfony\\Polyfill\\Intl\\Normalizer\\Normalizer' => __DIR__ . '/..' . '/symfony/polyfill-intl-normalizer/Normalizer.php',
         'Symfony\\Polyfill\\Mbstring\\Mbstring' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/Mbstring.php',
         'Symfony\\Polyfill\\Uuid\\Uuid' => __DIR__ . '/..' . '/symfony/polyfill-uuid/Uuid.php',
+        'Symfony\\Requirements\\PhpConfigRequirement' => __DIR__ . '/..' . '/symfony/requirements-checker/src/PhpConfigRequirement.php',
+        'Symfony\\Requirements\\ProjectRequirements' => __DIR__ . '/..' . '/symfony/requirements-checker/src/ProjectRequirements.php',
+        'Symfony\\Requirements\\Requirement' => __DIR__ . '/..' . '/symfony/requirements-checker/src/Requirement.php',
+        'Symfony\\Requirements\\RequirementCollection' => __DIR__ . '/..' . '/symfony/requirements-checker/src/RequirementCollection.php',
+        'Symfony\\Requirements\\SymfonyRequirements' => __DIR__ . '/..' . '/symfony/requirements-checker/src/SymfonyRequirements.php',
         'Symfony\\Runtime\\Symfony\\Component\\Console\\ApplicationRuntime' => __DIR__ . '/..' . '/symfony/runtime/Internal/Console/ApplicationRuntime.php',
         'Symfony\\Runtime\\Symfony\\Component\\Console\\Command\\CommandRuntime' => __DIR__ . '/..' . '/symfony/runtime/Internal/Console/Command/CommandRuntime.php',
         'Symfony\\Runtime\\Symfony\\Component\\Console\\Input\\InputInterfaceRuntime' => __DIR__ . '/..' . '/symfony/runtime/Internal/Console/Input/InputInterfaceRuntime.php',
