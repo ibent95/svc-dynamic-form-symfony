@@ -5,9 +5,9 @@
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => 'a7dc03522a329ca0e762f5950757fb4c8e157365',
+        'reference' => '21654e8577162b6bd6cebcc7f7d511097001934a',
         'name' => '__root__',
-        'dev' => true,
+        'dev' => false,
     ),
     'versions' => array(
         '__root__' => array(
@@ -16,7 +16,7 @@
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => 'a7dc03522a329ca0e762f5950757fb4c8e157365',
+            'reference' => '21654e8577162b6bd6cebcc7f7d511097001934a',
             'dev_requirement' => false,
         ),
         'doctrine/annotations' => array(
@@ -198,15 +198,6 @@
             'aliases' => array(),
             'reference' => '0ee5ee30b0ee08ea122d431ae6e0ddeb87f035c0',
             'dev_requirement' => false,
-        ),
-        'nikic/php-parser' => array(
-            'pretty_version' => 'v4.15.2',
-            'version' => '4.15.2.0',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../nikic/php-parser',
-            'aliases' => array(),
-            'reference' => 'f59bbe44bf7d96f24f3e2b4ddc21cd52c1d2adbc',
-            'dev_requirement' => true,
         ),
         'ocramius/proxy-manager' => array(
             'dev_requirement' => false,
@@ -508,15 +499,6 @@
             'aliases' => array(),
             'reference' => '8fc1ffe753948c47a103a809cdd6a4a8458b3254',
             'dev_requirement' => false,
-        ),
-        'symfony/maker-bundle' => array(
-            'pretty_version' => 'v1.48.0',
-            'version' => '1.48.0.0',
-            'type' => 'symfony-bundle',
-            'install_path' => __DIR__ . '/../symfony/maker-bundle',
-            'aliases' => array(),
-            'reference' => '2e428e8432e9879187672fe08f1cc335e2a31dd6',
-            'dev_requirement' => true,
         ),
         'symfony/monolog-bridge' => array(
             'pretty_version' => 'v6.1.2',
