@@ -83,6 +83,15 @@ class PublicationForm
     //#[Ignore]
     private $flag_required;
 
+    #[ORM\Column(options: ['default' => false])]
+    private ?bool $flag_field_publication_type = null;
+
+    #[ORM\Column(options: ['default' => false])]
+    private ?bool $flag_field_title = null;
+
+    #[ORM\Column(options: ['default' => false])]
+    private ?bool $flag_field_publication_date = null;
+
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
     #[Ignore]
     private $flag_active;
@@ -327,6 +336,42 @@ class PublicationForm
     public function setFlagRequired(bool $flag_required): self
     {
         $this->flag_required = $flag_required;
+
+        return $this;
+    }
+
+    public function isFlagFieldPublicationType(): ?bool
+    {
+        return $this->flag_field_publication_type;
+    }
+
+    public function setFlagFieldPublicationType(bool $flag_field_publication_type): self
+    {
+        $this->flag_field_publication_type = $flag_field_publication_type;
+
+        return $this;
+    }
+
+    public function isFlagFieldTitle(): ?bool
+    {
+        return $this->flag_field_title;
+    }
+
+    public function setFlagFieldTitle(bool $flag_field_title): self
+    {
+        $this->flag_field_title = $flag_field_title;
+
+        return $this;
+    }
+
+    public function isFlagFieldPublicationDate(): ?bool
+    {
+        return $this->flag_field_publication_date;
+    }
+
+    public function setFlagFieldPublicationDate(bool $flag_field_publication_date): self
+    {
+        $this->flag_field_publication_date = $flag_field_publication_date;
 
         return $this;
     }

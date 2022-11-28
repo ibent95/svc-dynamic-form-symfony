@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\PublicationFormVersionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
@@ -15,6 +16,10 @@ class PublicationFormVersion
     #[ORM\Id, ORM\GeneratedValue(strategy: "IDENTITY"), ORM\Column(type: 'bigint', options: ["unsigned" => true])]
     #[Ignore]
     protected $id;
+
+    #[ORM\Column(type: 'bigint')]
+    //#[Ignore]
+    private $publication_type_id;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Ignore]
@@ -54,18 +59,18 @@ class PublicationFormVersion
     #[Ignore]
     protected $publicationType;
 
-    #[ORM\OneToMany(mappedBy: 'publicationFormVersion', targetEntity: PublicationForm::class)] // $element['field_type'] === 'wizard'
+    #[ORM\OneToMany(mappedBy: 'publicationFormVersion', targetEntity: PublicationForm::class)]
     #[Ignore]
     protected $publicationForms;
 
-    #[ORM\OneToMany(mappedBy: 'publication_form_version', targetEntity: Publication::class)]
+    #[ORM\OneToMany(mappedBy: 'publicationFormVersion', targetEntity: Publication::class)]
     #[Ignore]
     private $publications;
 
     public function __construct()
     {
-        $this->publications = new ArrayCollection();
         $this->publicationForms = new ArrayCollection();
+        $this->publications = new ArrayCollection();
     }
 
     #[ORM\PrePersist]
@@ -80,39 +85,21 @@ class PublicationFormVersion
         $this->updated_at = new \DateTime("now");
     }
 
-    /**
-     * @return Collection<int, Publication>
-     */
-    public function getPublications(): Collection
-    {
-        return $this->publications;
-    }
-
-    public function addPublication(Publication $publication): self
-    {
-        if (!$this->publications->contains($publication)) {
-            $this->publications[] = $publication;
-            $publication->setPublicationFormVersion($this);
-        }
-
-        return $this;
-    }
-
-    public function removePublication(Publication $publication): self
-    {
-        if ($this->publications->removeElement($publication)) {
-            // set the owning side to null (unless already changed)
-            if ($publication->getPublicationFormVersion() === $this) {
-                $publication->setPublicationFormVersion(null);
-            }
-        }
-
-        return $this;
-    }
-
     public function getId(): ?string
     {
         return $this->id;
+    }
+
+    public function getPublicationTypeId(): ?string
+    {
+        return $this->publication_type_id;
+    }
+
+    public function setPublicationTypeId(string $publication_type_id): self
+    {
+        $this->publication_type_id = $publication_type_id;
+
+        return $this;
     }
 
     public function getPublicationFormVersionName(): ?string
@@ -139,7 +126,7 @@ class PublicationFormVersion
         return $this;
     }
 
-    public function getGridSystem(): ?array
+    public function getGridSystem(): array
     {
         return $this->grid_system;
     }
@@ -151,8 +138,7 @@ class PublicationFormVersion
         return $this;
     }
 
-    #[Ignore]
-    public function getFlagActive(): ?bool
+    public function isFlagActive(): ?bool
     {
         return $this->flag_active;
     }
@@ -251,7 +237,7 @@ class PublicationFormVersion
     public function addPublicationForm(PublicationForm $publicationForm): self
     {
         if (!$this->publicationForms->contains($publicationForm)) {
-            $this->publicationForms[] = $publicationForm;
+            $this->publicationForms->add($publicationForm);
             $publicationForm->setPublicationFormVersion($this);
         }
 
@@ -264,6 +250,36 @@ class PublicationFormVersion
             // set the owning side to null (unless already changed)
             if ($publicationForm->getPublicationFormVersion() === $this) {
                 $publicationForm->setPublicationFormVersion(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Publication>
+     */
+    public function getPublications(): Collection
+    {
+        return $this->publications;
+    }
+
+    public function addPublication(Publication $publication): self
+    {
+        if (!$this->publications->contains($publication)) {
+            $this->publications->add($publication);
+            $publication->setPublicationFormVersion($this);
+        }
+
+        return $this;
+    }
+
+    public function removePublication(Publication $publication): self
+    {
+        if ($this->publications->removeElement($publication)) {
+            // set the owning side to null (unless already changed)
+            if ($publication->getPublicationFormVersion() === $this) {
+                $publication->setPublicationFormVersion(null);
             }
         }
 

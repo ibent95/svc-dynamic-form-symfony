@@ -46,6 +46,13 @@ class PublicationFormRepository extends ServiceEntityRepository
         }
     }
 
+    public function getFormByCode(String $code)
+    {
+        $result = $this->_em->f;
+
+        return $result;
+    }
+
     public function getMasterData(String $tableName, String $orderDirection = 'ASC', Int $maxResult = NULL): ?Array
     {
         // Initiate result variable
