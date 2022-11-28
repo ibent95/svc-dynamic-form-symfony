@@ -1,6 +1,7 @@
 ###> Devilbox settings ###
 .devilbox/
-htdocs
+htdocs';
+db/
 ###< Devilbox settings ###
 
 ###> symfony/framework-bundle ###
@@ -10,5 +11,5 @@ htdocs
 /config/secrets/prod/prod.decrypt.private.php
 /public/bundles/
 /var/
-/vendor/
+#/vendor/
 ###< symfony/framework-bundle ###
