@@ -10,4 +10,5 @@ htdocs
 /config/secrets/prod/prod.decrypt.private.php
 /public/bundles/
 /var/
+/vendor/
 ###< symfony/framework-bundle ###
