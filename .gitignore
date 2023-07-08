@@ -17,4 +17,5 @@ htdocs
 .buildpath
 .project
 /.settings
+/.phpintel
 ###< Others ###
