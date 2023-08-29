@@ -53,7 +53,7 @@ class PublicationService {
         );
 
         $data = $sourceData->matching($this->criteria);
-        dd('Hihih', $data);
+
         return $data;
     }
 
