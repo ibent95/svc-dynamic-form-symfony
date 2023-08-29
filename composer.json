@@ -74,7 +74,7 @@
 		}
 	},
 	"require-dev" : {
-		"symfony/maker-bundle" : "^1.47"
+		"symfony/maker-bundle": "^1.50"
 	},
 	"support" : {
 		"email" : "ibent95tuny@gmail.com"

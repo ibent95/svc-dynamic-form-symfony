@@ -245,6 +245,7 @@ class PublicationQueryController extends AbstractController
 
             // Get Forms raw data
             $formsRaw						= $this->publicationSvc->getAllFormMetaData($formVersion->getPublicationForms());
+            dd('Hahah');
             $formsRawNormalizeCollection	= new ArrayCollection($this->commonSvc->normalizeObject($formsRaw));
             $forms							= $formsRawNormalizeCollection->map(function ($field) use ($entityManager) {
                 $field['options']			= [];
