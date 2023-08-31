@@ -74,7 +74,11 @@
 		}
 	},
 	"require-dev" : {
-		"symfony/maker-bundle": "^1.50"
+		"phpunit/phpunit": "^9.5",
+		"symfony/browser-kit": "6.3.*",
+		"symfony/css-selector": "6.3.*",
+		"symfony/maker-bundle": "^1.50",
+		"symfony/phpunit-bridge": "^6.3"
 	},
 	"support" : {
 		"email" : "ibent95tuny@gmail.com"
