@@ -12,3 +12,10 @@ htdocs
 /var/
 /vendor/
 ###< symfony/framework-bundle ###
+
+###> Others ###
+.buildpath
+.project
+/.settings
+/.phpintel
+###< Others ###

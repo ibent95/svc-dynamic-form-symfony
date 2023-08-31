@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\PublicationStatusRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
@@ -199,6 +200,11 @@ class PublicationStatus
         $this->uuid = $uuid;
 
         return $this;
+    }
+
+    public function isFlagActive(): ?bool
+    {
+        return $this->flag_active;
     }
 
 }

@@ -1,13 +1,15 @@
 -- phpMyAdmin SQL Dump
--- version 5.1.3
+-- version 4.9.7
 -- https://www.phpmyadmin.net/
 --
 -- Host: mysql
--- Generation Time: Aug 04, 2022 at 04:50 PM
+-- Generation Time: Aug 27, 2023 at 07:48 PM
 -- Server version: 10.6.7-MariaDB-1:10.6.7+maria~focal
--- PHP Version: 8.1.6
+-- PHP Version: 7.0.33
 
+SET FOREIGN_KEY_CHECKS=0;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET AUTOCOMMIT = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
 
@@ -29,7 +31,6 @@ USE `dynamic_form_app`;
 -- Table structure for table `doctrine_migration_versions`
 --
 
-DROP TABLE IF EXISTS `doctrine_migration_versions`;
 CREATE TABLE `doctrine_migration_versions` (
   `version` varchar(191) COLLATE utf8mb3_unicode_ci NOT NULL,
   `executed_at` datetime DEFAULT NULL,
@@ -50,7 +51,6 @@ INSERT INTO `doctrine_migration_versions` (`version`, `executed_at`, `execution_
 -- Table structure for table `publication`
 --
 
-DROP TABLE IF EXISTS `publication`;
 CREATE TABLE `publication` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `publication_general_type_id` bigint(20) UNSIGNED NOT NULL,
@@ -87,7 +87,6 @@ INSERT INTO `publication` (`id`, `publication_general_type_id`, `publication_typ
 -- Table structure for table `publication_form`
 --
 
-DROP TABLE IF EXISTS `publication_form`;
 CREATE TABLE `publication_form` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `publication_form_version_id` bigint(20) UNSIGNED DEFAULT NULL,
@@ -165,7 +164,6 @@ INSERT INTO `publication_form` (`id`, `publication_form_version_id`, `form_versi
 -- Table structure for table `publication_form_version`
 --
 
-DROP TABLE IF EXISTS `publication_form_version`;
 CREATE TABLE `publication_form_version` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `publication_type_id` bigint(20) UNSIGNED DEFAULT NULL,
@@ -195,7 +193,6 @@ INSERT INTO `publication_form_version` (`id`, `publication_type_id`, `publicatio
 -- Table structure for table `publication_general_type`
 --
 
-DROP TABLE IF EXISTS `publication_general_type`;
 CREATE TABLE `publication_general_type` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `publication_general_type_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -223,7 +220,6 @@ INSERT INTO `publication_general_type` (`id`, `publication_general_type_name`, `
 -- Table structure for table `publication_meta`
 --
 
-DROP TABLE IF EXISTS `publication_meta`;
 CREATE TABLE `publication_meta` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `publication_id` bigint(20) UNSIGNED DEFAULT NULL,
@@ -244,7 +240,6 @@ CREATE TABLE `publication_meta` (
 -- Table structure for table `publication_status`
 --
 
-DROP TABLE IF EXISTS `publication_status`;
 CREATE TABLE `publication_status` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `publication_status_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -273,7 +268,6 @@ INSERT INTO `publication_status` (`id`, `publication_status_name`, `publication_
 -- Table structure for table `publication_type`
 --
 
-DROP TABLE IF EXISTS `publication_type`;
 CREATE TABLE `publication_type` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `publication_general_type_id` bigint(20) UNSIGNED DEFAULT NULL,
@@ -439,6 +433,7 @@ ALTER TABLE `publication_meta`
 --
 ALTER TABLE `publication_type`
   ADD CONSTRAINT `FK_8726D6E4A7D25F7B` FOREIGN KEY (`publication_general_type_id`) REFERENCES `publication_general_type` (`id`);
+SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

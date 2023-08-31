@@ -20,7 +20,7 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerInterface;
 
-class MasterData {
+class TaxonomyTermsService {
 	private $result;
 	private $serializer;
 	private $doctrine;
@@ -37,6 +37,12 @@ class MasterData {
 		$this->criteria 		= new Criteria();
 	}
 
+	public function getMasterDataByTableName(String $tableName): Array
+	{
+		$result 		= [];
+		$objectManajer 	= NULL;
 
+		return $result;
+	}
 
 }
