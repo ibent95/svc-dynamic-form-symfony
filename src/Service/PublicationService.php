@@ -48,7 +48,7 @@ class PublicationService {
     {
         $data = [];
 
-        $this->criteria->where(
+        $this->criteria = $this->criteria->where(
             $this->exprBuilder->eq('flag_active', true)
         );
 
