@@ -42,28 +42,29 @@ when@test:
                 path: "%kernel.logs_dir%/%kernel.environment%.log"
                 level: debug
 
-when@prod:
-    monolog:
-        handlers:
-            main:
-                type: fingers_crossed
-                action_level: error
-                handler: nested
-                excluded_http_codes: [404, 405]
-                buffer_size: 50 # How many messages should be saved? Prevent memory leaks
-                max_files: 0
-                filename_format: '{date}'
-                date_format: 'Y-m-d'
-            nested:
-                type: stream
-                path: php://stderr
-                level: debug
-                formatter: monolog.formatter.json
-            console:
-                type: console
-                process_psr_3_messages: false
-                channels: ["!event", "!doctrine"]
-            deprecation:
-                type: stream
-                channels: [deprecation]
-                path: php://stderr
+# when@prod:
+#     monolog:
+#         handlers:
+#             main:
+#                 type: fingers_crossed
+#                 action_level: error
+#                 handler: nested
+#                 excluded_http_codes: [404, 405]
+#                 buffer_size: 50 # How many messages should be saved? Prevent memory leaks
+#                 max_files: 0
+#                 filename_format: '{date}'
+#                 date_format: 'Y-m-d'
+#             nested:
+#                 type: stream
+#                 # path: php://stderr
+#                 path: "%kernel.logs_dir%/%kernel.environment%.log"
+#                 level: debug
+#                 formatter: monolog.formatter.json
+#             console:
+#                 type: console
+#                 process_psr_3_messages: false
+#                 channels: ["!event", "!doctrine"]
+#             deprecation:
+#                 type: stream
+#                 channels: [deprecation]
+#                 path: php://stderr
