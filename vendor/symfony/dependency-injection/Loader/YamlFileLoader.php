@@ -23,6 +23,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
+use Symfony\Component\DependencyInjection\Exception\LogicException;
 use Symfony\Component\DependencyInjection\Exception\RuntimeException;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\Component\DependencyInjection\Reference;
@@ -63,6 +64,7 @@ class YamlFileLoader extends FileLoader
         'autowire' => 'autowire',
         'autoconfigure' => 'autoconfigure',
         'bind' => 'bind',
+        'constructor' => 'constructor',
     ];
 
     private const PROTOTYPE_KEYWORDS = [
@@ -84,6 +86,7 @@ class YamlFileLoader extends FileLoader
         'autowire' => 'autowire',
         'autoconfigure' => 'autoconfigure',
         'bind' => 'bind',
+        'constructor' => 'constructor',
     ];
 
     private const INSTANCEOF_KEYWORDS = [
@@ -96,6 +99,7 @@ class YamlFileLoader extends FileLoader
         'tags' => 'tags',
         'autowire' => 'autowire',
         'bind' => 'bind',
+        'constructor' => 'constructor',
     ];
 
     private const DEFAULTS_KEYWORDS = [
@@ -113,9 +117,6 @@ class YamlFileLoader extends FileLoader
 
     protected $autoRegisterAliasesForSinglyImplementedInterfaces = false;
 
-    /**
-     * {@inheritdoc}
-     */
     public function load(mixed $resource, string $type = null): mixed
     {
         $path = $this->locator->locate($resource);
@@ -149,7 +150,7 @@ class YamlFileLoader extends FileLoader
         return null;
     }
 
-    private function loadContent(array $content, string $path)
+    private function loadContent(array $content, string $path): void
     {
         // imports
         $this->parseImports($content, $path);
@@ -180,9 +181,6 @@ class YamlFileLoader extends FileLoader
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function supports(mixed $resource, string $type = null): bool
     {
         if (!\is_string($resource)) {
@@ -196,7 +194,7 @@ class YamlFileLoader extends FileLoader
         return \in_array($type, ['yaml', 'yml'], true);
     }
 
-    private function parseImports(array $content, string $file)
+    private function parseImports(array $content, string $file): void
     {
         if (!isset($content['imports'])) {
             return;
@@ -220,7 +218,7 @@ class YamlFileLoader extends FileLoader
         }
     }
 
-    private function parseDefinitions(array $content, string $file, bool $trackBindings = true)
+    private function parseDefinitions(array $content, string $file, bool $trackBindings = true): void
     {
         if (!isset($content['services'])) {
             return;
@@ -303,11 +301,7 @@ class YamlFileLoader extends FileLoader
                     throw new InvalidArgumentException(sprintf('The tag name in "_defaults" must be a non-empty string in "%s".', $file));
                 }
 
-                foreach ($tag as $attribute => $value) {
-                    if (!\is_scalar($value) && null !== $value) {
-                        throw new InvalidArgumentException(sprintf('Tag "%s", attribute "%s" in "_defaults" must be of a scalar-type in "%s". Check your YAML syntax.', $name, $attribute, $file));
-                    }
-                }
+                $this->validateAttributes(sprintf('Tag "%s", attribute "%s" in "_defaults" must be of a scalar-type in "%s". Check your YAML syntax.', $name, '%s', $file), $tag);
             }
         }
 
@@ -338,7 +332,7 @@ class YamlFileLoader extends FileLoader
     /**
      * @throws InvalidArgumentException When tags are invalid
      */
-    private function parseDefinition(string $id, array|string|null $service, string $file, array $defaults, bool $return = false, bool $trackBindings = true)
+    private function parseDefinition(string $id, array|string|null $service, string $file, array $defaults, bool $return = false, bool $trackBindings = true): Definition|Alias|null
     {
         if (preg_match('/^_[a-zA-Z0-9_]*$/', $id)) {
             throw new InvalidArgumentException(sprintf('Service names that start with an underscore are reserved. Rename the "%s" service or define it in XML instead.', $id));
@@ -358,11 +352,7 @@ class YamlFileLoader extends FileLoader
             $service = ['arguments' => $service];
         }
 
-        if (null === $service) {
-            $service = [];
-        }
-
-        if (!\is_array($service)) {
+        if (!\is_array($service ??= [])) {
             throw new InvalidArgumentException(sprintf('A service definition must be an array or a string starting with "@" but "%s" found for service "%s" in "%s". Check your YAML syntax.', get_debug_type($service), $id, $file));
         }
 
@@ -409,6 +399,22 @@ class YamlFileLoader extends FileLoader
 
         $definition = isset($service[0]) && $service[0] instanceof Definition ? array_shift($service) : null;
         $return = null === $definition ? $return : true;
+
+        if (isset($service['from_callable'])) {
+            foreach (['alias', 'parent', 'synthetic', 'factory', 'file', 'arguments', 'properties', 'configurator', 'calls'] as $key) {
+                if (isset($service['factory'])) {
+                    throw new InvalidArgumentException(sprintf('The configuration key "%s" is unsupported for the service "%s" when using "from_callable" in "%s".', $key, $id, $file));
+                }
+            }
+
+            if ('Closure' !== $service['class'] ??= 'Closure') {
+                $service['lazy'] = true;
+            }
+
+            $service['factory'] = ['Closure', 'fromCallable'];
+            $service['arguments'] = [$service['from_callable']];
+            unset($service['from_callable']);
+        }
 
         $this->checkDefinition($id, $service, $file);
 
@@ -515,6 +521,14 @@ class YamlFileLoader extends FileLoader
             $definition->setFactory($this->parseCallable($service['factory'], 'factory', $id, $file));
         }
 
+        if (isset($service['constructor'])) {
+            if (null !== $definition->getFactory()) {
+                throw new LogicException(sprintf('The "%s" service cannot declare a factory as well as a constructor.', $id));
+            }
+
+            $definition->setFactory([null, $service['constructor']]);
+        }
+
         if (isset($service['file'])) {
             $definition->setFile($service['file']);
         }
@@ -611,11 +625,7 @@ class YamlFileLoader extends FileLoader
                 throw new InvalidArgumentException(sprintf('The tag name for service "%s" in "%s" must be a non-empty string.', $id, $file));
             }
 
-            foreach ($tag as $attribute => $value) {
-                if (!\is_scalar($value) && null !== $value) {
-                    throw new InvalidArgumentException(sprintf('A "tags" attribute must be of a scalar-type for service "%s", tag "%s", attribute "%s" in "%s". Check your YAML syntax.', $id, $name, $attribute, $file));
-                }
-            }
+            $this->validateAttributes(sprintf('A "tags" attribute must be of a scalar-type for service "%s", tag "%s", attribute "%s" in "%s". Check your YAML syntax.', $id, $name, '%s', $file), $tag);
 
             $definition->addTag($name, $tag);
         }
@@ -692,10 +702,12 @@ class YamlFileLoader extends FileLoader
             }
             $exclude = $service['exclude'] ?? null;
             $namespace = $service['namespace'] ?? $id;
-            $this->registerClasses($definition, $namespace, $service['resource'], $exclude);
+            $this->registerClasses($definition, $namespace, $service['resource'], $exclude, $file);
         } else {
             $this->setDefinition($id, $definition);
         }
+
+        return null;
     }
 
     /**
@@ -749,7 +761,7 @@ class YamlFileLoader extends FileLoader
     protected function loadFile(string $file): ?array
     {
         if (!class_exists(\Symfony\Component\Yaml\Parser::class)) {
-            throw new RuntimeException('Unable to load YAML config files as the Symfony Yaml Component is not installed.');
+            throw new RuntimeException('Unable to load YAML config files as the Symfony Yaml Component is not installed. Try running "composer require symfony/yaml".');
         }
 
         if (!stream_is_local($file)) {
@@ -792,7 +804,7 @@ class YamlFileLoader extends FileLoader
             }
 
             if (!$this->container->hasExtension($namespace)) {
-                $extensionNamespaces = array_filter(array_map(function (ExtensionInterface $ext) { return $ext->getAlias(); }, $this->container->getExtensions()));
+                $extensionNamespaces = array_filter(array_map(fn (ExtensionInterface $ext) => $ext->getAlias(), $this->container->getExtensions()));
                 throw new InvalidArgumentException(sprintf('There is no extension able to load the configuration for "%s" (in "%s"). Looked for namespace "%s", found "%s".', $namespace, $file, $namespace, $extensionNamespaces ? sprintf('"%s"', implode('", "', $extensionNamespaces)) : 'none'));
             }
         }
@@ -832,17 +844,21 @@ class YamlFileLoader extends FileLoader
 
                 $argument = $this->resolveServices($argument, $file, $isParameter);
 
+                if (isset($argument[0])) {
+                    trigger_deprecation('symfony/dependency-injection', '6.3', 'Using integers as keys in a "!service_locator" tag is deprecated. The keys will default to the IDs of the original services in 7.0.');
+                }
+
                 return new ServiceLocatorArgument($argument);
             }
             if (\in_array($value->getTag(), ['tagged', 'tagged_iterator', 'tagged_locator'], true)) {
                 $forLocator = 'tagged_locator' === $value->getTag();
 
                 if (\is_array($argument) && isset($argument['tag']) && $argument['tag']) {
-                    if ($diff = array_diff(array_keys($argument), ['tag', 'index_by', 'default_index_method', 'default_priority_method'])) {
-                        throw new InvalidArgumentException(sprintf('"!%s" tag contains unsupported key "%s"; supported ones are "tag", "index_by", "default_index_method", and "default_priority_method".', $value->getTag(), implode('", "', $diff)));
+                    if ($diff = array_diff(array_keys($argument), $supportedKeys = ['tag', 'index_by', 'default_index_method', 'default_priority_method', 'exclude', 'exclude_self'])) {
+                        throw new InvalidArgumentException(sprintf('"!%s" tag contains unsupported key "%s"; supported ones are "%s".', $value->getTag(), implode('", "', $diff), implode('", "', $supportedKeys)));
                     }
 
-                    $argument = new TaggedIteratorArgument($argument['tag'], $argument['index_by'] ?? null, $argument['default_index_method'] ?? null, $forLocator, $argument['default_priority_method'] ?? null);
+                    $argument = new TaggedIteratorArgument($argument['tag'], $argument['index_by'] ?? null, $argument['default_index_method'] ?? null, $forLocator, $argument['default_priority_method'] ?? null, (array) ($argument['exclude'] ?? null), $argument['exclude_self'] ?? true);
                 } elseif (\is_string($argument) && $argument) {
                     $argument = new TaggedIteratorArgument($argument, null, null, $forLocator);
                 } else {
@@ -923,7 +939,7 @@ class YamlFileLoader extends FileLoader
         return $value;
     }
 
-    private function loadFromExtensions(array $content)
+    private function loadFromExtensions(array $content): void
     {
         foreach ($content as $namespace => $values) {
             if (\in_array($namespace, ['imports', 'parameters', 'services']) || str_starts_with($namespace, 'when@')) {
@@ -938,7 +954,7 @@ class YamlFileLoader extends FileLoader
         }
     }
 
-    private function checkDefinition(string $id, array $definition, string $file)
+    private function checkDefinition(string $id, array $definition, string $file): void
     {
         if ($this->isLoadingInstanceof) {
             $keywords = self::INSTANCEOF_KEYWORDS;
@@ -951,6 +967,18 @@ class YamlFileLoader extends FileLoader
         foreach ($definition as $key => $value) {
             if (!isset($keywords[$key])) {
                 throw new InvalidArgumentException(sprintf('The configuration key "%s" is unsupported for definition "%s" in "%s". Allowed configuration keys are "%s".', $key, $id, $file, implode('", "', $keywords)));
+            }
+        }
+    }
+
+    private function validateAttributes(string $message, array $attributes, array $path = []): void
+    {
+        foreach ($attributes as $name => $value) {
+            if (\is_array($value)) {
+                $this->validateAttributes($message, $value, [...$path, $name]);
+            } elseif (!\is_scalar($value ?? '')) {
+                $name = implode('.', [...$path, $name]);
+                throw new InvalidArgumentException(sprintf($message, $name));
             }
         }
     }

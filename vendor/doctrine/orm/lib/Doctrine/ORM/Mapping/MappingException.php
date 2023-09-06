@@ -33,7 +33,7 @@ class MappingException extends ORMException
     }
 
     /**
-     * @param string $entityName
+     * @param class-string $entityName
      *
      * @return MappingException
      */
@@ -346,7 +346,7 @@ class MappingException extends ORMException
     }
 
     /**
-     * @param string $className
+     * @param class-string $className
      *
      * @return MappingException
      */
@@ -813,21 +813,16 @@ class MappingException extends ORMException
         return new self(sprintf('Entity Listener "%s#%s()" in "%s" was already declared, but it must be declared only once.', $listenerName, $methodName, $className));
     }
 
-    /**
-     * @param string $className
-     * @param string $annotation
-     *
-     * @return MappingException
-     */
-    public static function invalidFetchMode($className, $annotation)
+    /** @param class-string $className */
+    public static function invalidFetchMode(string $className, string $fetchMode): self
     {
-        return new self("Entity '" . $className . "' has a mapping with invalid fetch mode '" . $annotation . "'");
+        return new self("Entity '" . $className . "' has a mapping with invalid fetch mode '" . $fetchMode . "'");
     }
 
-    /** @param int|string $annotation */
-    public static function invalidGeneratedMode($annotation): MappingException
+    /** @param int|string $generatedMode */
+    public static function invalidGeneratedMode($generatedMode): self
     {
-        return new self("Invalid generated mode '" . $annotation . "'");
+        return new self("Invalid generated mode '" . $generatedMode . "'");
     }
 
     /**
@@ -913,8 +908,7 @@ class MappingException extends ORMException
     {
         return new self(
             sprintf(
-                'Override for %s::%s is only allowed for attributes/associations ' .
-                'declared on a mapped superclass or a trait.',
+                'Overrides are only allowed for fields or associations declared in mapped superclasses or traits, which is not the case for %s::%s.',
                 $className,
                 $propertyName
             )

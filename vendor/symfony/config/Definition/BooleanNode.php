@@ -21,7 +21,7 @@ use Symfony\Component\Config\Definition\Exception\InvalidTypeException;
 class BooleanNode extends ScalarNode
 {
     /**
-     * {@inheritdoc}
+     * @return void
      */
     protected function validateType(mixed $value)
     {
@@ -36,18 +36,12 @@ class BooleanNode extends ScalarNode
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function isValueEmpty(mixed $value): bool
     {
         // a boolean value cannot be empty
         return false;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function getValidPlaceholderTypes(): array
     {
         return ['bool'];

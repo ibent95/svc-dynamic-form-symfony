@@ -35,6 +35,8 @@ class ResolveInvalidReferencesPass implements CompilerPassInterface
 
     /**
      * Process the ContainerBuilder to resolve invalid references.
+     *
+     * @return void
      */
     public function process(ContainerBuilder $container)
     {
@@ -95,7 +97,7 @@ class ResolveInvalidReferencesPass implements CompilerPassInterface
                 $value = array_values($value);
             }
         } elseif ($value instanceof Reference) {
-            if ($this->container->has($id = (string) $value)) {
+            if ($this->container->hasDefinition($id = (string) $value) ? !$this->container->getDefinition($id)->hasTag('container.excluded') : $this->container->hasAlias($id)) {
                 return $value;
             }
 

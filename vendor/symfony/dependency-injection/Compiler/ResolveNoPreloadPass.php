@@ -27,7 +27,7 @@ class ResolveNoPreloadPass extends AbstractRecursivePass
     private array $resolvedIds = [];
 
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function process(ContainerBuilder $container)
     {
@@ -61,9 +61,6 @@ class ResolveNoPreloadPass extends AbstractRecursivePass
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function processValue(mixed $value, bool $isRoot = false): mixed
     {
         if ($value instanceof Reference && ContainerBuilder::IGNORE_ON_UNINITIALIZED_REFERENCE !== $value->getInvalidBehavior() && $this->container->hasDefinition($id = (string) $value)) {

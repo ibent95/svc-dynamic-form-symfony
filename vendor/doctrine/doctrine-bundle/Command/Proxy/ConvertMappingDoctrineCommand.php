@@ -13,14 +13,14 @@ use function assert;
 /**
  * Convert Doctrine ORM metadata mapping information between the various supported
  * formats.
+ *
+ * @deprecated use Doctrine\ORM\Tools\Console\Command\ConvertMappingCommand instead
  */
 class ConvertMappingDoctrineCommand extends ConvertMappingCommand
 {
     use OrmProxyCommand;
 
-    /**
-     * {@inheritDoc}
-     */
+    /** @return void */
     protected function configure()
     {
         parent::configure();

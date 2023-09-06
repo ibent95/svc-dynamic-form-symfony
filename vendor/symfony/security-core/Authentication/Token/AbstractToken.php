@@ -38,9 +38,6 @@ abstract class AbstractToken implements TokenInterface, \Serializable
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getRoleNames(): array
     {
         return $this->roleNames;
@@ -51,16 +48,13 @@ abstract class AbstractToken implements TokenInterface, \Serializable
         return $this->user ? $this->user->getUserIdentifier() : '';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getUser(): ?UserInterface
     {
         return $this->user;
     }
 
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function setUser(UserInterface $user)
     {
@@ -68,7 +62,7 @@ abstract class AbstractToken implements TokenInterface, \Serializable
     }
 
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function eraseCredentials()
     {
@@ -119,33 +113,24 @@ abstract class AbstractToken implements TokenInterface, \Serializable
         $this->user = \is_string($user) ? new InMemoryUser($user, '', $this->roleNames, false) : $user;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getAttributes(): array
     {
         return $this->attributes;
     }
 
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function setAttributes(array $attributes)
     {
         $this->attributes = $attributes;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function hasAttribute(string $name): bool
     {
         return \array_key_exists($name, $this->attributes);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getAttribute(string $name): mixed
     {
         if (!\array_key_exists($name, $this->attributes)) {
@@ -156,7 +141,7 @@ abstract class AbstractToken implements TokenInterface, \Serializable
     }
 
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function setAttribute(string $name, mixed $value)
     {
@@ -187,7 +172,7 @@ abstract class AbstractToken implements TokenInterface, \Serializable
     /**
      * @internal
      */
-    final public function unserialize(string $serialized)
+    final public function unserialize(string $serialized): void
     {
         $this->__unserialize(unserialize($serialized));
     }

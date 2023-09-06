@@ -14,7 +14,6 @@ namespace Symfony\Bundle\SecurityBundle\DependencyInjection\Security\Factory;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Reference;
 
 /**
  * AbstractFactory is the base class for all classes inheriting from
@@ -53,6 +52,9 @@ abstract class AbstractFactory implements AuthenticatorFactoryInterface
         $this->options[$name] = $default;
     }
 
+    /**
+     * @return void
+     */
     public function addConfiguration(NodeDefinition $node)
     {
         $builder = $node->children();
@@ -73,6 +75,9 @@ abstract class AbstractFactory implements AuthenticatorFactoryInterface
         }
     }
 
+    /**
+     * @return string
+     */
     protected function createAuthenticationSuccessHandler(ContainerBuilder $container, string $id, array $config)
     {
         $successHandlerId = $this->getSuccessHandlerId($id);
@@ -80,7 +85,7 @@ abstract class AbstractFactory implements AuthenticatorFactoryInterface
 
         if (isset($config['success_handler'])) {
             $successHandler = $container->setDefinition($successHandlerId, new ChildDefinition('security.authentication.custom_success_handler'));
-            $successHandler->replaceArgument(0, new Reference($config['success_handler']));
+            $successHandler->replaceArgument(0, new ChildDefinition($config['success_handler']));
             $successHandler->replaceArgument(1, $options);
             $successHandler->replaceArgument(2, $id);
         } else {
@@ -92,6 +97,9 @@ abstract class AbstractFactory implements AuthenticatorFactoryInterface
         return $successHandlerId;
     }
 
+    /**
+     * @return string
+     */
     protected function createAuthenticationFailureHandler(ContainerBuilder $container, string $id, array $config)
     {
         $id = $this->getFailureHandlerId($id);
@@ -99,7 +107,7 @@ abstract class AbstractFactory implements AuthenticatorFactoryInterface
 
         if (isset($config['failure_handler'])) {
             $failureHandler = $container->setDefinition($id, new ChildDefinition('security.authentication.custom_failure_handler'));
-            $failureHandler->replaceArgument(0, new Reference($config['failure_handler']));
+            $failureHandler->replaceArgument(0, new ChildDefinition($config['failure_handler']));
             $failureHandler->replaceArgument(1, $options);
         } else {
             $failureHandler = $container->setDefinition($id, new ChildDefinition('security.authentication.failure_handler'));
@@ -109,11 +117,17 @@ abstract class AbstractFactory implements AuthenticatorFactoryInterface
         return $id;
     }
 
+    /**
+     * @return string
+     */
     protected function getSuccessHandlerId(string $id)
     {
         return 'security.authentication.success_handler.'.$id.'.'.str_replace('-', '_', $this->getKey());
     }
 
+    /**
+     * @return string
+     */
     protected function getFailureHandlerId(string $id)
     {
         return 'security.authentication.failure_handler.'.$id.'.'.str_replace('-', '_', $this->getKey());

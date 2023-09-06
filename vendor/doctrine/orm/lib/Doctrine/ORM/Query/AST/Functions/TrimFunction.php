@@ -10,6 +10,7 @@ use Doctrine\ORM\Query\Lexer;
 use Doctrine\ORM\Query\Parser;
 use Doctrine\ORM\Query\SqlWalker;
 
+use function assert;
 use function strcasecmp;
 
 /**
@@ -35,7 +36,7 @@ class TrimFunction extends FunctionNode
     public $stringPrimary;
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getSql(SqlWalker $sqlWalker)
     {
@@ -55,7 +56,7 @@ class TrimFunction extends FunctionNode
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function parse(Parser $parser)
     {
@@ -69,7 +70,8 @@ class TrimFunction extends FunctionNode
         if ($lexer->isNextToken(Lexer::T_STRING)) {
             $parser->match(Lexer::T_STRING);
 
-            $this->trimChar = $lexer->token['value'];
+            assert($lexer->token !== null);
+            $this->trimChar = $lexer->token->value;
         }
 
         if ($this->leading || $this->trailing || $this->both || $this->trimChar) {
@@ -102,7 +104,8 @@ class TrimFunction extends FunctionNode
     private function parseTrimMode(Parser $parser): void
     {
         $lexer = $parser->getLexer();
-        $value = $lexer->lookahead['value'];
+        assert($lexer->lookahead !== null);
+        $value = $lexer->lookahead->value;
 
         if (strcasecmp('leading', $value) === 0) {
             $parser->match(Lexer::T_LEADING);

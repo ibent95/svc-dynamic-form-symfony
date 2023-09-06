@@ -49,7 +49,7 @@ class RememberMeAuthenticator implements InteractiveAuthenticatorInterface
     private string $cookieName;
     private ?LoggerInterface $logger;
 
-    public function __construct(RememberMeHandlerInterface $rememberMeHandler, string $secret, TokenStorageInterface $tokenStorage, string $cookieName, LoggerInterface $logger = null)
+    public function __construct(RememberMeHandlerInterface $rememberMeHandler, #[\SensitiveParameter] string $secret, TokenStorageInterface $tokenStorage, string $cookieName, LoggerInterface $logger = null)
     {
         $this->rememberMeHandler = $rememberMeHandler;
         $this->secret = $secret;
@@ -69,7 +69,7 @@ class RememberMeAuthenticator implements InteractiveAuthenticatorInterface
             return false;
         }
 
-        if (!$request->cookies->has($this->cookieName)) {
+        if (!$request->cookies->has($this->cookieName) || !\is_scalar($request->cookies->all()[$this->cookieName] ?: null)) {
             return false;
         }
 
@@ -81,16 +81,15 @@ class RememberMeAuthenticator implements InteractiveAuthenticatorInterface
 
     public function authenticate(Request $request): Passport
     {
-        $rawCookie = $request->cookies->get($this->cookieName);
-        if (!$rawCookie) {
+        if (!$rawCookie = $request->cookies->get($this->cookieName)) {
             throw new \LogicException('No remember-me cookie is found.');
         }
 
         $rememberMeCookie = RememberMeDetails::fromRawCookie($rawCookie);
 
-        return new SelfValidatingPassport(new UserBadge($rememberMeCookie->getUserIdentifier(), function () use ($rememberMeCookie) {
-            return $this->rememberMeHandler->consumeRememberMeCookie($rememberMeCookie);
-        }));
+        $userBadge = new UserBadge($rememberMeCookie->getUserIdentifier(), fn () => $this->rememberMeHandler->consumeRememberMeCookie($rememberMeCookie));
+
+        return new SelfValidatingPassport($userBadge);
     }
 
     public function createToken(Passport $passport, string $firewallName): TokenInterface

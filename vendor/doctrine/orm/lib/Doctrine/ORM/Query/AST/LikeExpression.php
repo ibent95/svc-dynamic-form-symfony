@@ -30,15 +30,16 @@ class LikeExpression extends Node
      * @param InputParameter|FunctionNode|PathExpression|Literal $stringPattern
      * @param Literal|null                                       $escapeChar
      */
-    public function __construct($stringExpression, $stringPattern, $escapeChar = null)
+    public function __construct($stringExpression, $stringPattern, $escapeChar = null, bool $not = false)
     {
         $this->stringExpression = $stringExpression;
         $this->stringPattern    = $stringPattern;
         $this->escapeChar       = $escapeChar;
+        $this->not              = $not;
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function dispatch($sqlWalker)
     {

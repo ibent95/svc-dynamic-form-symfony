@@ -13,23 +13,24 @@ use Doctrine\ORM\Exception\ORMException;
  */
 class OptimisticLockException extends ORMException
 {
-    /** @var object|null */
+    /** @var object|string|null */
     private $entity;
 
     /**
-     * @param string      $msg
-     * @param object|null $entity
+     * @param string             $msg
+     * @param object|string|null $entity
      */
     public function __construct($msg, $entity)
     {
         parent::__construct($msg);
+
         $this->entity = $entity;
     }
 
     /**
      * Gets the entity that caused the exception.
      *
-     * @return object|null
+     * @return object|string|null
      */
     public function getEntity()
     {
@@ -37,7 +38,7 @@ class OptimisticLockException extends ORMException
     }
 
     /**
-     * @param object $entity
+     * @param object|class-string $entity
      *
      * @return OptimisticLockException
      */
@@ -47,9 +48,9 @@ class OptimisticLockException extends ORMException
     }
 
     /**
-     * @param object                $entity
-     * @param int|DateTimeInterface $expectedLockVersion
-     * @param int|DateTimeInterface $actualLockVersion
+     * @param object                       $entity
+     * @param int|string|DateTimeInterface $expectedLockVersion
+     * @param int|string|DateTimeInterface $actualLockVersion
      *
      * @return OptimisticLockException
      */

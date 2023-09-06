@@ -47,7 +47,7 @@ class CouchbaseCollectionAdapter extends AbstractAdapter
         $this->marshaller = $marshaller ?? new DefaultMarshaller();
     }
 
-    public static function createConnection(array|string $dsn, array $options = []): Bucket|Collection
+    public static function createConnection(#[\SensitiveParameter] array|string $dsn, array $options = []): Bucket|Collection
     {
         if (\is_string($dsn)) {
             $dsn = [$dsn];
@@ -71,7 +71,7 @@ class CouchbaseCollectionAdapter extends AbstractAdapter
 
             foreach ($dsn as $server) {
                 if (!str_starts_with($server, 'couchbase:')) {
-                    throw new InvalidArgumentException(sprintf('Invalid Couchbase DSN: "%s" does not start with "couchbase:".', $server));
+                    throw new InvalidArgumentException('Invalid Couchbase DSN: it does not start with "couchbase:".');
                 }
 
                 preg_match($dsnPattern, $server, $matches);
@@ -131,9 +131,6 @@ class CouchbaseCollectionAdapter extends AbstractAdapter
         return $results;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function doFetch(array $ids): array
     {
         $results = [];
@@ -152,25 +149,16 @@ class CouchbaseCollectionAdapter extends AbstractAdapter
         return $results;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function doHave($id): bool
     {
         return $this->connection->exists($id)->exists();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function doClear($namespace): bool
     {
         return false;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function doDelete(array $ids): bool
     {
         $idsErrors = [];
@@ -188,9 +176,6 @@ class CouchbaseCollectionAdapter extends AbstractAdapter
         return 0 === \count($idsErrors);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function doSave(array $values, $lifetime): array|bool
     {
         if (!$values = $this->marshaller->marshall($values, $failed)) {

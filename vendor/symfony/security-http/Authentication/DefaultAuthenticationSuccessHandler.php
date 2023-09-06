@@ -52,10 +52,7 @@ class DefaultAuthenticationSuccessHandler implements AuthenticationSuccessHandle
         $this->setOptions($options);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function onAuthenticationSuccess(Request $request, TokenInterface $token): Response
+    public function onAuthenticationSuccess(Request $request, TokenInterface $token): ?Response
     {
         return $this->httpUtils->createRedirectResponse($request, $this->determineTargetUrl($request));
     }
@@ -68,6 +65,9 @@ class DefaultAuthenticationSuccessHandler implements AuthenticationSuccessHandle
         return $this->options;
     }
 
+    /**
+     * @return void
+     */
     public function setOptions(array $options)
     {
         $this->options = array_merge($this->defaultOptions, $options);
@@ -103,7 +103,7 @@ class DefaultAuthenticationSuccessHandler implements AuthenticationSuccessHandle
         }
 
         $firewallName = $this->getFirewallName();
-        if (null !== $firewallName && $targetUrl = $this->getTargetPath($request->getSession(), $firewallName)) {
+        if (null !== $firewallName && !$request->attributes->getBoolean('_stateless') && $targetUrl = $this->getTargetPath($request->getSession(), $firewallName)) {
             $this->removeTargetPath($request->getSession(), $firewallName);
 
             return $targetUrl;

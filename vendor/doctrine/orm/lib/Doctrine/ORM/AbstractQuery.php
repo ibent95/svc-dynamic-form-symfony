@@ -1010,7 +1010,7 @@ abstract class AbstractQuery
      *
      * Alias for getSingleResult(HYDRATE_SINGLE_SCALAR).
      *
-     * @return mixed The scalar result.
+     * @return bool|float|int|string|null The scalar result.
      *
      * @throws NoResultException        If the query returned no result.
      * @throws NonUniqueResultException If the query result is not unique.
@@ -1321,9 +1321,11 @@ abstract class AbstractQuery
     protected function getHydrationCacheId()
     {
         $parameters = [];
+        $types      = [];
 
         foreach ($this->getParameters() as $parameter) {
             $parameters[$parameter->getName()] = $this->processParameterValue($parameter->getValue());
+            $types[$parameter->getName()]      = $parameter->getType();
         }
 
         $sql = $this->getSQL();
@@ -1335,7 +1337,7 @@ abstract class AbstractQuery
         ksort($hints);
         assert($queryCacheProfile !== null);
 
-        return $queryCacheProfile->generateCacheKeys($sql, $parameters, $hints);
+        return $queryCacheProfile->generateCacheKeys($sql, $parameters, $types, $hints);
     }
 
     /**

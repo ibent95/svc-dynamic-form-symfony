@@ -9,6 +9,7 @@ use Doctrine\ORM\Events;
 use Doctrine\ORM\Mapping;
 use Doctrine\ORM\Mapping\Builder\EntityListenerBuilder;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Mapping\MappingAttribute;
 use Doctrine\ORM\Mapping\MappingException;
 use Doctrine\Persistence\Mapping\ClassMetadata as PersistenceClassMetadata;
 use Doctrine\Persistence\Mapping\Driver\ColocatedMappingDriver;
@@ -22,23 +23,28 @@ use function class_exists;
 use function constant;
 use function defined;
 use function get_class;
-use function sprintf;
 
 use const PHP_VERSION_ID;
 
 class AttributeDriver extends CompatibilityAnnotationDriver
 {
     use ColocatedMappingDriver;
+    use ReflectionBasedDriver;
 
-    /** @var array<string,int> */
-    // @phpcs:ignore
-    protected $entityAnnotationClasses = [
+    private const ENTITY_ATTRIBUTE_CLASSES = [
         Mapping\Entity::class => 1,
         Mapping\MappedSuperclass::class => 2,
     ];
 
     /**
-     * The annotation reader.
+     * @deprecated override isTransient() instead of overriding this property
+     *
+     * @var array<class-string<MappingAttribute>, int>
+     */
+    protected $entityAnnotationClasses = self::ENTITY_ATTRIBUTE_CLASSES;
+
+    /**
+     * The attribute reader.
      *
      * @internal this property will be private in 3.0
      *
@@ -47,17 +53,37 @@ class AttributeDriver extends CompatibilityAnnotationDriver
     protected $reader;
 
     /** @param array<string> $paths */
-    public function __construct(array $paths)
+    public function __construct(array $paths, bool $reportFieldsWhereDeclared = false)
     {
         if (PHP_VERSION_ID < 80000) {
-            throw new LogicException(sprintf(
+            throw new LogicException(
                 'The attribute metadata driver cannot be enabled on PHP 7. Please upgrade to PHP 8 or choose a different'
                 . ' metadata driver.'
-            ));
+            );
         }
 
         $this->reader = new AttributeReader();
         $this->addPaths($paths);
+
+        if ($this->entityAnnotationClasses !== self::ENTITY_ATTRIBUTE_CLASSES) {
+            Deprecation::trigger(
+                'doctrine/orm',
+                'https://github.com/doctrine/orm/pull/10204',
+                'Changing the value of %s::$entityAnnotationClasses is deprecated and will have no effect in Doctrine ORM 3.0.',
+                self::class
+            );
+        }
+
+        if (! $reportFieldsWhereDeclared) {
+            Deprecation::trigger(
+                'doctrine/orm',
+                'https://github.com/doctrine/orm/pull/10455',
+                'In ORM 3.0, the AttributeDriver will report fields for the classes where they are declared. This may uncover invalid mapping configurations. To opt into the new mode today, set the "reportFieldsWhereDeclared" constructor parameter to true.',
+                self::class
+            );
+        }
+
+        $this->reportFieldsWhereDeclared = $reportFieldsWhereDeclared;
     }
 
     /**
@@ -84,11 +110,11 @@ class AttributeDriver extends CompatibilityAnnotationDriver
      */
     public function isTransient($className)
     {
-        $classAnnotations = $this->reader->getClassAnnotations(new ReflectionClass($className));
+        $classAttributes = $this->reader->getClassAttributes(new ReflectionClass($className));
 
-        foreach ($classAnnotations as $a) {
-            $annot = $a instanceof RepeatableAttributeCollection ? $a[0] : $a;
-            if (isset($this->entityAnnotationClasses[get_class($annot)])) {
+        foreach ($classAttributes as $a) {
+            $attr = $a instanceof RepeatableAttributeCollection ? $a[0] : $a;
+            if (isset($this->entityAnnotationClasses[get_class($attr)])) {
                 return false;
             }
         }
@@ -107,13 +133,13 @@ class AttributeDriver extends CompatibilityAnnotationDriver
     public function loadMetadataForClass($className, PersistenceClassMetadata $metadata): void
     {
         $reflectionClass = $metadata->getReflectionClass()
-            // this happens when running annotation driver in combination with
+            // this happens when running attribute driver in combination with
             // static reflection services. This is not the nicest fix
             ?? new ReflectionClass($metadata->name);
 
-        $classAttributes = $this->reader->getClassAnnotations($reflectionClass);
+        $classAttributes = $this->reader->getClassAttributes($reflectionClass);
 
-        // Evaluate Entity annotation
+        // Evaluate Entity attribute
         if (isset($classAttributes[Mapping\Entity::class])) {
             $entityAttribute = $classAttributes[Mapping\Entity::class];
             if ($entityAttribute->repositoryClass !== null) {
@@ -226,7 +252,7 @@ class AttributeDriver extends CompatibilityAnnotationDriver
 
         $metadata->setPrimaryTable($primaryTable);
 
-        // Evaluate @Cache annotation
+        // Evaluate #[Cache] attribute
         if (isset($classAttributes[Mapping\Cache::class])) {
             $cacheAttribute = $classAttributes[Mapping\Cache::class];
             $cacheMap       = [
@@ -237,7 +263,7 @@ class AttributeDriver extends CompatibilityAnnotationDriver
             $metadata->enableCache($cacheMap);
         }
 
-        // Evaluate InheritanceType annotation
+        // Evaluate InheritanceType attribute
         if (isset($classAttributes[Mapping\InheritanceType::class])) {
             $inheritanceTypeAttribute = $classAttributes[Mapping\InheritanceType::class];
 
@@ -246,23 +272,28 @@ class AttributeDriver extends CompatibilityAnnotationDriver
             );
 
             if ($metadata->inheritanceType !== ClassMetadata::INHERITANCE_TYPE_NONE) {
-                // Evaluate DiscriminatorColumn annotation
+                // Evaluate DiscriminatorColumn attribute
                 if (isset($classAttributes[Mapping\DiscriminatorColumn::class])) {
                     $discrColumnAttribute = $classAttributes[Mapping\DiscriminatorColumn::class];
 
-                    $metadata->setDiscriminatorColumn(
-                        [
-                            'name'             => isset($discrColumnAttribute->name) ? (string) $discrColumnAttribute->name : null,
-                            'type'             => isset($discrColumnAttribute->type) ? (string) $discrColumnAttribute->type : 'string',
-                            'length'           => isset($discrColumnAttribute->length) ? (int) $discrColumnAttribute->length : 255,
-                            'columnDefinition' => isset($discrColumnAttribute->columnDefinition) ? (string) $discrColumnAttribute->columnDefinition : null,
-                        ]
-                    );
+                    $columnDef = [
+                        'name' => isset($discrColumnAttribute->name) ? (string) $discrColumnAttribute->name : null,
+                        'type' => isset($discrColumnAttribute->type) ? (string) $discrColumnAttribute->type : 'string',
+                        'length' => isset($discrColumnAttribute->length) ? (int) $discrColumnAttribute->length : 255,
+                        'columnDefinition' => isset($discrColumnAttribute->columnDefinition) ? (string) $discrColumnAttribute->columnDefinition : null,
+                        'enumType' => isset($discrColumnAttribute->enumType) ? (string) $discrColumnAttribute->enumType : null,
+                    ];
+
+                    if ($discrColumnAttribute->options) {
+                        $columnDef['options'] = (array) $discrColumnAttribute->options;
+                    }
+
+                    $metadata->setDiscriminatorColumn($columnDef);
                 } else {
                     $metadata->setDiscriminatorColumn(['name' => 'dtype', 'type' => 'string', 'length' => 255]);
                 }
 
-                // Evaluate DiscriminatorMap annotation
+                // Evaluate DiscriminatorMap attribute
                 if (isset($classAttributes[Mapping\DiscriminatorMap::class])) {
                     $discrMapAttribute = $classAttributes[Mapping\DiscriminatorMap::class];
                     $metadata->setDiscriminatorMap($discrMapAttribute->value);
@@ -270,7 +301,7 @@ class AttributeDriver extends CompatibilityAnnotationDriver
             }
         }
 
-        // Evaluate DoctrineChangeTrackingPolicy annotation
+        // Evaluate DoctrineChangeTrackingPolicy attribute
         if (isset($classAttributes[Mapping\ChangeTrackingPolicy::class])) {
             $changeTrackingAttribute = $classAttributes[Mapping\ChangeTrackingPolicy::class];
             $metadata->setChangeTrackingPolicy(constant('Doctrine\ORM\Mapping\ClassMetadata::CHANGETRACKING_' . $changeTrackingAttribute->value));
@@ -278,23 +309,16 @@ class AttributeDriver extends CompatibilityAnnotationDriver
 
         foreach ($reflectionClass->getProperties() as $property) {
             assert($property instanceof ReflectionProperty);
-            if (
-                $metadata->isMappedSuperclass && ! $property->isPrivate()
-                ||
-                $metadata->isInheritedField($property->name)
-                ||
-                $metadata->isInheritedAssociation($property->name)
-                ||
-                $metadata->isInheritedEmbeddedClass($property->name)
-            ) {
+
+            if ($this->isRepeatedPropertyDeclaration($property, $metadata)) {
                 continue;
             }
 
             $mapping              = [];
-            $mapping['fieldName'] = $property->getName();
+            $mapping['fieldName'] = $property->name;
 
-            // Evaluate @Cache annotation
-            $cacheAttribute = $this->reader->getPropertyAnnotation($property, Mapping\Cache::class);
+            // Evaluate #[Cache] attribute
+            $cacheAttribute = $this->reader->getPropertyAttribute($property, Mapping\Cache::class);
             if ($cacheAttribute !== null) {
                 assert($cacheAttribute instanceof Mapping\Cache);
 
@@ -307,10 +331,10 @@ class AttributeDriver extends CompatibilityAnnotationDriver
                 );
             }
 
-            // Check for JoinColumn/JoinColumns annotations
+            // Check for JoinColumn/JoinColumns attributes
             $joinColumns = [];
 
-            $joinColumnAttributes = $this->reader->getPropertyAnnotationCollection($property, Mapping\JoinColumn::class);
+            $joinColumnAttributes = $this->reader->getPropertyAttributeCollection($property, Mapping\JoinColumn::class);
 
             foreach ($joinColumnAttributes as $joinColumnAttribute) {
                 $joinColumns[] = $this->joinColumnToArray($joinColumnAttribute);
@@ -318,35 +342,35 @@ class AttributeDriver extends CompatibilityAnnotationDriver
 
             // Field can only be attributed with one of:
             // Column, OneToOne, OneToMany, ManyToOne, ManyToMany, Embedded
-            $columnAttribute     = $this->reader->getPropertyAnnotation($property, Mapping\Column::class);
-            $oneToOneAttribute   = $this->reader->getPropertyAnnotation($property, Mapping\OneToOne::class);
-            $oneToManyAttribute  = $this->reader->getPropertyAnnotation($property, Mapping\OneToMany::class);
-            $manyToOneAttribute  = $this->reader->getPropertyAnnotation($property, Mapping\ManyToOne::class);
-            $manyToManyAttribute = $this->reader->getPropertyAnnotation($property, Mapping\ManyToMany::class);
-            $embeddedAttribute   = $this->reader->getPropertyAnnotation($property, Mapping\Embedded::class);
+            $columnAttribute     = $this->reader->getPropertyAttribute($property, Mapping\Column::class);
+            $oneToOneAttribute   = $this->reader->getPropertyAttribute($property, Mapping\OneToOne::class);
+            $oneToManyAttribute  = $this->reader->getPropertyAttribute($property, Mapping\OneToMany::class);
+            $manyToOneAttribute  = $this->reader->getPropertyAttribute($property, Mapping\ManyToOne::class);
+            $manyToManyAttribute = $this->reader->getPropertyAttribute($property, Mapping\ManyToMany::class);
+            $embeddedAttribute   = $this->reader->getPropertyAttribute($property, Mapping\Embedded::class);
 
             if ($columnAttribute !== null) {
-                $mapping = $this->columnToArray($property->getName(), $columnAttribute);
+                $mapping = $this->columnToArray($property->name, $columnAttribute);
 
-                if ($this->reader->getPropertyAnnotation($property, Mapping\Id::class)) {
+                if ($this->reader->getPropertyAttribute($property, Mapping\Id::class)) {
                     $mapping['id'] = true;
                 }
 
-                $generatedValueAttribute = $this->reader->getPropertyAnnotation($property, Mapping\GeneratedValue::class);
+                $generatedValueAttribute = $this->reader->getPropertyAttribute($property, Mapping\GeneratedValue::class);
 
                 if ($generatedValueAttribute !== null) {
                     $metadata->setIdGeneratorType(constant('Doctrine\ORM\Mapping\ClassMetadata::GENERATOR_TYPE_' . $generatedValueAttribute->strategy));
                 }
 
-                if ($this->reader->getPropertyAnnotation($property, Mapping\Version::class)) {
+                if ($this->reader->getPropertyAttribute($property, Mapping\Version::class)) {
                     $metadata->setVersionMapping($mapping);
                 }
 
                 $metadata->mapField($mapping);
 
                 // Check for SequenceGenerator/TableGenerator definition
-                $seqGeneratorAttribute    = $this->reader->getPropertyAnnotation($property, Mapping\SequenceGenerator::class);
-                $customGeneratorAttribute = $this->reader->getPropertyAnnotation($property, Mapping\CustomIdGenerator::class);
+                $seqGeneratorAttribute    = $this->reader->getPropertyAttribute($property, Mapping\SequenceGenerator::class);
+                $customGeneratorAttribute = $this->reader->getPropertyAttribute($property, Mapping\CustomIdGenerator::class);
 
                 if ($seqGeneratorAttribute !== null) {
                     $metadata->setSequenceGeneratorDefinition(
@@ -364,7 +388,7 @@ class AttributeDriver extends CompatibilityAnnotationDriver
                     );
                 }
             } elseif ($oneToOneAttribute !== null) {
-                if ($this->reader->getPropertyAnnotation($property, Mapping\Id::class)) {
+                if ($this->reader->getPropertyAttribute($property, Mapping\Id::class)) {
                     $mapping['id'] = true;
                 }
 
@@ -384,7 +408,7 @@ class AttributeDriver extends CompatibilityAnnotationDriver
                 $mapping['orphanRemoval'] = $oneToManyAttribute->orphanRemoval;
                 $mapping['fetch']         = $this->getFetchMode($className, $oneToManyAttribute->fetch);
 
-                $orderByAttribute = $this->reader->getPropertyAnnotation($property, Mapping\OrderBy::class);
+                $orderByAttribute = $this->reader->getPropertyAttribute($property, Mapping\OrderBy::class);
 
                 if ($orderByAttribute !== null) {
                     $mapping['orderBy'] = $orderByAttribute->value;
@@ -392,7 +416,7 @@ class AttributeDriver extends CompatibilityAnnotationDriver
 
                 $metadata->mapOneToMany($mapping);
             } elseif ($manyToOneAttribute !== null) {
-                $idAttribute = $this->reader->getPropertyAnnotation($property, Mapping\Id::class);
+                $idAttribute = $this->reader->getPropertyAttribute($property, Mapping\Id::class);
 
                 if ($idAttribute !== null) {
                     $mapping['id'] = true;
@@ -406,7 +430,7 @@ class AttributeDriver extends CompatibilityAnnotationDriver
                 $metadata->mapManyToOne($mapping);
             } elseif ($manyToManyAttribute !== null) {
                 $joinTable          = [];
-                $joinTableAttribute = $this->reader->getPropertyAnnotation($property, Mapping\JoinTable::class);
+                $joinTableAttribute = $this->reader->getPropertyAttribute($property, Mapping\JoinTable::class);
 
                 if ($joinTableAttribute !== null) {
                     $joinTable = [
@@ -417,13 +441,21 @@ class AttributeDriver extends CompatibilityAnnotationDriver
                     if ($joinTableAttribute->options) {
                         $joinTable['options'] = $joinTableAttribute->options;
                     }
+
+                    foreach ($joinTableAttribute->joinColumns as $joinColumn) {
+                        $joinTable['joinColumns'][] = $this->joinColumnToArray($joinColumn);
+                    }
+
+                    foreach ($joinTableAttribute->inverseJoinColumns as $joinColumn) {
+                        $joinTable['inverseJoinColumns'][] = $this->joinColumnToArray($joinColumn);
+                    }
                 }
 
-                foreach ($this->reader->getPropertyAnnotationCollection($property, Mapping\JoinColumn::class) as $joinColumn) {
+                foreach ($this->reader->getPropertyAttributeCollection($property, Mapping\JoinColumn::class) as $joinColumn) {
                     $joinTable['joinColumns'][] = $this->joinColumnToArray($joinColumn);
                 }
 
-                foreach ($this->reader->getPropertyAnnotationCollection($property, Mapping\InverseJoinColumn::class) as $joinColumn) {
+                foreach ($this->reader->getPropertyAttributeCollection($property, Mapping\InverseJoinColumn::class) as $joinColumn) {
                     $joinTable['inverseJoinColumns'][] = $this->joinColumnToArray($joinColumn);
                 }
 
@@ -436,7 +468,7 @@ class AttributeDriver extends CompatibilityAnnotationDriver
                 $mapping['orphanRemoval'] = $manyToManyAttribute->orphanRemoval;
                 $mapping['fetch']         = $this->getFetchMode($className, $manyToManyAttribute->fetch);
 
-                $orderByAttribute = $this->reader->getPropertyAnnotation($property, Mapping\OrderBy::class);
+                $orderByAttribute = $this->reader->getPropertyAttribute($property, Mapping\OrderBy::class);
 
                 if ($orderByAttribute !== null) {
                     $mapping['orderBy'] = $orderByAttribute->value;
@@ -509,7 +541,7 @@ class AttributeDriver extends CompatibilityAnnotationDriver
             }
         }
 
-        // Evaluate AttributeOverrides annotation
+        // Evaluate AttributeOverrides attribute
         if (isset($classAttributes[Mapping\AttributeOverrides::class])) {
             $attributeOverridesAnnot = $classAttributes[Mapping\AttributeOverrides::class];
 
@@ -520,7 +552,7 @@ class AttributeDriver extends CompatibilityAnnotationDriver
             }
         }
 
-        // Evaluate EntityListeners annotation
+        // Evaluate EntityListeners attribute
         if (isset($classAttributes[Mapping\EntityListeners::class])) {
             $entityListenersAttribute = $classAttributes[Mapping\EntityListeners::class];
 
@@ -552,7 +584,7 @@ class AttributeDriver extends CompatibilityAnnotationDriver
             }
         }
 
-        // Evaluate @HasLifecycleCallbacks annotation
+        // Evaluate #[HasLifecycleCallbacks] attribute
         if (isset($classAttributes[Mapping\HasLifecycleCallbacks::class])) {
             foreach ($reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
                 assert($method instanceof ReflectionMethod);
@@ -566,8 +598,8 @@ class AttributeDriver extends CompatibilityAnnotationDriver
     /**
      * Attempts to resolve the fetch mode.
      *
-     * @param string $className The class name.
-     * @param string $fetchMode The fetch mode.
+     * @param class-string $className The class name.
+     * @param string       $fetchMode The fetch mode.
      *
      * @return ClassMetadata::FETCH_* The fetch mode as defined in ClassMetadata.
      *
@@ -599,12 +631,13 @@ class AttributeDriver extends CompatibilityAnnotationDriver
     /**
      * Parses the given method.
      *
-     * @return callable[]
+     * @return list<array{string, string}>
+     * @psalm-return list<array{string, (Events::*)}>
      */
     private function getMethodCallbacks(ReflectionMethod $method): array
     {
         $callbacks  = [];
-        $attributes = $this->reader->getMethodAnnotations($method);
+        $attributes = $this->reader->getMethodAttributes($method);
 
         foreach ($attributes as $attribute) {
             if ($attribute instanceof Mapping\PrePersist) {

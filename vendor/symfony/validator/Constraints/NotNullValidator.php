@@ -21,7 +21,7 @@ use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 class NotNullValidator extends ConstraintValidator
 {
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function validate(mixed $value, Constraint $constraint)
     {

@@ -13,7 +13,6 @@ parameters:
         -
             message: '~^Variable property access on SimpleXMLElement\.$~'
             path: lib/Doctrine/Migrations/Configuration/Migration/XmlFile.php
-
         -
             message: '~^Call to function is_bool\(\) with bool will always evaluate to true\.$~'
             path: lib/Doctrine/Migrations/InlineParameterFormatter.php
@@ -47,6 +46,12 @@ parameters:
         -
             message: '~^Call to function method_exists\(\) with Doctrine\\Migrations\\Metadata\\Storage\\MetadataStorage and ''getSql'' will always evaluate to true\.$~'
             path: lib/Doctrine/Migrations/Version/DbalExecutor.php
+
+        # TODO: deprecate using the connection event manager and expose
+        # our own event manager instead.
+        -
+            message: '~^Call to deprecated method getEventManager\(\) of class Doctrine\\DBAL\\Connection\.$~'
+            path: lib/Doctrine/Migrations/DependencyFactory.php
 
     symfony:
             console_application_loader: tests/Doctrine/Migrations/Tests/doctrine-migrations-phpstan-app.php

@@ -64,9 +64,6 @@ class UrlPackage extends Package
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getUrl(string $path): string
     {
         if ($this->isAbsoluteUrl($path)) {
@@ -110,10 +107,10 @@ class UrlPackage extends Package
      */
     protected function chooseBaseUrl(string $path): int
     {
-        return (int) fmod(hexdec(substr(hash('sha256', $path), 0, 10)), \count($this->baseUrls));
+        return abs(crc32($path)) % \count($this->baseUrls);
     }
 
-    private function getSslUrls(array $urls)
+    private function getSslUrls(array $urls): array
     {
         $sslUrls = [];
         foreach ($urls as $url) {

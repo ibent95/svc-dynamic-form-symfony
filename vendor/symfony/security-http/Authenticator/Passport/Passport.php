@@ -66,11 +66,23 @@ class Passport
      * This method replaces the current badge if it is already set on this
      * passport.
      *
+     * @param string|null $badgeFqcn A FQCN to which the badge should be mapped to. 
+     *                                                        This allows replacing a built-in badge by a custom one using
+     *.                                                        e.g. addBadge(new MyCustomUserBadge(), UserBadge::class)
+     *
      * @return $this
      */
-    public function addBadge(BadgeInterface $badge): static
+    public function addBadge(BadgeInterface $badge/* , string $badgeFqcn = null */): static
     {
-        $this->badges[\get_class($badge)] = $badge;
+        $badgeFqcn = $badge::class;
+        if (2 === \func_num_args()) {
+            $badgeFqcn = func_get_arg(1);
+            if (!\is_string($badgeFqcn)) {
+                throw new \LogicException(sprintf('Second argument of "%s" must be a string.', __METHOD__));
+            }
+        }
+
+        $this->badges[$badgeFqcn] = $badge;
 
         return $this;
     }
@@ -80,6 +92,13 @@ class Passport
         return isset($this->badges[$badgeFqcn]);
     }
 
+    /**
+     * @template TBadge of BadgeInterface
+     *
+     * @param class-string<TBadge> $badgeFqcn
+     *
+     * @return TBadge|null
+     */
     public function getBadge(string $badgeFqcn): ?BadgeInterface
     {
         return $this->badges[$badgeFqcn] ?? null;

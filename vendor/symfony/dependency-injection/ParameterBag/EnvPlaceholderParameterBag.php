@@ -26,9 +26,6 @@ class EnvPlaceholderParameterBag extends ParameterBag
 
     private static int $counter = 0;
 
-    /**
-     * {@inheritdoc}
-     */
     public function get(string $name): array|bool|string|int|float|\UnitEnum|null
     {
         if (str_starts_with($name, 'env(') && str_ends_with($name, ')') && 'env()' !== $name) {
@@ -44,15 +41,15 @@ class EnvPlaceholderParameterBag extends ParameterBag
                     return $placeholder; // return first result
                 }
             }
-            if (!preg_match('/^(?:[-.\w]*+:)*+\w++$/', $env)) {
+            if (!preg_match('/^(?:[-.\w\\\\]*+:)*+\w++$/', $env)) {
                 throw new InvalidArgumentException(sprintf('Invalid %s name: only "word" characters are allowed.', $name));
             }
             if ($this->has($name) && null !== ($defaultValue = parent::get($name)) && !\is_string($defaultValue)) {
                 throw new RuntimeException(sprintf('The default value of an env() parameter must be a string or null, but "%s" given to "%s".', get_debug_type($defaultValue), $name));
             }
 
-            $uniqueName = md5($name.'_'.self::$counter++);
-            $placeholder = sprintf('%s_%s_%s', $this->getEnvPlaceholderUniquePrefix(), strtr($env, ':-.', '___'), $uniqueName);
+            $uniqueName = hash('xxh128', $name.'_'.self::$counter++);
+            $placeholder = sprintf('%s_%s_%s', $this->getEnvPlaceholderUniquePrefix(), strtr($env, ':-.\\', '____'), $uniqueName);
             $this->envPlaceholders[$env][$placeholder] = $placeholder;
 
             return $placeholder;
@@ -69,7 +66,7 @@ class EnvPlaceholderParameterBag extends ParameterBag
         if (!isset($this->envPlaceholderUniquePrefix)) {
             $reproducibleEntropy = unserialize(serialize($this->parameters));
             array_walk_recursive($reproducibleEntropy, function (&$v) { $v = null; });
-            $this->envPlaceholderUniquePrefix = 'env_'.substr(md5(serialize($reproducibleEntropy)), -16);
+            $this->envPlaceholderUniquePrefix = 'env_'.substr(hash('xxh128', serialize($reproducibleEntropy)), -16);
         }
 
         return $this->envPlaceholderUniquePrefix;
@@ -90,6 +87,9 @@ class EnvPlaceholderParameterBag extends ParameterBag
         return $this->unusedEnvPlaceholders;
     }
 
+    /**
+     * @return void
+     */
     public function clearUnusedEnvPlaceholders()
     {
         $this->unusedEnvPlaceholders = [];
@@ -97,6 +97,8 @@ class EnvPlaceholderParameterBag extends ParameterBag
 
     /**
      * Merges the env placeholders of another EnvPlaceholderParameterBag.
+     *
+     * @return void
      */
     public function mergeEnvPlaceholders(self $bag)
     {
@@ -119,6 +121,8 @@ class EnvPlaceholderParameterBag extends ParameterBag
 
     /**
      * Maps env prefixes to their corresponding PHP types.
+     *
+     * @return void
      */
     public function setProvidedTypes(array $providedTypes)
     {
@@ -136,7 +140,7 @@ class EnvPlaceholderParameterBag extends ParameterBag
     }
 
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function resolve()
     {

@@ -43,10 +43,7 @@ final class CachePoolDeleteCommand extends Command
         $this->poolNames = $poolNames;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setDefinition([
@@ -62,9 +59,6 @@ EOF
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);

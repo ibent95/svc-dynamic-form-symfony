@@ -33,7 +33,7 @@ class ContainerAwareLoader extends Loader
     }
 
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function addFixture(FixtureInterface $fixture)
     {

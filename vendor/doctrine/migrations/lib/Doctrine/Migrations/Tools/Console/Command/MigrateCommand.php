@@ -75,7 +75,8 @@ final class MigrateCommand extends DoctrineCommand
                 'all-or-nothing',
                 null,
                 InputOption::VALUE_OPTIONAL,
-                'Wrap the entire migration in a transaction.'
+                'Wrap the entire migration in a transaction.',
+                'notprovided'
             )
             ->setHelp(<<<EOT
 The <info>%command.name%</info> command executes a migration to a specified version or the latest available version:
@@ -214,6 +215,10 @@ EOT
             $writer->write($path, $plan->getDirection(), $sql);
         }
 
+        $this->io->success(sprintf(
+            'Successfully migrated to version : %s',
+            $version
+        ));
         $this->io->newLine();
 
         return 0;

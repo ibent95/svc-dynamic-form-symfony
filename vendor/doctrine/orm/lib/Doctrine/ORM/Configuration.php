@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Doctrine\ORM;
 
+use BadMethodCallException;
 use Doctrine\Common\Annotations\AnnotationReader;
-use Doctrine\Common\Annotations\AnnotationRegistry;
 use Doctrine\Common\Annotations\CachedReader;
 use Doctrine\Common\Annotations\SimpleAnnotationReader;
 use Doctrine\Common\Cache\ArrayCache;
@@ -13,7 +13,6 @@ use Doctrine\Common\Cache\Cache as CacheDriver;
 use Doctrine\Common\Cache\Psr6\CacheAdapter;
 use Doctrine\Common\Cache\Psr6\DoctrineProvider;
 use Doctrine\Common\Persistence\PersistentObject;
-use Doctrine\Common\Proxy\AbstractProxyFactory;
 use Doctrine\Deprecations\Deprecation;
 use Doctrine\ORM\Cache\CacheConfiguration;
 use Doctrine\ORM\Cache\Exception\CacheException;
@@ -36,6 +35,7 @@ use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
 use Doctrine\ORM\Mapping\EntityListenerResolver;
 use Doctrine\ORM\Mapping\NamingStrategy;
 use Doctrine\ORM\Mapping\QuoteStrategy;
+use Doctrine\ORM\Mapping\TypedFieldMapper;
 use Doctrine\ORM\Proxy\ProxyFactory;
 use Doctrine\ORM\Query\AST\Functions\FunctionNode;
 use Doctrine\ORM\Query\Filter\SQLFilter;
@@ -44,14 +44,17 @@ use Doctrine\ORM\Repository\DefaultRepositoryFactory;
 use Doctrine\ORM\Repository\RepositoryFactory;
 use Doctrine\Persistence\Mapping\Driver\MappingDriver;
 use Doctrine\Persistence\ObjectRepository;
+use Doctrine\Persistence\Reflection\RuntimeReflectionProperty;
 use LogicException;
 use Psr\Cache\CacheItemPoolInterface;
+use Symfony\Component\VarExporter\LazyGhostTrait;
 
 use function class_exists;
 use function is_a;
 use function method_exists;
 use function sprintf;
 use function strtolower;
+use function trait_exists;
 use function trim;
 
 /**
@@ -59,8 +62,6 @@ use function trim;
  * It combines all configuration options from DBAL & ORM.
  *
  * Internal note: When adding a new configuration option just write a getter/setter pair.
- *
- * @psalm-import-type AutogenerateMode from ProxyFactory
  */
 class Configuration extends \Doctrine\DBAL\Configuration
 {
@@ -92,20 +93,17 @@ class Configuration extends \Doctrine\DBAL\Configuration
     /**
      * Gets the strategy for automatically generating proxy classes.
      *
-     * @return int Possible values are constants of Doctrine\Common\Proxy\AbstractProxyFactory.
-     * @psalm-return AutogenerateMode
+     * @return ProxyFactory::AUTOGENERATE_*
      */
     public function getAutoGenerateProxyClasses()
     {
-        return $this->_attributes['autoGenerateProxyClasses'] ?? AbstractProxyFactory::AUTOGENERATE_ALWAYS;
+        return $this->_attributes['autoGenerateProxyClasses'] ?? ProxyFactory::AUTOGENERATE_ALWAYS;
     }
 
     /**
      * Sets the strategy for automatically generating proxy classes.
      *
-     * @param bool|int $autoGenerate Possible values are constants of Doctrine\Common\Proxy\AbstractProxyFactory.
-     * @psalm-param bool|AutogenerateMode $autoGenerate
-     * True is converted to AUTOGENERATE_ALWAYS, false to AUTOGENERATE_NEVER.
+     * @param bool|ProxyFactory::AUTOGENERATE_* $autoGenerate True is converted to AUTOGENERATE_ALWAYS, false to AUTOGENERATE_NEVER.
      *
      * @return void
      */
@@ -161,7 +159,7 @@ class Configuration extends \Doctrine\DBAL\Configuration
      *
      * @return AnnotationDriver
      */
-    public function newDefaultAnnotationDriver($paths = [], $useSimpleAnnotationReader = true)
+    public function newDefaultAnnotationDriver($paths = [], $useSimpleAnnotationReader = true, bool $reportFieldsWhereDeclared = false)
     {
         Deprecation::trigger(
             'doctrine/orm',
@@ -172,16 +170,21 @@ class Configuration extends \Doctrine\DBAL\Configuration
         );
 
         if (! class_exists(AnnotationReader::class)) {
-            throw new LogicException(sprintf(
+            throw new LogicException(
                 'The annotation metadata driver cannot be enabled because the "doctrine/annotations" library'
                 . ' is not installed. Please run "composer require doctrine/annotations" or choose a different'
                 . ' metadata driver.'
-            ));
+            );
         }
 
-        AnnotationRegistry::registerFile(__DIR__ . '/Mapping/Driver/DoctrineAnnotations.php');
-
         if ($useSimpleAnnotationReader) {
+            if (! class_exists(SimpleAnnotationReader::class)) {
+                throw new BadMethodCallException(
+                    'SimpleAnnotationReader has been removed in doctrine/annotations 2.'
+                    . ' Downgrade to version 1 or set $useSimpleAnnotationReader to false.'
+                );
+            }
+
             // Register the ORM Annotations in the AnnotationRegistry
             $reader = new SimpleAnnotationReader();
             $reader->addNamespace('Doctrine\ORM\Mapping');
@@ -189,20 +192,21 @@ class Configuration extends \Doctrine\DBAL\Configuration
             $reader = new AnnotationReader();
         }
 
-        if (class_exists(ArrayCache::class)) {
+        if (class_exists(ArrayCache::class) && class_exists(CachedReader::class)) {
             $reader = new CachedReader($reader, new ArrayCache());
         }
 
         return new AnnotationDriver(
             $reader,
-            (array) $paths
+            (array) $paths,
+            $reportFieldsWhereDeclared
         );
     }
 
     /**
-     * @deprecated No replacement planned.
-     *
      * Adds a namespace under a certain alias.
+     *
+     * @deprecated No replacement planned.
      *
      * @param string $alias
      * @param string $namespace
@@ -219,7 +223,7 @@ class Configuration extends \Doctrine\DBAL\Configuration
                 $alias
             );
         } else {
-            NotSupported::createForPersistence3(sprintf(
+            throw NotSupported::createForPersistence3(sprintf(
                 'Using short namespace alias "%s" by calling %s',
                 $alias,
                 __METHOD__
@@ -572,7 +576,7 @@ class Configuration extends \Doctrine\DBAL\Configuration
             throw QueryCacheUsesNonPersistentCache::fromDriver($queryCacheImpl);
         }
 
-        if ($this->getAutoGenerateProxyClasses() !== AbstractProxyFactory::AUTOGENERATE_NEVER) {
+        if ($this->getAutoGenerateProxyClasses() !== ProxyFactory::AUTOGENERATE_NEVER) {
             throw ProxyClassesAlwaysRegenerating::create();
         }
 
@@ -717,7 +721,7 @@ class Configuration extends \Doctrine\DBAL\Configuration
      * @param string $name
      *
      * @return string|callable|null
-     * @psalm-return class-string|callable|null $name
+     * @psalm-return class-string|callable|null
      */
     public function getCustomDatetimeFunction($name)
     {
@@ -744,6 +748,22 @@ class Configuration extends \Doctrine\DBAL\Configuration
         foreach ($functions as $name => $className) {
             $this->addCustomDatetimeFunction($name, $className);
         }
+    }
+
+    /**
+     * Sets a TypedFieldMapper for php typed fields to DBAL types auto-completion.
+     */
+    public function setTypedFieldMapper(?TypedFieldMapper $typedFieldMapper): void
+    {
+        $this->_attributes['typedFieldMapper'] = $typedFieldMapper;
+    }
+
+    /**
+     * Gets a TypedFieldMapper for php typed fields to DBAL types auto-completion.
+     */
+    public function getTypedFieldMapper(): ?TypedFieldMapper
+    {
+        return $this->_attributes['typedFieldMapper'] ?? null;
     }
 
     /**
@@ -1072,5 +1092,39 @@ class Configuration extends \Doctrine\DBAL\Configuration
     public function setSchemaIgnoreClasses(array $schemaIgnoreClasses): void
     {
         $this->_attributes['schemaIgnoreClasses'] = $schemaIgnoreClasses;
+    }
+
+    public function isLazyGhostObjectEnabled(): bool
+    {
+        return $this->_attributes['isLazyGhostObjectEnabled'] ?? false;
+    }
+
+    public function setLazyGhostObjectEnabled(bool $flag): void
+    {
+        if ($flag && ! trait_exists(LazyGhostTrait::class)) {
+            throw new LogicException(
+                'Lazy ghost objects cannot be enabled because the "symfony/var-exporter" library'
+                . ' version 6.2 or higher is not installed. Please run "composer require symfony/var-exporter:^6.2".'
+            );
+        }
+
+        if ($flag && ! class_exists(RuntimeReflectionProperty::class)) {
+            throw new LogicException(
+                'Lazy ghost objects cannot be enabled because the "doctrine/persistence" library'
+                . ' version 3.1 or higher is not installed. Please run "composer update doctrine/persistence".'
+            );
+        }
+
+        $this->_attributes['isLazyGhostObjectEnabled'] = $flag;
+    }
+
+    public function setRejectIdCollisionInIdentityMap(bool $flag): void
+    {
+        $this->_attributes['rejectIdCollisionInIdentityMap'] = $flag;
+    }
+
+    public function isRejectIdCollisionInIdentityMapEnabled(): bool
+    {
+        return $this->_attributes['rejectIdCollisionInIdentityMap'] ?? false;
     }
 }

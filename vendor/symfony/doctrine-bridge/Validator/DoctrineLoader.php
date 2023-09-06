@@ -42,9 +42,6 @@ final class DoctrineLoader implements LoaderInterface
         $this->classValidatorRegexp = $classValidatorRegexp;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function loadClassMetadata(ClassMetadata $metadata): bool
     {
         $className = $metadata->getClassName();
@@ -108,7 +105,7 @@ final class DoctrineLoader implements LoaderInterface
                 if (isset($mapping['originalClass']) && !str_contains($mapping['declaredField'], '.')) {
                     $metadata->addPropertyConstraint($mapping['declaredField'], new Valid());
                     $loaded = true;
-                } elseif (property_exists($className, $mapping['fieldName'])) {
+                } elseif (property_exists($className, $mapping['fieldName']) && (!$doctrineMetadata->isMappedSuperclass || $metadata->getReflectionClass()->getProperty($mapping['fieldName'])->isPrivate())) {
                     $metadata->addPropertyConstraint($mapping['fieldName'], new Length(['max' => $mapping['length']]));
                     $loaded = true;
                 }

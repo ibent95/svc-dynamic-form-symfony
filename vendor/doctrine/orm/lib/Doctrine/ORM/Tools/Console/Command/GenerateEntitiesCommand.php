@@ -28,9 +28,7 @@ use function sprintf;
  */
 class GenerateEntitiesCommand extends AbstractEntityManagerCommand
 {
-    /**
-     * {@inheritdoc}
-     */
+    /** @return void */
     protected function configure()
     {
         $this->setName('orm:generate-entities')
@@ -70,13 +68,13 @@ EOT
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      *
      * @return int
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $ui = new SymfonyStyle($input, $output);
+        $ui = (new SymfonyStyle($input, $output))->getErrorStyle();
         $ui->warning('Command ' . $this->getName() . ' is deprecated and will be removed in Doctrine ORM 3.0.');
 
         $em = $this->getEntityManager($input);

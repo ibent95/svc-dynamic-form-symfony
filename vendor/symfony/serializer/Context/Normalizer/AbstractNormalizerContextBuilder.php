@@ -158,10 +158,19 @@ abstract class AbstractNormalizerContextBuilder implements ContextBuilderInterfa
      * Note: The behaviour for nested structures is different from ATTRIBUTES
      * for historical reason. Aligning the behaviour would be a BC break.
      *
-     * @param list<string>|null $attributes
+     * @param list<string>|null $ignoredAttributes
      */
     public function withIgnoredAttributes(?array $ignoredAttributes): static
     {
         return $this->with(AbstractNormalizer::IGNORED_ATTRIBUTES, $ignoredAttributes);
+    }
+
+    /**
+     * Configures requiring all properties to be listed in the input instead
+     * of falling back to null for nullable ones.
+     */
+    public function withRequireAllProperties(?bool $requireAllProperties = true): static
+    {
+        return $this->with(AbstractNormalizer::REQUIRE_ALL_PROPERTIES, $requireAllProperties);
     }
 }

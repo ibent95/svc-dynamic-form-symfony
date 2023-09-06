@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+6.3
+---
+
+ * Add support for Relay PHP extension for Redis
+ * Updates to allow Redis cluster connections using predis/predis:^2.0
+ * Add optional parameter `$isSameDatabase` to `DoctrineDbalAdapter::configureSchema()`
+
 6.1
 ---
 

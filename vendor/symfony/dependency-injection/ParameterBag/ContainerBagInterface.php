@@ -29,6 +29,14 @@ interface ContainerBagInterface extends ContainerInterface
     /**
      * Replaces parameter placeholders (%name%) by their values.
      *
+     * @template TValue of array<array|scalar>|scalar
+     *
+     * @param TValue $value
+     *
+     * @return mixed
+     *
+     * @psalm-return (TValue is scalar ? array|scalar : array<array|scalar>)
+     *
      * @throws ParameterNotFoundException if a placeholder references a parameter that does not exist
      */
     public function resolveValue(mixed $value);

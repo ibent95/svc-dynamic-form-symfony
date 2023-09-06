@@ -22,7 +22,7 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 class AllValidator extends ConstraintValidator
 {
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function validate(mixed $value, Constraint $constraint)
     {

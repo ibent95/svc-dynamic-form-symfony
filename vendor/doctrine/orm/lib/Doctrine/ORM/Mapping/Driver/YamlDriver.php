@@ -48,11 +48,11 @@ class YamlDriver extends FileDriver
         );
 
         if (! class_exists(Yaml::class)) {
-            throw new LogicException(sprintf(
+            throw new LogicException(
                 'The YAML metadata driver cannot be enabled because the "symfony/yaml" library'
                 . ' is not installed. Please run "composer require symfony/yaml" or choose a different'
                 . ' metadata driver.'
-            ));
+            );
         }
 
         parent::__construct($locator, $fileExtension);
@@ -201,6 +201,7 @@ class YamlDriver extends FileDriver
                             'type' => isset($discrColumn['type']) ? (string) $discrColumn['type'] : 'string',
                             'length' => isset($discrColumn['length']) ? (int) $discrColumn['length'] : 255,
                             'columnDefinition' => isset($discrColumn['columnDefinition']) ? (string) $discrColumn['columnDefinition'] : null,
+                            'enumType' => isset($discrColumn['enumType']) ? (string) $discrColumn['enumType'] : null,
                         ]
                     );
                 } else {
@@ -902,11 +903,10 @@ class YamlDriver extends FileDriver
      * Parse / Normalize the cache configuration
      *
      * @param mixed[] $cacheMapping
-     * @psalm-param array{usage: mixed, region: (string|null)} $cacheMapping
-     * @psalm-param array{usage: string, region?: string} $cacheMapping
+     * @psalm-param array{usage: string|null, region?: mixed} $cacheMapping
      *
      * @return mixed[]
-     * @psalm-return array{usage: int, region: string|null}
+     * @psalm-return array{usage: int|null, region: string|null}
      */
     private function cacheToArray(array $cacheMapping): array
     {

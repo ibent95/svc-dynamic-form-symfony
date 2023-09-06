@@ -50,22 +50,17 @@ use function usort;
  */
 class DoctrineDataCollector extends BaseCollector
 {
-    /** @var ManagerRegistry */
-    private $registry;
-
-    /** @var int|null */
-    private $invalidEntityCount;
+    private ManagerRegistry $registry;
+    private ?int $invalidEntityCount = null;
 
     /**
-     * @var mixed[][]
+     * @var mixed[][]|null
      * @psalm-var ?array<string, list<QueryType&array{count: int, index: int, executionPercent: float}>>
      */
-    private $groupedQueries;
+    private ?array $groupedQueries = null;
 
-    /** @var bool */
-    private $shouldValidateSchema;
+    private bool $shouldValidateSchema;
 
-    /** @psalm-suppress UndefinedClass */
     public function __construct(ManagerRegistry $registry, bool $shouldValidateSchema = true, ?DebugDataHolder $debugDataHolder = null)
     {
         $this->registry             = $registry;
@@ -74,15 +69,11 @@ class DoctrineDataCollector extends BaseCollector
         if ($debugDataHolder === null) {
             parent::__construct($registry);
         } else {
-            /** @psalm-suppress TooManyArguments */
             parent::__construct($registry, $debugDataHolder);
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function collect(Request $request, Response $response, ?Throwable $exception = null)
+    public function collect(Request $request, Response $response, ?Throwable $exception = null): void
     {
         parent::collect($request, $response, $exception);
 
@@ -120,7 +111,12 @@ class DoctrineDataCollector extends BaseCollector
                     }
 
                     $classErrors                        = $validator->validateClass($class);
-                    $entities[$name][$class->getName()] = $class->getName();
+                    $r                                  = $class->getReflectionClass();
+                    $entities[$name][$class->getName()] = [
+                        'class' => $class->getName(),
+                        'file' => $r->getFileName(),
+                        'line' => $r->getStartLine(),
+                    ];
 
                     if (empty($classErrors)) {
                         continue;
@@ -242,11 +238,7 @@ class DoctrineDataCollector extends BaseCollector
     /** @return int */
     public function getInvalidEntityCount()
     {
-        if ($this->invalidEntityCount === null) {
-            $this->invalidEntityCount = array_sum(array_map('count', $this->data['errors']));
-        }
-
-        return $this->invalidEntityCount;
+        return $this->invalidEntityCount ??= array_sum(array_map('count', $this->data['errors']));
     }
 
     /**

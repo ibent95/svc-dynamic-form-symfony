@@ -18,6 +18,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\Ignore;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Serializer\Annotation\SerializedName;
+use Symfony\Component\Serializer\Annotation\SerializedPath;
 use Symfony\Component\Serializer\Exception\MappingException;
 use Symfony\Component\Serializer\Mapping\AttributeMetadata;
 use Symfony\Component\Serializer\Mapping\AttributeMetadataInterface;
@@ -38,19 +39,15 @@ class AnnotationLoader implements LoaderInterface
         Ignore::class,
         MaxDepth::class,
         SerializedName::class,
+        SerializedPath::class,
         Context::class,
     ];
 
-    private $reader;
-
-    public function __construct(Reader $reader = null)
-    {
-        $this->reader = $reader;
+    public function __construct(
+        private readonly ?Reader $reader = null,
+    ) {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function loadClassMetadata(ClassMetadataInterface $classMetadata): bool
     {
         $reflectionClass = $classMetadata->getReflectionClass();
@@ -84,6 +81,8 @@ class AnnotationLoader implements LoaderInterface
                         $attributesMetadata[$property->name]->setMaxDepth($annotation->getMaxDepth());
                     } elseif ($annotation instanceof SerializedName) {
                         $attributesMetadata[$property->name]->setSerializedName($annotation->getSerializedName());
+                    } elseif ($annotation instanceof SerializedPath) {
+                        $attributesMetadata[$property->name]->setSerializedPath($annotation->getSerializedPath());
                     } elseif ($annotation instanceof Ignore) {
                         $attributesMetadata[$property->name]->setIgnore(true);
                     } elseif ($annotation instanceof Context) {
@@ -137,6 +136,12 @@ class AnnotationLoader implements LoaderInterface
                     }
 
                     $attributeMetadata->setSerializedName($annotation->getSerializedName());
+                } elseif ($annotation instanceof SerializedPath) {
+                    if (!$accessorOrMutator) {
+                        throw new MappingException(sprintf('SerializedPath on "%s::%s()" cannot be added. SerializedPath can only be added on methods beginning with "get", "is", "has" or "set".', $className, $method->name));
+                    }
+
+                    $attributeMetadata->setSerializedPath($annotation->getSerializedPath());
                 } elseif ($annotation instanceof Ignore) {
                     if (!$accessorOrMutator) {
                         throw new MappingException(sprintf('Ignore on "%s::%s()" cannot be added. Ignore can only be added on methods beginning with "get", "is", "has" or "set".', $className, $method->name));

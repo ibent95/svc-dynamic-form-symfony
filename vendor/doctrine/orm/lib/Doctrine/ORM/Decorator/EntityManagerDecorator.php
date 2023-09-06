@@ -9,6 +9,8 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query\ResultSetMapping;
 use Doctrine\Persistence\ObjectManagerDecorator;
 
+use function func_get_arg;
+use function func_num_args;
 use function get_debug_type;
 use function method_exists;
 use function sprintf;
@@ -29,7 +31,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getConnection()
     {
@@ -37,7 +39,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getExpressionBuilder()
     {
@@ -45,7 +47,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      *
      * @psalm-param class-string<T> $className
      *
@@ -59,7 +61,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getClassMetadata($className)
     {
@@ -67,7 +69,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function beginTransaction()
     {
@@ -75,7 +77,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function transactional($func)
     {
@@ -83,7 +85,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function wrapInTransaction(callable $func)
     {
@@ -100,7 +102,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function commit()
     {
@@ -108,7 +110,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function rollback()
     {
@@ -116,7 +118,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function createQuery($dql = '')
     {
@@ -124,7 +126,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function createNamedQuery($name)
     {
@@ -132,7 +134,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function createNativeQuery($sql, ResultSetMapping $rsm)
     {
@@ -140,7 +142,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function createNamedNativeQuery($name)
     {
@@ -148,7 +150,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function createQueryBuilder()
     {
@@ -156,7 +158,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getReference($entityName, $id)
     {
@@ -164,7 +166,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getPartialReference($entityName, $identifier)
     {
@@ -172,7 +174,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function close()
     {
@@ -180,7 +182,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function copy($entity, $deep = false)
     {
@@ -188,7 +190,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function lock($entity, $lockMode, $lockVersion = null)
     {
@@ -196,7 +198,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function find($className, $id, $lockMode = null, $lockVersion = null)
     {
@@ -204,7 +206,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function flush($entity = null)
     {
@@ -212,7 +214,21 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
+     */
+    public function refresh($object)
+    {
+        $lockMode = null;
+
+        if (func_num_args() > 1) {
+            $lockMode = func_get_arg(1);
+        }
+
+        $this->wrapped->refresh($object, $lockMode);
+    }
+
+    /**
+     * {@inheritDoc}
      */
     public function getEventManager()
     {
@@ -220,7 +236,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getConfiguration()
     {
@@ -228,7 +244,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function isOpen()
     {
@@ -236,7 +252,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getUnitOfWork()
     {
@@ -244,7 +260,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getHydrator($hydrationMode)
     {
@@ -252,7 +268,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function newHydrator($hydrationMode)
     {
@@ -260,7 +276,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getProxyFactory()
     {
@@ -268,7 +284,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getFilters()
     {
@@ -276,7 +292,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function isFiltersStateClean()
     {
@@ -284,7 +300,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function hasFilters()
     {
@@ -292,7 +308,7 @@ abstract class EntityManagerDecorator extends ObjectManagerDecorator implements 
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getCache()
     {

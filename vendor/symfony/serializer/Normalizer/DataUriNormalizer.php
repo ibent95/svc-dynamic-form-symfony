@@ -22,6 +22,8 @@ use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
  * Denormalizes a data URI to a {@see \SplFileObject} object.
  *
  * @author Kévin Dunglas <dunglas@gmail.com>
+ *
+ * @final since Symfony 6.3
  */
 class DataUriNormalizer implements NormalizerInterface, DenormalizerInterface, CacheableSupportsMethodInterface
 {
@@ -31,10 +33,7 @@ class DataUriNormalizer implements NormalizerInterface, DenormalizerInterface, C
         File::class => true,
     ];
 
-    /**
-     * @var MimeTypeGuesserInterface|null
-     */
-    private $mimeTypeGuesser;
+    private readonly ?MimeTypeGuesserInterface $mimeTypeGuesser;
 
     public function __construct(MimeTypeGuesserInterface $mimeTypeGuesser = null)
     {
@@ -45,9 +44,17 @@ class DataUriNormalizer implements NormalizerInterface, DenormalizerInterface, C
         $this->mimeTypeGuesser = $mimeTypeGuesser;
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    public function getSupportedTypes(?string $format): array
+    {
+        $isCacheable = __CLASS__ === static::class || $this->hasCacheableSupportsMethod();
+
+        return [
+            \SplFileInfo::class => $isCacheable,
+            \SplFileObject::class => $isCacheable,
+            File::class => $isCacheable,
+        ];
+    }
+
     public function normalize(mixed $object, string $format = null, array $context = []): string
     {
         if (!$object instanceof \SplFileInfo) {
@@ -72,8 +79,6 @@ class DataUriNormalizer implements NormalizerInterface, DenormalizerInterface, C
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @param array $context
      */
     public function supportsNormalization(mixed $data, string $format = null /* , array $context = [] */): bool
@@ -82,8 +87,6 @@ class DataUriNormalizer implements NormalizerInterface, DenormalizerInterface, C
     }
 
     /**
-     * {@inheritdoc}
-     *
      * Regex adapted from Brian Grinstead code.
      *
      * @see https://gist.github.com/bgrins/6194623
@@ -118,8 +121,6 @@ class DataUriNormalizer implements NormalizerInterface, DenormalizerInterface, C
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @param array $context
      */
     public function supportsDenormalization(mixed $data, string $type, string $format = null /* , array $context = [] */): bool
@@ -128,10 +129,12 @@ class DataUriNormalizer implements NormalizerInterface, DenormalizerInterface, C
     }
 
     /**
-     * {@inheritdoc}
+     * @deprecated since Symfony 6.3, use "getSupportedTypes()" instead
      */
     public function hasCacheableSupportsMethod(): bool
     {
+        trigger_deprecation('symfony/serializer', '6.3', 'The "%s()" method is deprecated, implement "%s::getSupportedTypes()" instead.', __METHOD__, get_debug_type($this));
+
         return __CLASS__ === static::class;
     }
 
@@ -144,11 +147,7 @@ class DataUriNormalizer implements NormalizerInterface, DenormalizerInterface, C
             return $object->getMimeType();
         }
 
-        if ($this->mimeTypeGuesser && $mimeType = $this->mimeTypeGuesser->guessMimeType($object->getPathname())) {
-            return $mimeType;
-        }
-
-        return 'application/octet-stream';
+        return $this->mimeTypeGuesser?->guessMimeType($object->getPathname()) ?: 'application/octet-stream';
     }
 
     /**

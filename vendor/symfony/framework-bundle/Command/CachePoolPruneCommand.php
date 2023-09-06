@@ -38,10 +38,7 @@ final class CachePoolPruneCommand extends Command
         $this->pools = $pools;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setHelp(<<<'EOF'
@@ -53,9 +50,6 @@ EOF
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);

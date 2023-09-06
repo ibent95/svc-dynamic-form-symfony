@@ -969,7 +969,7 @@ public function __construct(<params>)
     {
         $refl = new ReflectionClass($this->getClassToExtend());
 
-        return '\\' . $refl->getName();
+        return '\\' . $refl->name;
     }
 
     /** @return string */
@@ -1055,7 +1055,7 @@ public function __construct(<params>)
         }
 
         if (isset($metadata->table['options']) && $metadata->table['options']) {
-            $table[] = 'options={' . $this->exportTableOptions((array) $metadata->table['options']) . '}';
+            $table[] = 'options={' . $this->exportTableOptions($metadata->table['options']) . '}';
         }
 
         if (isset($metadata->table['uniqueConstraints']) && $metadata->table['uniqueConstraints']) {
@@ -1376,7 +1376,7 @@ public function __construct(<params>)
         $this->staticReflection[$metadata->name]['methods'][] = strtolower($methodName);
 
         $var      = sprintf('%sMethodTemplate', $type);
-        $template = static::$$var;
+        $template = (string) static::$$var;
 
         $methodTypeHint = '';
         $types          = Type::getTypesMap();
@@ -1695,7 +1695,7 @@ public function __construct(<params>)
             }
 
             if (isset($fieldMapping['options']['comment']) && $fieldMapping['options']['comment']) {
-                $options[] = '"comment"="' . str_replace('"', '""', $fieldMapping['options']['comment']) . '"';
+                $options[] = '"comment"="' . str_replace('"', '""', (string) $fieldMapping['options']['comment']) . '"';
             }
 
             if (isset($fieldMapping['options']['collation']) && $fieldMapping['options']['collation']) {

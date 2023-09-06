@@ -1,6 +1,22 @@
 CHANGELOG
 =========
 
+6.3
+---
+
+ * Deprecate passing Doctrine subscribers to `ContainerAwareEventManager` class, use listeners instead
+ * Add `AbstractSchemaListener`, `LockStoreSchemaListener` and `PdoSessionHandlerSchemaListener`
+ * Deprecate `DoctrineDbalCacheAdapterSchemaSubscriber` in favor of `DoctrineDbalCacheAdapterSchemaListener`
+ * Deprecate `MessengerTransportDoctrineSchemaSubscriber` in favor of `MessengerTransportDoctrineSchemaListener`
+ * Deprecate `RememberMeTokenProviderDoctrineSchemaSubscriber` in favor of `RememberMeTokenProviderDoctrineSchemaListener`
+ * Add optional parameter `$isSameDatabase` to `DoctrineTokenProvider::configureSchema()`
+
+6.2
+---
+
+ * Add `#[MapEntity]` with its corresponding `EntityValueResolver`
+ * Add `NAME` constant to `UlidType` and `UuidType`
+
 6.0
 ---
 

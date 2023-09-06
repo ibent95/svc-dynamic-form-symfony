@@ -26,6 +26,7 @@ class PrototypeConfigurator extends AbstractServiceConfigurator
     use Traits\BindTrait;
     use Traits\CallTrait;
     use Traits\ConfiguratorTrait;
+    use Traits\ConstructorTrait;
     use Traits\DeprecateTrait;
     use Traits\FactoryTrait;
     use Traits\LazyTrait;
@@ -41,8 +42,9 @@ class PrototypeConfigurator extends AbstractServiceConfigurator
     private string $resource;
     private ?array $excludes = null;
     private bool $allowParent;
+    private ?string $path;
 
-    public function __construct(ServicesConfigurator $parent, PhpFileLoader $loader, Definition $defaults, string $namespace, string $resource, bool $allowParent)
+    public function __construct(ServicesConfigurator $parent, PhpFileLoader $loader, Definition $defaults, string $namespace, string $resource, bool $allowParent, string $path = null)
     {
         $definition = new Definition();
         if (!$defaults->isPublic() || !$defaults->isPrivate()) {
@@ -57,6 +59,7 @@ class PrototypeConfigurator extends AbstractServiceConfigurator
         $this->loader = $loader;
         $this->resource = $resource;
         $this->allowParent = $allowParent;
+        $this->path = $path;
 
         parent::__construct($parent, $definition, $namespace, $defaults->getTags());
     }
@@ -66,7 +69,7 @@ class PrototypeConfigurator extends AbstractServiceConfigurator
         parent::__destruct();
 
         if (isset($this->loader)) {
-            $this->loader->registerClasses($this->definition, $this->id, $this->resource, $this->excludes);
+            $this->loader->registerClasses($this->definition, $this->id, $this->resource, $this->excludes, $this->path);
         }
         unset($this->loader);
     }

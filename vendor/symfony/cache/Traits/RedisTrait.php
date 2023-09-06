@@ -15,8 +15,12 @@ use Predis\Command\Redis\UNLINK;
 use Predis\Connection\Aggregate\ClusterInterface;
 use Predis\Connection\Aggregate\RedisCluster;
 use Predis\Connection\Aggregate\ReplicationInterface;
+use Predis\Connection\Cluster\ClusterInterface as Predis2ClusterInterface;
+use Predis\Connection\Cluster\RedisCluster as Predis2RedisCluster;
 use Predis\Response\ErrorInterface;
 use Predis\Response\Status;
+use Relay\Relay;
+use Relay\Sentinel;
 use Symfony\Component\Cache\Exception\CacheException;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
 use Symfony\Component\Cache\Marshaller\DefaultMarshaller;
@@ -45,10 +49,10 @@ trait RedisTrait
         'failover' => 'none',
         'ssl' => null, // see https://php.net/context.ssl
     ];
-    private \Redis|\RedisArray|\RedisCluster|\Predis\ClientInterface|RedisProxy|RedisClusterProxy $redis;
+    private \Redis|Relay|\RedisArray|\RedisCluster|\Predis\ClientInterface $redis;
     private MarshallerInterface $marshaller;
 
-    private function init(\Redis|\RedisArray|\RedisCluster|\Predis\ClientInterface|RedisProxy|RedisClusterProxy $redis, string $namespace, int $defaultLifetime, ?MarshallerInterface $marshaller)
+    private function init(\Redis|Relay|\RedisArray|\RedisCluster|\Predis\ClientInterface $redis, string $namespace, int $defaultLifetime, ?MarshallerInterface $marshaller): void
     {
         parent::__construct($namespace, $defaultLifetime);
 
@@ -80,18 +84,18 @@ trait RedisTrait
      *
      * @throws InvalidArgumentException when the DSN is invalid
      */
-    public static function createConnection(string $dsn, array $options = []): \Redis|\RedisArray|\RedisCluster|RedisClusterProxy|RedisProxy|\Predis\ClientInterface
+    public static function createConnection(#[\SensitiveParameter] string $dsn, array $options = []): \Redis|\RedisArray|\RedisCluster|\Predis\ClientInterface|Relay
     {
         if (str_starts_with($dsn, 'redis:')) {
             $scheme = 'redis';
         } elseif (str_starts_with($dsn, 'rediss:')) {
             $scheme = 'rediss';
         } else {
-            throw new InvalidArgumentException(sprintf('Invalid Redis DSN: "%s" does not start with "redis:" or "rediss".', $dsn));
+            throw new InvalidArgumentException('Invalid Redis DSN: it does not start with "redis[s]:".');
         }
 
         if (!\extension_loaded('redis') && !class_exists(\Predis\Client::class)) {
-            throw new CacheException(sprintf('Cannot find the "redis" extension nor the "predis/predis" package: "%s".', $dsn));
+            throw new CacheException('Cannot find the "redis" extension nor the "predis/predis" package.');
         }
 
         $params = preg_replace_callback('#^'.$scheme.':(//)?(?:(?:(?<user>[^:@]*+):)?(?<password>[^@]*+)@)?#', function ($m) use (&$auth) {
@@ -111,7 +115,7 @@ trait RedisTrait
         }, $dsn);
 
         if (false === $params = parse_url($params)) {
-            throw new InvalidArgumentException(sprintf('Invalid Redis DSN: "%s".', $dsn));
+            throw new InvalidArgumentException('Invalid Redis DSN.');
         }
 
         $query = $hosts = [];
@@ -124,7 +128,7 @@ trait RedisTrait
 
             if (isset($query['host'])) {
                 if (!\is_array($hosts = $query['host'])) {
-                    throw new InvalidArgumentException(sprintf('Invalid Redis DSN: "%s".', $dsn));
+                    throw new InvalidArgumentException('Invalid Redis DSN: query parameter "host" must be an array.');
                 }
                 foreach ($hosts as $host => $parameters) {
                     if (\is_string($parameters)) {
@@ -144,11 +148,11 @@ trait RedisTrait
 
         if (isset($params['host']) || isset($params['path'])) {
             if (!isset($params['dbindex']) && isset($params['path'])) {
-                if (preg_match('#/(\d+)$#', $params['path'], $m)) {
-                    $params['dbindex'] = $m[1];
+                if (preg_match('#/(\d+)?$#', $params['path'], $m)) {
+                    $params['dbindex'] = $m[1] ?? '0';
                     $params['path'] = substr($params['path'], 0, -\strlen($m[0]));
                 } elseif (isset($params['host'])) {
-                    throw new InvalidArgumentException(sprintf('Invalid Redis DSN: "%s", the "dbindex" parameter must be a number.', $dsn));
+                    throw new InvalidArgumentException('Invalid Redis DSN: query parameter "dbindex" must be a number.');
                 }
             }
 
@@ -160,34 +164,50 @@ trait RedisTrait
         }
 
         if (!$hosts) {
-            throw new InvalidArgumentException(sprintf('Invalid Redis DSN: "%s".', $dsn));
+            throw new InvalidArgumentException('Invalid Redis DSN: missing host.');
         }
 
         $params += $query + $options + self::$defaultConnectionOptions;
 
-        if (isset($params['redis_sentinel']) && !class_exists(\Predis\Client::class) && !class_exists(\RedisSentinel::class)) {
-            throw new CacheException(sprintf('Redis Sentinel support requires the "predis/predis" package or the "redis" extension v5.2 or higher: "%s".', $dsn));
+        if (isset($params['redis_sentinel']) && !class_exists(\Predis\Client::class) && !class_exists(\RedisSentinel::class) && !class_exists(Sentinel::class)) {
+            throw new CacheException('Redis Sentinel support requires one of: "predis/predis", "ext-redis >= 5.2", "ext-relay".');
         }
+
+        if (isset($params['lazy'])) {
+            $params['lazy'] = filter_var($params['lazy'], \FILTER_VALIDATE_BOOLEAN);
+        }
+        $params['redis_cluster'] = filter_var($params['redis_cluster'], \FILTER_VALIDATE_BOOLEAN);
 
         if ($params['redis_cluster'] && isset($params['redis_sentinel'])) {
-            throw new InvalidArgumentException(sprintf('Cannot use both "redis_cluster" and "redis_sentinel" at the same time: "%s".', $dsn));
+            throw new InvalidArgumentException('Cannot use both "redis_cluster" and "redis_sentinel" at the same time.');
         }
 
-        if (null === $params['class'] && \extension_loaded('redis')) {
-            $class = $params['redis_cluster'] ? \RedisCluster::class : (1 < \count($hosts) && !isset($params['redis_sentinel']) ? \RedisArray::class : \Redis::class);
-        } else {
-            $class = $params['class'] ?? \Predis\Client::class;
+        $class = $params['class'] ?? match (true) {
+            $params['redis_cluster'] => \extension_loaded('redis') ? \RedisCluster::class : \Predis\Client::class,
+            isset($params['redis_sentinel']) => match (true) {
+                \extension_loaded('redis') => \Redis::class,
+                \extension_loaded('relay') => Relay::class,
+                default => \Predis\Client::class,
+            },
+            1 < \count($hosts) && \extension_loaded('redis') => 1 < \count($hosts) ? \RedisArray::class : \Redis::class,
+            \extension_loaded('redis') => \Redis::class,
+            \extension_loaded('relay') => Relay::class,
+            default => \Predis\Client::class,
+        };
 
-            if (isset($params['redis_sentinel']) && !is_a($class, \Predis\Client::class, true) && !class_exists(\RedisSentinel::class)) {
-                throw new CacheException(sprintf('Cannot use Redis Sentinel: class "%s" does not extend "Predis\Client" and ext-redis >= 5.2 not found: "%s".', $class, $dsn));
-            }
+        if (isset($params['redis_sentinel']) && !is_a($class, \Predis\Client::class, true) && !class_exists(\RedisSentinel::class) && !class_exists(Sentinel::class)) {
+            throw new CacheException(sprintf('Cannot use Redis Sentinel: class "%s" does not extend "Predis\Client" and neither ext-redis >= 5.2 nor ext-relay have been found.', $class));
         }
 
-        if (is_a($class, \Redis::class, true)) {
+        $isRedisExt = is_a($class, \Redis::class, true);
+        $isRelayExt = !$isRedisExt && is_a($class, Relay::class, true);
+
+        if ($isRedisExt || $isRelayExt) {
             $connect = $params['persistent'] || $params['persistent_id'] ? 'pconnect' : 'connect';
-            $redis = new $class();
 
-            $initializer = static function ($redis) use ($connect, $params, $dsn, $auth, $hosts, $tls) {
+            $initializer = static function () use ($class, $isRedisExt, $connect, $params, $auth, $hosts, $tls) {
+                $sentinelClass = $isRedisExt ? \RedisSentinel::class : Sentinel::class;
+                $redis = new $class();
                 $hostIndex = 0;
                 do {
                     $host = $hosts[$hostIndex]['host'] ?? $hosts[$hostIndex]['path'];
@@ -201,8 +221,11 @@ trait RedisTrait
                     if (!isset($params['redis_sentinel'])) {
                         break;
                     }
-
-                    $sentinel = new \RedisSentinel($host, $port, $params['timeout'], (string) $params['persistent_id'], $params['retry_interval'], $params['read_timeout']);
+                    $extra = [];
+                    if (\defined('Redis::OPT_NULL_MULTIBULK_AS_NULL') && isset($params['auth'])) {
+                        $extra = [$params['auth']];
+                    }
+                    $sentinel = new $sentinelClass($host, $port, $params['timeout'], (string) $params['persistent_id'], $params['retry_interval'], $params['read_timeout'], ...$extra);
 
                     if ($address = $sentinel->getMasterAddrByName($params['redis_sentinel'])) {
                         [$host, $port] = $address;
@@ -210,11 +233,17 @@ trait RedisTrait
                 } while (++$hostIndex < \count($hosts) && !$address);
 
                 if (isset($params['redis_sentinel']) && !$address) {
-                    throw new InvalidArgumentException(sprintf('Failed to retrieve master information from sentinel "%s" and dsn "%s".', $params['redis_sentinel'], $dsn));
+                    throw new InvalidArgumentException(sprintf('Failed to retrieve master information from sentinel "%s".', $params['redis_sentinel']));
                 }
 
                 try {
-                    @$redis->{$connect}($host, $port, $params['timeout'], (string) $params['persistent_id'], $params['retry_interval'], $params['read_timeout'], ...\defined('Redis::SCAN_PREFIX') ? [['stream' => $params['ssl'] ?? null]] : []);
+                    $extra = [
+                        'stream' => $params['ssl'] ?? null,
+                    ];
+                    if (isset($params['auth'])) {
+                        $extra['auth'] = $params['auth'];
+                    }
+                    @$redis->{$connect}($host, $port, (float) $params['timeout'], (string) $params['persistent_id'], $params['retry_interval'], $params['read_timeout'], ...\defined('Redis::SCAN_PREFIX') || !$isRedisExt ? [$extra] : []);
 
                     set_error_handler(function ($type, $msg) use (&$error) { $error = $msg; });
                     try {
@@ -223,31 +252,31 @@ trait RedisTrait
                         restore_error_handler();
                     }
                     if (!$isConnected) {
-                        $error = preg_match('/^Redis::p?connect\(\): (.*)/', $error, $error) ? sprintf(' (%s)', $error[1]) : '';
-                        throw new InvalidArgumentException(sprintf('Redis connection "%s" failed: ', $dsn).$error.'.');
+                        $error = preg_match('/^Redis::p?connect\(\): (.*)/', $error ?? $redis->getLastError() ?? '', $error) ? sprintf(' (%s)', $error[1]) : '';
+                        throw new InvalidArgumentException('Redis connection failed: '.$error.'.');
                     }
 
                     if ((null !== $auth && !$redis->auth($auth))
                         || ($params['dbindex'] && !$redis->select($params['dbindex']))
                     ) {
                         $e = preg_replace('/^ERR /', '', $redis->getLastError());
-                        throw new InvalidArgumentException(sprintf('Redis connection "%s" failed: ', $dsn).$e.'.');
+                        throw new InvalidArgumentException('Redis connection failed: '.$e.'.');
                     }
 
-                    if (0 < $params['tcp_keepalive'] && \defined('Redis::OPT_TCP_KEEPALIVE')) {
-                        $redis->setOption(\Redis::OPT_TCP_KEEPALIVE, $params['tcp_keepalive']);
+                    if (0 < $params['tcp_keepalive'] && (!$isRedisExt || \defined('Redis::OPT_TCP_KEEPALIVE'))) {
+                        $redis->setOption($isRedisExt ? \Redis::OPT_TCP_KEEPALIVE : Relay::OPT_TCP_KEEPALIVE, $params['tcp_keepalive']);
                     }
-                } catch (\RedisException $e) {
-                    throw new InvalidArgumentException(sprintf('Redis connection "%s" failed: ', $dsn).$e->getMessage());
+                } catch (\RedisException|\Relay\Exception $e) {
+                    throw new InvalidArgumentException('Redis connection failed: '.$e->getMessage());
                 }
 
-                return true;
+                return $redis;
             };
 
             if ($params['lazy']) {
-                $redis = new RedisProxy($redis, $initializer);
+                $redis = $isRedisExt ? RedisProxy::createLazyProxy($initializer) : RelayProxy::createLazyProxy($initializer);
             } else {
-                $initializer($redis);
+                $redis = $initializer();
             }
         } elseif (is_a($class, \RedisArray::class, true)) {
             foreach ($hosts as $i => $host) {
@@ -263,14 +292,14 @@ trait RedisTrait
             try {
                 $redis = new $class($hosts, $params);
             } catch (\RedisClusterException $e) {
-                throw new InvalidArgumentException(sprintf('Redis connection "%s" failed: ', $dsn).$e->getMessage());
+                throw new InvalidArgumentException('Redis connection failed: '.$e->getMessage());
             }
 
-            if (0 < $params['tcp_keepalive'] && \defined('Redis::OPT_TCP_KEEPALIVE')) {
-                $redis->setOption(\Redis::OPT_TCP_KEEPALIVE, $params['tcp_keepalive']);
+            if (0 < $params['tcp_keepalive'] && (!$isRedisExt || \defined('Redis::OPT_TCP_KEEPALIVE'))) {
+                $redis->setOption($isRedisExt ? \Redis::OPT_TCP_KEEPALIVE : Relay::OPT_TCP_KEEPALIVE, $params['tcp_keepalive']);
             }
         } elseif (is_a($class, \RedisCluster::class, true)) {
-            $initializer = static function () use ($class, $params, $dsn, $hosts) {
+            $initializer = static function () use ($isRedisExt, $class, $params, $hosts) {
                 foreach ($hosts as $i => $host) {
                     $hosts[$i] = match ($host['scheme']) {
                         'tcp' => $host['host'].':'.$host['port'],
@@ -282,22 +311,23 @@ trait RedisTrait
                 try {
                     $redis = new $class(null, $hosts, $params['timeout'], $params['read_timeout'], (bool) $params['persistent'], $params['auth'] ?? '', ...\defined('Redis::SCAN_PREFIX') ? [$params['ssl'] ?? null] : []);
                 } catch (\RedisClusterException $e) {
-                    throw new InvalidArgumentException(sprintf('Redis connection "%s" failed: ', $dsn).$e->getMessage());
+                    throw new InvalidArgumentException('Redis connection failed: '.$e->getMessage());
                 }
 
-                if (0 < $params['tcp_keepalive'] && \defined('Redis::OPT_TCP_KEEPALIVE')) {
-                    $redis->setOption(\Redis::OPT_TCP_KEEPALIVE, $params['tcp_keepalive']);
+                if (0 < $params['tcp_keepalive'] && (!$isRedisExt || \defined('Redis::OPT_TCP_KEEPALIVE'))) {
+                    $redis->setOption($isRedisExt ? \Redis::OPT_TCP_KEEPALIVE : Relay::OPT_TCP_KEEPALIVE, $params['tcp_keepalive']);
                 }
-                switch ($params['failover']) {
-                    case 'error': $redis->setOption(\RedisCluster::OPT_SLAVE_FAILOVER, \RedisCluster::FAILOVER_ERROR); break;
-                    case 'distribute': $redis->setOption(\RedisCluster::OPT_SLAVE_FAILOVER, \RedisCluster::FAILOVER_DISTRIBUTE); break;
-                    case 'slaves': $redis->setOption(\RedisCluster::OPT_SLAVE_FAILOVER, \RedisCluster::FAILOVER_DISTRIBUTE_SLAVES); break;
-                }
+                $redis->setOption(\RedisCluster::OPT_SLAVE_FAILOVER, match ($params['failover']) {
+                    'error' => \RedisCluster::FAILOVER_ERROR,
+                    'distribute' => \RedisCluster::FAILOVER_DISTRIBUTE,
+                    'slaves' => \RedisCluster::FAILOVER_DISTRIBUTE_SLAVES,
+                    'none' => \RedisCluster::FAILOVER_NONE,
+                });
 
                 return $redis;
             };
 
-            $redis = $params['lazy'] ? new RedisClusterProxy($initializer) : $initializer();
+            $redis = $params['lazy'] ? RedisClusterProxy::createLazyProxy($initializer) : $initializer();
         } elseif (is_a($class, \Predis\ClientInterface::class, true)) {
             if ($params['redis_cluster']) {
                 $params['cluster'] = 'redis';
@@ -324,6 +354,13 @@ trait RedisTrait
                     $params['parameters']['password'] = $auth;
                 }
             }
+
+            if (isset($params['ssl'])) {
+                foreach ($hosts as $i => $host) {
+                    $hosts[$i]['ssl'] ??= $params['ssl'];
+                }
+            }
+
             if (1 === \count($hosts) && !($params['redis_cluster'] || $params['redis_sentinel'])) {
                 $hosts = $hosts[0];
             } elseif (\in_array($params['failover'], ['slaves', 'distribute'], true) && !isset($params['replication'])) {
@@ -332,12 +369,12 @@ trait RedisTrait
             }
             $params['exceptions'] = false;
 
-            $redis = new $class($hosts, array_diff_key($params, array_diff_key(self::$defaultConnectionOptions, ['ssl' => null])));
+            $redis = new $class($hosts, array_diff_key($params, self::$defaultConnectionOptions));
             if (isset($params['redis_sentinel'])) {
                 $redis->getConnection()->setSentinelTimeout($params['timeout']);
             }
         } elseif (class_exists($class, false)) {
-            throw new InvalidArgumentException(sprintf('"%s" is not a subclass of "Redis", "RedisArray", "RedisCluster" nor "Predis\ClientInterface".', $class));
+            throw new InvalidArgumentException(sprintf('"%s" is not a subclass of "Redis", "RedisArray", "RedisCluster", "Relay\Relay" nor "Predis\ClientInterface".', $class));
         } else {
             throw new InvalidArgumentException(sprintf('Class "%s" does not exist.', $class));
         }
@@ -345,9 +382,6 @@ trait RedisTrait
         return $redis;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function doFetch(array $ids): iterable
     {
         if (!$ids) {
@@ -356,7 +390,7 @@ trait RedisTrait
 
         $result = [];
 
-        if ($this->redis instanceof \Predis\ClientInterface && $this->redis->getConnection() instanceof ClusterInterface) {
+        if ($this->redis instanceof \Predis\ClientInterface && ($this->redis->getConnection() instanceof ClusterInterface || $this->redis->getConnection() instanceof Predis2ClusterInterface)) {
             $values = $this->pipeline(function () use ($ids) {
                 foreach ($ids as $id) {
                     yield 'get' => [$id];
@@ -381,17 +415,11 @@ trait RedisTrait
         return $result;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function doHave(string $id): bool
     {
         return (bool) $this->redis->exists($id);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function doClear(string $namespace): bool
     {
         if ($this->redis instanceof \Predis\ClientInterface) {
@@ -416,7 +444,10 @@ trait RedisTrait
             $info = $host->info('Server');
             $info = !$info instanceof ErrorInterface ? $info['Server'] ?? $info : ['redis_version' => '2.0'];
 
-            if (!$host instanceof \Predis\ClientInterface) {
+            if ($host instanceof Relay) {
+                $prefix = Relay::SCAN_PREFIX & $host->getOption(Relay::OPT_SCAN) ? '' : $host->getOption(Relay::OPT_PREFIX);
+                $prefixLen = \strlen($host->getOption(Relay::OPT_PREFIX) ?? '');
+            } elseif (!$host instanceof \Predis\ClientInterface) {
                 $prefix = \defined('Redis::SCAN_PREFIX') && (\Redis::SCAN_PREFIX & $host->getOption(\Redis::OPT_SCAN)) ? '' : $host->getOption(\Redis::OPT_PREFIX);
                 $prefixLen = \strlen($host->getOption(\Redis::OPT_PREFIX) ?? '');
             }
@@ -453,16 +484,13 @@ trait RedisTrait
         return $cleared;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function doDelete(array $ids): bool
     {
         if (!$ids) {
             return true;
         }
 
-        if ($this->redis instanceof \Predis\ClientInterface && $this->redis->getConnection() instanceof ClusterInterface) {
+        if ($this->redis instanceof \Predis\ClientInterface && ($this->redis->getConnection() instanceof ClusterInterface || $this->redis->getConnection() instanceof Predis2ClusterInterface)) {
             static $del;
             $del ??= (class_exists(UNLINK::class) ? 'unlink' : 'del');
 
@@ -490,9 +518,6 @@ trait RedisTrait
         return true;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function doSave(array $values, int $lifetime): array|bool
     {
         if (!$values = $this->marshaller->marshall($values, $failed)) {
@@ -523,7 +548,7 @@ trait RedisTrait
         $ids = [];
         $redis ??= $this->redis;
 
-        if ($redis instanceof RedisClusterProxy || $redis instanceof \RedisCluster || ($redis instanceof \Predis\ClientInterface && $redis->getConnection() instanceof RedisCluster)) {
+        if ($redis instanceof \RedisCluster || ($redis instanceof \Predis\ClientInterface && ($redis->getConnection() instanceof RedisCluster || $redis->getConnection() instanceof Predis2RedisCluster))) {
             // phpredis & predis don't support pipelining with RedisCluster
             // see https://github.com/phpredis/phpredis/blob/develop/cluster.markdown#pipelining
             // see https://github.com/nrk/predis/issues/267#issuecomment-123781423
@@ -558,7 +583,7 @@ trait RedisTrait
                 $results[$k] = $connections[$h][$c];
             }
         } else {
-            $redis->multi(\Redis::PIPELINE);
+            $redis->multi($redis instanceof Relay ? Relay::PIPELINE : \Redis::PIPELINE);
             foreach ($generator() as $command => $args) {
                 $redis->{$command}(...$args);
                 $ids[] = 'eval' === $command ? $args[1][0] : $args[0];
@@ -567,8 +592,12 @@ trait RedisTrait
         }
 
         if (!$redis instanceof \Predis\ClientInterface && 'eval' === $command && $redis->getLastError()) {
-            $e = new \RedisException($redis->getLastError());
-            $results = array_map(function ($v) use ($e) { return false === $v ? $e : $v; }, $results);
+            $e = $redis instanceof Relay ? new \Relay\Exception($redis->getLastError()) : new \RedisException($redis->getLastError());
+            $results = array_map(fn ($v) => false === $v ? $e : $v, (array) $results);
+        }
+
+        if (\is_bool($results)) {
+            return;
         }
 
         foreach ($ids as $k => $id) {
@@ -581,7 +610,7 @@ trait RedisTrait
         $hosts = [$this->redis];
         if ($this->redis instanceof \Predis\ClientInterface) {
             $connection = $this->redis->getConnection();
-            if ($connection instanceof ClusterInterface && $connection instanceof \Traversable) {
+            if (($connection instanceof ClusterInterface || $connection instanceof Predis2ClusterInterface) && $connection instanceof \Traversable) {
                 $hosts = [];
                 foreach ($connection as $c) {
                     $hosts[] = new \Predis\Client($c);
@@ -592,7 +621,7 @@ trait RedisTrait
             foreach ($this->redis->_hosts() as $host) {
                 $hosts[] = $this->redis->_instance($host);
             }
-        } elseif ($this->redis instanceof RedisClusterProxy || $this->redis instanceof \RedisCluster) {
+        } elseif ($this->redis instanceof \RedisCluster) {
             $hosts = [];
             foreach ($this->redis->_masters() as $host) {
                 $hosts[] = new RedisClusterNodeProxy($host, $this->redis);

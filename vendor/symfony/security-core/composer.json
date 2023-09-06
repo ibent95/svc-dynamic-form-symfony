@@ -17,8 +17,9 @@
     ],
     "require": {
         "php": ">=8.1",
-        "symfony/event-dispatcher-contracts": "^1.1|^2|^3",
-        "symfony/service-contracts": "^1.1.6|^2|^3",
+        "symfony/deprecation-contracts": "^2.5|^3",
+        "symfony/event-dispatcher-contracts": "^2.5|^3",
+        "symfony/service-contracts": "^2.5|^3",
         "symfony/password-hasher": "^5.4|^6.0"
     },
     "require-dev": {
@@ -29,6 +30,7 @@
         "symfony/expression-language": "^5.4|^6.0",
         "symfony/http-foundation": "^5.4|^6.0",
         "symfony/ldap": "^5.4|^6.0",
+        "symfony/string": "^5.4|^6.0",
         "symfony/translation": "^5.4|^6.0",
         "symfony/validator": "^5.4|^6.0",
         "psr/log": "^1|^2|^3"
@@ -39,14 +41,6 @@
         "symfony/security-guard": "<5.4",
         "symfony/ldap": "<5.4",
         "symfony/validator": "<5.4"
-    },
-    "suggest": {
-        "psr/container-implementation": "To instantiate the Security class",
-        "symfony/event-dispatcher": "",
-        "symfony/http-foundation": "",
-        "symfony/validator": "For using the user password constraint",
-        "symfony/expression-language": "For using the expression voter",
-        "symfony/ldap": "For using LDAP integration"
     },
     "autoload": {
         "psr-4": { "Symfony\\Component\\Security\\Core\\": "" },

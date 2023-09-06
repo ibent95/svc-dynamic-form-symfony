@@ -31,7 +31,9 @@ namespace Symfony\Component\Validator;
  *
  * @author Bernhard Schussek <bschussek@gmail.com>
  *
- * @method string __toString() Converts the violation into a string for debugging purposes. Not implementing it is deprecated since Symfony 6.1.
+ * @method Constraint|null getConstraint() Returns the constraint whose validation caused the violation. Not implementing it is deprecated since Symfony 6.3.
+ * @method mixed           getCause()      Returns the cause of the violation. Not implementing it is deprecated since Symfony 6.2.
+ * @method string          __toString()    Converts the violation into a string for debugging purposes. Not implementing it is deprecated since Symfony 6.1.
  */
 interface ConstraintViolationInterface
 {

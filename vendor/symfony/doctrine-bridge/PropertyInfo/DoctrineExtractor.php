@@ -38,9 +38,6 @@ class DoctrineExtractor implements PropertyListExtractorInterface, PropertyTypeE
         $this->entityManager = $entityManager;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getProperties(string $class, array $context = []): ?array
     {
         if (null === $metadata = $this->getMetadata($class)) {
@@ -50,9 +47,7 @@ class DoctrineExtractor implements PropertyListExtractorInterface, PropertyTypeE
         $properties = array_merge($metadata->getFieldNames(), $metadata->getAssociationNames());
 
         if ($metadata instanceof ClassMetadataInfo && class_exists(Embedded::class) && $metadata->embeddedClasses) {
-            $properties = array_filter($properties, function ($property) {
-                return !str_contains($property, '.');
-            });
+            $properties = array_filter($properties, fn ($property) => !str_contains($property, '.'));
 
             $properties = array_merge($properties, array_keys($metadata->embeddedClasses));
         }
@@ -60,9 +55,6 @@ class DoctrineExtractor implements PropertyListExtractorInterface, PropertyTypeE
         return $properties;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getTypes(string $class, string $property, array $context = []): ?array
     {
         if (null === $metadata = $this->getMetadata($class)) {
@@ -197,17 +189,11 @@ class DoctrineExtractor implements PropertyListExtractorInterface, PropertyTypeE
         return null;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isReadable(string $class, string $property, array $context = []): ?bool
     {
         return null;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isWritable(string $class, string $property, array $context = []): ?bool
     {
         if (

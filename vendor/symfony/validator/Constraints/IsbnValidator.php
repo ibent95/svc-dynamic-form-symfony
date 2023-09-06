@@ -28,7 +28,7 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 class IsbnValidator extends ConstraintValidator
 {
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function validate(mixed $value, Constraint $constraint)
     {
@@ -95,6 +95,9 @@ class IsbnValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * @return string|bool
+     */
     protected function validateIsbn10(string $isbn)
     {
         // Choose an algorithm so that ERROR_INVALID_CHARACTERS is preferred
@@ -135,6 +138,9 @@ class IsbnValidator extends ConstraintValidator
         return 0 === $checkSum % 11 ? true : Isbn::CHECKSUM_FAILED_ERROR;
     }
 
+    /**
+     * @return string|bool
+     */
     protected function validateIsbn13(string $isbn)
     {
         // Error priority:
@@ -169,6 +175,9 @@ class IsbnValidator extends ConstraintValidator
         return 0 === $checkSum % 10 ? true : Isbn::CHECKSUM_FAILED_ERROR;
     }
 
+    /**
+     * @return string
+     */
     protected function getMessage(Isbn $constraint, string $type = null)
     {
         if (null !== $constraint->message) {

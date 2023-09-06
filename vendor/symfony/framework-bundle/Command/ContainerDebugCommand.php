@@ -38,10 +38,7 @@ class ContainerDebugCommand extends Command
 {
     use BuildDebugContainerTrait;
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setDefinition([
@@ -55,7 +52,7 @@ class ContainerDebugCommand extends Command
                 new InputOption('types', null, InputOption::VALUE_NONE, 'Display types (classes/interfaces) available in the container'),
                 new InputOption('env-var', null, InputOption::VALUE_REQUIRED, 'Display a specific environment variable used in the container'),
                 new InputOption('env-vars', null, InputOption::VALUE_NONE, 'Display environment variables used in the container'),
-                new InputOption('format', null, InputOption::VALUE_REQUIRED, 'The output format (txt, xml, json, or md)', 'txt'),
+                new InputOption('format', null, InputOption::VALUE_REQUIRED, sprintf('The output format ("%s")', implode('", "', $this->getAvailableFormatOptions())), 'txt'),
                 new InputOption('raw', null, InputOption::VALUE_NONE, 'To output raw description'),
                 new InputOption('deprecations', null, InputOption::VALUE_NONE, 'Display deprecations generated when compiling and warming up the container'),
             ])
@@ -114,9 +111,6 @@ EOF
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -145,6 +139,7 @@ EOF
         } elseif ($input->getOption('tags')) {
             $options = ['group_by' => 'tags'];
         } elseif ($tag = $input->getOption('tag')) {
+            $tag = $this->findProperTagName($input, $errorIo, $object, $tag);
             $options = ['tag' => $tag];
         } elseif ($name = $input->getArgument('name')) {
             $name = $this->findProperServiceName($input, $errorIo, $object, $name, $input->getOption('show-hidden'));
@@ -165,6 +160,21 @@ EOF
 
         try {
             $helper->describe($io, $object, $options);
+
+            if ('txt' === $options['format'] && isset($options['id'])) {
+                if ($object->hasDefinition($options['id'])) {
+                    $definition = $object->getDefinition($options['id']);
+                    if ($definition->isDeprecated()) {
+                        $errorIo->warning($definition->getDeprecation($options['id'])['message'] ?? sprintf('The "%s" service is deprecated.', $options['id']));
+                    }
+                }
+                if ($object->hasAlias($options['id'])) {
+                    $alias = $object->getAlias($options['id']);
+                    if ($alias->isDeprecated()) {
+                        $errorIo->warning($alias->getDeprecation($options['id'])['message'] ?? sprintf('The "%s" alias is deprecated.', $options['id']));
+                    }
+                }
+            }
 
             if (isset($options['id']) && isset($kernel->getContainer()->getRemovedIds()[$options['id']])) {
                 $errorIo->note(sprintf('The "%s" service or alias has been removed or inlined when the container was compiled.', $options['id']));
@@ -193,8 +203,7 @@ EOF
     public function complete(CompletionInput $input, CompletionSuggestions $suggestions): void
     {
         if ($input->mustSuggestOptionValuesFor('format')) {
-            $helper = new DescriptorHelper();
-            $suggestions->suggestValues($helper->getFormats());
+            $suggestions->suggestValues($this->getAvailableFormatOptions());
 
             return;
         }
@@ -233,7 +242,7 @@ EOF
      *
      * @throws \InvalidArgumentException
      */
-    protected function validateInput(InputInterface $input)
+    protected function validateInput(InputInterface $input): void
     {
         $options = ['tags', 'tag', 'parameters', 'parameter'];
 
@@ -252,16 +261,16 @@ EOF
         }
     }
 
-    private function findProperServiceName(InputInterface $input, SymfonyStyle $io, ContainerBuilder $builder, string $name, bool $showHidden): string
+    private function findProperServiceName(InputInterface $input, SymfonyStyle $io, ContainerBuilder $container, string $name, bool $showHidden): string
     {
         $name = ltrim($name, '\\');
 
-        if ($builder->has($name) || !$input->isInteractive()) {
+        if ($container->has($name) || !$input->isInteractive()) {
             return $name;
         }
 
-        $matchingServices = $this->findServiceIdsContaining($builder, $name, $showHidden);
-        if (empty($matchingServices)) {
+        $matchingServices = $this->findServiceIdsContaining($container, $name, $showHidden);
+        if (!$matchingServices) {
             throw new InvalidArgumentException(sprintf('No services found that match "%s".', $name));
         }
 
@@ -272,12 +281,33 @@ EOF
         return $io->choice('Select one of the following services to display its information', $matchingServices);
     }
 
-    private function findServiceIdsContaining(ContainerBuilder $builder, string $name, bool $showHidden): array
+    private function findProperTagName(InputInterface $input, SymfonyStyle $io, ContainerBuilder $container, string $tagName): string
     {
-        $serviceIds = $builder->getServiceIds();
+        if (\in_array($tagName, $container->findTags(), true) || !$input->isInteractive()) {
+            return $tagName;
+        }
+
+        $matchingTags = $this->findTagsContaining($container, $tagName);
+        if (!$matchingTags) {
+            throw new InvalidArgumentException(sprintf('No tags found that match "%s".', $tagName));
+        }
+
+        if (1 === \count($matchingTags)) {
+            return $matchingTags[0];
+        }
+
+        return $io->choice('Select one of the following tags to display its information', $matchingTags);
+    }
+
+    private function findServiceIdsContaining(ContainerBuilder $container, string $name, bool $showHidden): array
+    {
+        $serviceIds = $container->getServiceIds();
         $foundServiceIds = $foundServiceIdsIgnoringBackslashes = [];
         foreach ($serviceIds as $serviceId) {
             if (!$showHidden && str_starts_with($serviceId, '.')) {
+                continue;
+            }
+            if (!$showHidden && $container->hasDefinition($serviceId) && $container->getDefinition($serviceId)->hasTag('container.excluded')) {
                 continue;
             }
             if (false !== stripos(str_replace('\\', '', $serviceId), $name)) {
@@ -289,6 +319,19 @@ EOF
         }
 
         return $foundServiceIds ?: $foundServiceIdsIgnoringBackslashes;
+    }
+
+    private function findTagsContaining(ContainerBuilder $container, string $tagName): array
+    {
+        $tags = $container->findTags();
+        $foundTags = [];
+        foreach ($tags as $tag) {
+            if (str_contains($tag, $tagName)) {
+                $foundTags[] = $tag;
+            }
+        }
+
+        return $foundTags;
     }
 
     /**
@@ -307,5 +350,10 @@ EOF
         }
 
         return class_exists($serviceId) || interface_exists($serviceId, false);
+    }
+
+    private function getAvailableFormatOptions(): array
+    {
+        return (new DescriptorHelper())->getFormats();
     }
 }

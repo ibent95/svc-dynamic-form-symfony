@@ -13,21 +13,36 @@ use Doctrine\Common\Annotations\Annotation\NamedArgumentConstructor;
  * @Target({"PROPERTY","ANNOTATION"})
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
-final class JoinTable implements Annotation
+final class JoinTable implements MappingAttribute
 {
-    /** @var string|null */
+    /**
+     * @var string|null
+     * @readonly
+     */
     public $name;
 
-    /** @var string|null */
+    /**
+     * @var string|null
+     * @readonly
+     */
     public $schema;
 
-    /** @var array<\Doctrine\ORM\Mapping\JoinColumn> */
+    /**
+     * @var array<JoinColumn>
+     * @readonly
+     */
     public $joinColumns = [];
 
-    /** @var array<\Doctrine\ORM\Mapping\JoinColumn> */
+    /**
+     * @var array<JoinColumn>
+     * @readonly
+     */
     public $inverseJoinColumns = [];
 
-    /** @var array<string, mixed> */
+    /**
+     * @var array<string, mixed>
+     * @readonly
+     */
     public $options = [];
 
     /** @param array<string, mixed> $options */

@@ -53,7 +53,7 @@ class TypeValidator extends ConstraintValidator
     ];
 
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function validate(mixed $value, Constraint $constraint)
     {

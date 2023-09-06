@@ -20,9 +20,7 @@ use function sprintf;
  */
 class InfoCommand extends AbstractEntityManagerCommand
 {
-    /**
-     * {@inheritdoc}
-     */
+    /** @return void */
     protected function configure()
     {
         $this->setName('orm:info')
@@ -37,13 +35,13 @@ EOT
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      *
      * @return int
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $ui = new SymfonyStyle($input, $output);
+        $ui = (new SymfonyStyle($input, $output))->getErrorStyle();
 
         $entityManager = $this->getEntityManager($input);
 

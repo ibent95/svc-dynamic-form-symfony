@@ -6,6 +6,7 @@ namespace Doctrine\ORM\Persisters\Collection;
 
 use BadMethodCallException;
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\Common\Collections\Expr\Comparison;
 use Doctrine\DBAL\Exception as DBALException;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\PersistentCollection;
@@ -24,11 +25,13 @@ use function sprintf;
 
 /**
  * Persister for many-to-many collections.
+ *
+ * @psalm-import-type AssociationMapping from ClassMetadata
  */
 class ManyToManyPersister extends AbstractCollectionPersister
 {
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function delete(PersistentCollection $collection)
     {
@@ -49,7 +52,7 @@ class ManyToManyPersister extends AbstractCollectionPersister
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function update(PersistentCollection $collection)
     {
@@ -80,7 +83,7 @@ class ManyToManyPersister extends AbstractCollectionPersister
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function get(PersistentCollection $collection, $index)
     {
@@ -99,7 +102,7 @@ class ManyToManyPersister extends AbstractCollectionPersister
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function count(PersistentCollection $collection)
     {
@@ -169,7 +172,7 @@ class ManyToManyPersister extends AbstractCollectionPersister
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function containsKey(PersistentCollection $collection, $key)
     {
@@ -246,10 +249,15 @@ class ManyToManyPersister extends AbstractCollectionPersister
         foreach ($parameters as $parameter) {
             [$name, $value, $operator] = $parameter;
 
-            $field          = $this->quoteStrategy->getColumnName($name, $targetClass, $this->platform);
-            $whereClauses[] = sprintf('te.%s %s ?', $field, $operator);
-            $params[]       = $value;
-            $paramTypes[]   = PersisterHelper::getTypeOfField($name, $targetClass, $this->em)[0];
+            $field = $this->quoteStrategy->getColumnName($name, $targetClass, $this->platform);
+
+            if ($value === null && ($operator === Comparison::EQ || $operator === Comparison::NEQ)) {
+                $whereClauses[] = sprintf('te.%s %s NULL', $field, $operator === Comparison::EQ ? 'IS' : 'IS NOT');
+            } else {
+                $whereClauses[] = sprintf('te.%s %s ?', $field, $operator);
+                $params[]       = $value;
+                $paramTypes[]   = PersisterHelper::getTypeOfField($name, $targetClass, $this->em)[0];
+            }
         }
 
         $tableName = $this->quoteStrategy->getTableName($targetClass, $this->platform);
@@ -286,7 +294,7 @@ class ManyToManyPersister extends AbstractCollectionPersister
      * JOIN.
      *
      * @param mixed[] $mapping Array containing mapping information.
-     * @psalm-param array<string, mixed> $mapping
+     * @psalm-param AssociationMapping $mapping
      *
      * @return string[] ordered tuple:
      *                   - JOIN condition to add to the SQL
@@ -339,7 +347,7 @@ class ManyToManyPersister extends AbstractCollectionPersister
      * Generate ON condition
      *
      * @param mixed[] $mapping
-     * @psalm-param array<string, mixed> $mapping
+     * @psalm-param AssociationMapping $mapping
      *
      * @return string[]
      * @psalm-return list<string>

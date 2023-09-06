@@ -35,13 +35,49 @@ abstract class AbstractConfigCommand extends ContainerDebugCommand
         $rows = [];
 
         $bundles = $this->getApplication()->getKernel()->getBundles();
-        usort($bundles, function ($bundleA, $bundleB) {
-            return strcmp($bundleA->getName(), $bundleB->getName());
-        });
+        usort($bundles, fn ($bundleA, $bundleB) => strcmp($bundleA->getName(), $bundleB->getName()));
 
         foreach ($bundles as $bundle) {
             $extension = $bundle->getContainerExtension();
             $rows[] = [$bundle->getName(), $extension ? $extension->getAlias() : ''];
+        }
+
+        if ($output instanceof StyleInterface) {
+            $output->title($title);
+            $output->table($headers, $rows);
+        } else {
+            $output->writeln($title);
+            $table = new Table($output);
+            $table->setHeaders($headers)->setRows($rows)->render();
+        }
+    }
+
+    protected function listNonBundleExtensions(OutputInterface|StyleInterface $output): void
+    {
+        $title = 'Available registered non-bundle extension aliases';
+        $headers = ['Extension alias'];
+        $rows = [];
+
+        $kernel = $this->getApplication()->getKernel();
+
+        $bundleExtensions = [];
+        foreach ($kernel->getBundles() as $bundle) {
+            if ($extension = $bundle->getContainerExtension()) {
+                $bundleExtensions[\get_class($extension)] = true;
+            }
+        }
+
+        $extensions = $this->getContainerBuilder($kernel)->getExtensions();
+
+        foreach ($extensions as $alias => $extension) {
+            if (isset($bundleExtensions[\get_class($extension)])) {
+                continue;
+            }
+            $rows[] = [$alias];
+        }
+
+        if (!$rows) {
+            return;
         }
 
         if ($output instanceof StyleInterface) {
@@ -131,7 +167,7 @@ abstract class AbstractConfigCommand extends ContainerDebugCommand
         }
     }
 
-    private function initializeBundles()
+    private function initializeBundles(): array
     {
         // Re-build bundle manually to initialize DI extensions that can be extended by other bundles in their build() method
         // as this method is not called when the container is loaded from the cache.

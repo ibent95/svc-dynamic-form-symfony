@@ -57,7 +57,7 @@ abstract class AbstractSessionListener implements EventSubscriberInterface, Rese
         $this->sessionOptions = $sessionOptions;
     }
 
-    public function onKernelRequest(RequestEvent $event)
+    public function onKernelRequest(RequestEvent $event): void
     {
         if (!$event->isMainRequest()) {
             return;
@@ -65,11 +65,13 @@ abstract class AbstractSessionListener implements EventSubscriberInterface, Rese
 
         $request = $event->getRequest();
         if (!$request->hasSession()) {
-            // This variable prevents calling `$this->getSession()` twice in case the Request (and the below factory) is cloned
-            $sess = null;
-            $request->setSessionFactory(function () use (&$sess, $request) {
+            $request->setSessionFactory(function () use ($request) {
+                // Prevent calling `$this->getSession()` twice in case the Request (and the below factory) is cloned
+                static $sess;
+
                 if (!$sess) {
                     $sess = $this->getSession();
+                    $request->setSession($sess);
 
                     /*
                      * For supporting sessions in php runtime with runners like roadrunner or swoole, the session
@@ -88,7 +90,7 @@ abstract class AbstractSessionListener implements EventSubscriberInterface, Rese
         }
     }
 
-    public function onKernelResponse(ResponseEvent $event)
+    public function onKernelResponse(ResponseEvent $event): void
     {
         if (!$event->isMainRequest() || (!$this->container->has('initialized_session') && !$event->getRequest()->hasSession())) {
             return;
@@ -151,7 +153,7 @@ abstract class AbstractSessionListener implements EventSubscriberInterface, Rese
                 $request = $event->getRequest();
                 $requestSessionCookieId = $request->cookies->get($sessionName);
 
-                $isSessionEmpty = ($session instanceof Session ? $session->isEmpty() : empty($session->all())) && empty($_SESSION); // checking $_SESSION to keep compatibility with native sessions
+                $isSessionEmpty = ($session instanceof Session ? $session->isEmpty() : !$session->all()) && empty($_SESSION); // checking $_SESSION to keep compatibility with native sessions
                 if ($requestSessionCookieId && $isSessionEmpty) {
                     // PHP internally sets the session cookie value to "deleted" when setcookie() is called with empty string $value argument
                     // which happens in \Symfony\Component\HttpFoundation\Session\Storage\Handler\AbstractSessionHandler::destroy
@@ -195,10 +197,11 @@ abstract class AbstractSessionListener implements EventSubscriberInterface, Rese
         }
 
         if ($autoCacheControl) {
+            $maxAge = $response->headers->hasCacheControlDirective('public') ? 0 : (int) $response->getMaxAge();
             $response
-                ->setExpires(new \DateTime())
+                ->setExpires(new \DateTimeImmutable('+'.$maxAge.' seconds'))
                 ->setPrivate()
-                ->setMaxAge(0)
+                ->setMaxAge($maxAge)
                 ->headers->addCacheControlDirective('must-revalidate');
         }
 

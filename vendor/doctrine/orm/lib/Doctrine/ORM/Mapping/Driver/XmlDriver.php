@@ -50,27 +50,25 @@ class XmlDriver extends FileDriver
     public function __construct($locator, $fileExtension = self::DEFAULT_FILE_EXTENSION, bool $isXsdValidationEnabled = false)
     {
         if (! extension_loaded('simplexml')) {
-            throw new LogicException(sprintf(
+            throw new LogicException(
                 'The XML metadata driver cannot be enabled because the SimpleXML PHP extension is missing.'
                 . ' Please configure PHP with SimpleXML or choose a different metadata driver.'
-            ));
+            );
         }
 
         if (! $isXsdValidationEnabled) {
             Deprecation::trigger(
                 'doctrine/orm',
                 'https://github.com/doctrine/orm/pull/6728',
-                sprintf(
-                    'Using XML mapping driver with XSD validation disabled is deprecated'
-                    . ' and will not be supported in Doctrine ORM 3.0.'
-                )
+                'Using XML mapping driver with XSD validation disabled is deprecated'
+                . ' and will not be supported in Doctrine ORM 3.0.'
             );
         }
 
         if ($isXsdValidationEnabled && ! extension_loaded('dom')) {
-            throw new LogicException(sprintf(
+            throw new LogicException(
                 'XSD validation cannot be enabled because the DOM extension is missing.'
-            ));
+            );
         }
 
         $this->isXsdValidationEnabled = $isXsdValidationEnabled;
@@ -204,14 +202,19 @@ class XmlDriver extends FileDriver
                 // Evaluate <discriminator-column...>
                 if (isset($xmlRoot->{'discriminator-column'})) {
                     $discrColumn = $xmlRoot->{'discriminator-column'};
-                    $metadata->setDiscriminatorColumn(
-                        [
-                            'name' => isset($discrColumn['name']) ? (string) $discrColumn['name'] : null,
-                            'type' => isset($discrColumn['type']) ? (string) $discrColumn['type'] : 'string',
-                            'length' => isset($discrColumn['length']) ? (int) $discrColumn['length'] : 255,
-                            'columnDefinition' => isset($discrColumn['column-definition']) ? (string) $discrColumn['column-definition'] : null,
-                        ]
-                    );
+                    $columnDef   = [
+                        'name' => isset($discrColumn['name']) ? (string) $discrColumn['name'] : null,
+                        'type' => isset($discrColumn['type']) ? (string) $discrColumn['type'] : 'string',
+                        'length' => isset($discrColumn['length']) ? (int) $discrColumn['length'] : 255,
+                        'columnDefinition' => isset($discrColumn['column-definition']) ? (string) $discrColumn['column-definition'] : null,
+                        'enumType' => isset($discrColumn['enum-type']) ? (string) $discrColumn['enum-type'] : null,
+                    ];
+
+                    if (isset($discrColumn['options'])) {
+                        $columnDef['options'] = $this->parseOptions($discrColumn['options']->children());
+                    }
+
+                    $metadata->setDiscriminatorColumn($columnDef);
                 } else {
                     $metadata->setDiscriminatorColumn(['name' => 'dtype', 'type' => 'string', 'length' => 255]);
                 }
@@ -373,30 +376,8 @@ class XmlDriver extends FileDriver
                 continue;
             }
 
-            $mapping = [
-                'id' => true,
-                'fieldName' => (string) $idElement['name'],
-            ];
-
-            if (isset($idElement['type'])) {
-                $mapping['type'] = (string) $idElement['type'];
-            }
-
-            if (isset($idElement['length'])) {
-                $mapping['length'] = (int) $idElement['length'];
-            }
-
-            if (isset($idElement['column'])) {
-                $mapping['columnName'] = (string) $idElement['column'];
-            }
-
-            if (isset($idElement['column-definition'])) {
-                $mapping['columnDefinition'] = (string) $idElement['column-definition'];
-            }
-
-            if (isset($idElement->options)) {
-                $mapping['options'] = $this->parseOptions($idElement->options->children());
-            }
+            $mapping       = $this->columnToArray($idElement);
+            $mapping['id'] = true;
 
             $metadata->mapField($mapping);
 
@@ -963,10 +944,13 @@ class XmlDriver extends FileDriver
     private function getCascadeMappings(SimpleXMLElement $cascadeElement): array
     {
         $cascades = [];
-        foreach ($cascadeElement->children() as $action) {
+        $children = $cascadeElement->children();
+        assert($children !== null);
+
+        foreach ($children as $action) {
             // According to the JPA specifications, XML uses "cascade-persist"
             // instead of "persist". Here, both variations
-            // are supported because both YAML and Annotation use "persist"
+            // are supported because YAML, Annotation and Attribute use "persist"
             // and we want to make sure that this driver doesn't need to know
             // anything about the supported cascading actions
             $cascades[] = str_replace('cascade-', '', $action->getName());
@@ -984,6 +968,7 @@ class XmlDriver extends FileDriver
         $result = [];
         // Note: we do not use `simplexml_load_file()` because of https://bugs.php.net/bug.php?id=62577
         $xmlElement = simplexml_load_string(file_get_contents($file));
+        assert($xmlElement !== false);
 
         if (isset($xmlElement->entity)) {
             foreach ($xmlElement->entity as $entityElement) {

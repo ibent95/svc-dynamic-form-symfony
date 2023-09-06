@@ -30,7 +30,7 @@ class ChromePhpHandler extends BaseChromePhpHandler
     /**
      * Adds the headers to the response once it's created.
      */
-    public function onKernelResponse(ResponseEvent $event)
+    public function onKernelResponse(ResponseEvent $event): void
     {
         if (!$event->isMainRequest()) {
             return;
@@ -50,9 +50,6 @@ class ChromePhpHandler extends BaseChromePhpHandler
         $this->headers = [];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function sendHeader($header, $content): void
     {
         if (!self::$sendHeaders) {

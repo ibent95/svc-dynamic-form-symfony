@@ -32,7 +32,7 @@ class ResolveParameterPlaceHoldersPass extends AbstractRecursivePass
     }
 
     /**
-     * {@inheritdoc}
+     * @return void
      *
      * @throws ParameterNotFoundException
      */

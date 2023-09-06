@@ -46,6 +46,8 @@ abstract class Constraint
 
     /**
      * Maps error codes to the names of their constants.
+     *
+     * @var array<string, string>
      */
     protected const ERROR_NAMES = [];
 
@@ -232,6 +234,8 @@ abstract class Constraint
 
     /**
      * Adds the given group if this constraint is in the Default group.
+     *
+     * @return void
      */
     public function addImplicitGroupName(string $group)
     {

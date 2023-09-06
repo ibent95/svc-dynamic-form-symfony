@@ -53,7 +53,7 @@ class Application extends BaseApplication
     }
 
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function reset()
     {
@@ -80,9 +80,6 @@ class Application extends BaseApplication
         return parent::doRun($input, $output);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function doRunCommand(Command $command, InputInterface $input, OutputInterface $output): int
     {
         if (!$command instanceof ListCommand) {
@@ -104,9 +101,6 @@ class Application extends BaseApplication
         return $returnCode;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function find(string $name): Command
     {
         $this->registerCommands();
@@ -114,9 +108,6 @@ class Application extends BaseApplication
         return parent::find($name);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function get(string $name): Command
     {
         $this->registerCommands();
@@ -130,9 +121,6 @@ class Application extends BaseApplication
         return $command;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function all(string $namespace = null): array
     {
         $this->registerCommands();
@@ -140,9 +128,6 @@ class Application extends BaseApplication
         return parent::all($namespace);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getLongVersion(): string
     {
         return parent::getLongVersion().sprintf(' (env: <comment>%s</>, debug: <comment>%s</>) <bg=#0057B7;fg=#FFDD00>#StandWith</><bg=#FFDD00;fg=#0057B7>Ukraine</> <href=https://sf.to/ukraine>https://sf.to/ukraine</>', $this->kernel->getEnvironment(), $this->kernel->isDebug() ? 'true' : 'false');
@@ -155,6 +140,9 @@ class Application extends BaseApplication
         return parent::add($command);
     }
 
+    /**
+     * @return void
+     */
     protected function registerCommands()
     {
         if ($this->commandsRegistered) {
@@ -195,7 +183,7 @@ class Application extends BaseApplication
         }
     }
 
-    private function renderRegistrationErrors(InputInterface $input, OutputInterface $output)
+    private function renderRegistrationErrors(InputInterface $input, OutputInterface $output): void
     {
         if ($output instanceof ConsoleOutputInterface) {
             $output = $output->getErrorOutput();

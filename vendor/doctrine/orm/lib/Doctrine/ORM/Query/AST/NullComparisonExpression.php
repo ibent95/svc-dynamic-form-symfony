@@ -18,13 +18,14 @@ class NullComparisonExpression extends Node
     public $expression;
 
     /** @param Node $expression */
-    public function __construct($expression)
+    public function __construct($expression, bool $not = false)
     {
         $this->expression = $expression;
+        $this->not        = $not;
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function dispatch($sqlWalker)
     {

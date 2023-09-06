@@ -11,11 +11,13 @@
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\Security\Http\AccessMap;
 use Symfony\Component\Security\Http\Authentication\CustomAuthenticationFailureHandler;
 use Symfony\Component\Security\Http\Authentication\CustomAuthenticationSuccessHandler;
 use Symfony\Component\Security\Http\Authentication\DefaultAuthenticationFailureHandler;
 use Symfony\Component\Security\Http\Authentication\DefaultAuthenticationSuccessHandler;
+use Symfony\Component\Security\Http\EventListener\ClearSiteDataLogoutListener;
 use Symfony\Component\Security\Http\EventListener\CookieClearingLogoutListener;
 use Symfony\Component\Security\Http\EventListener\DefaultLogoutListener;
 use Symfony\Component\Security\Http\EventListener\SessionLogoutListener;
@@ -61,6 +63,9 @@ return static function (ContainerConfigurator $container) {
             ])
 
         ->set('security.logout.listener.session', SessionLogoutListener::class)
+            ->abstract()
+
+        ->set('security.logout.listener.clear_site_data', ClearSiteDataLogoutListener::class)
             ->abstract()
 
         ->set('security.logout.listener.cookie_clearing', CookieClearingLogoutListener::class)
@@ -150,6 +155,8 @@ return static function (ContainerConfigurator $container) {
                 'ROLE_ALLOWED_TO_SWITCH',
                 service('event_dispatcher')->nullOnInvalid(),
                 false, // Stateless
+                service('router')->nullOnInvalid(),
+                abstract_arg('Target Route'),
             ])
             ->tag('monolog.logger', ['channel' => 'security'])
 
@@ -160,5 +167,8 @@ return static function (ContainerConfigurator $container) {
                 service('security.access_map'),
             ])
             ->tag('monolog.logger', ['channel' => 'security'])
+
+        ->set('security.firewall.event_dispatcher_locator', ServiceLocator::class)
+            ->args([[]])
     ;
 };

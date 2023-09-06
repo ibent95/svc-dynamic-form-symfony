@@ -13,12 +13,18 @@ use Doctrine\Common\Annotations\Annotation\NamedArgumentConstructor;
  * @Target("PROPERTY")
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
-final class Embedded implements Annotation
+final class Embedded implements MappingAttribute
 {
-    /** @var string|null */
+    /**
+     * @var string|null
+     * @readonly
+     */
     public $class;
 
-    /** @var string|bool|null */
+    /**
+     * @var string|bool|null
+     * @readonly
+     */
     public $columnPrefix;
 
     public function __construct(?string $class = null, $columnPrefix = null)

@@ -27,23 +27,20 @@ class VariableNode extends BaseNode implements PrototypeNodeInterface
     protected $defaultValue;
     protected $allowEmptyValue = true;
 
+    /**
+     * @return void
+     */
     public function setDefaultValue(mixed $value)
     {
         $this->defaultValueSet = true;
         $this->defaultValue = $value;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function hasDefaultValue(): bool
     {
         return $this->defaultValueSet;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getDefaultValue(): mixed
     {
         $v = $this->defaultValue;
@@ -55,6 +52,8 @@ class VariableNode extends BaseNode implements PrototypeNodeInterface
      * Sets if this node is allowed to have an empty value.
      *
      * @param bool $boolean True if this entity will accept empty values
+     *
+     * @return void
      */
     public function setAllowEmptyValue(bool $boolean)
     {
@@ -62,7 +61,7 @@ class VariableNode extends BaseNode implements PrototypeNodeInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function setName(string $name)
     {
@@ -70,15 +69,12 @@ class VariableNode extends BaseNode implements PrototypeNodeInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @return void
      */
     protected function validateType(mixed $value)
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function finalizeValue(mixed $value): mixed
     {
         // deny environment variables only when using custom validators
@@ -106,17 +102,11 @@ class VariableNode extends BaseNode implements PrototypeNodeInterface
         return $value;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function normalizeValue(mixed $value): mixed
     {
         return $value;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function mergeValues(mixed $leftSide, mixed $rightSide): mixed
     {
         return $rightSide;

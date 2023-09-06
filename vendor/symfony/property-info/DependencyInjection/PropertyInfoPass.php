@@ -26,7 +26,7 @@ class PropertyInfoPass implements CompilerPassInterface
     use PriorityTaggedServiceTrait;
 
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function process(ContainerBuilder $container)
     {

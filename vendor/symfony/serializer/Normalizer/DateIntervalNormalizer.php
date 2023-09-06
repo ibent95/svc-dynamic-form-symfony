@@ -19,12 +19,14 @@ use Symfony\Component\Serializer\Exception\UnexpectedValueException;
  * Denormalizes an interval string to an instance of {@see \DateInterval}.
  *
  * @author Jérôme Parmentier <jerome@prmntr.me>
+ *
+ * @final since Symfony 6.3
  */
 class DateIntervalNormalizer implements NormalizerInterface, DenormalizerInterface, CacheableSupportsMethodInterface
 {
     public const FORMAT_KEY = 'dateinterval_format';
 
-    private $defaultContext = [
+    private array $defaultContext = [
         self::FORMAT_KEY => '%rP%yY%mM%dDT%hH%iM%sS',
     ];
 
@@ -33,9 +35,14 @@ class DateIntervalNormalizer implements NormalizerInterface, DenormalizerInterfa
         $this->defaultContext = array_merge($this->defaultContext, $defaultContext);
     }
 
+    public function getSupportedTypes(?string $format): array
+    {
+        return [
+            \DateInterval::class => __CLASS__ === static::class || $this->hasCacheableSupportsMethod(),
+        ];
+    }
+
     /**
-     * {@inheritdoc}
-     *
      * @throws InvalidArgumentException
      */
     public function normalize(mixed $object, string $format = null, array $context = []): string
@@ -48,8 +55,6 @@ class DateIntervalNormalizer implements NormalizerInterface, DenormalizerInterfa
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @param array $context
      */
     public function supportsNormalization(mixed $data, string $format = null /* , array $context = [] */): bool
@@ -58,16 +63,16 @@ class DateIntervalNormalizer implements NormalizerInterface, DenormalizerInterfa
     }
 
     /**
-     * {@inheritdoc}
+     * @deprecated since Symfony 6.3, use "getSupportedTypes()" instead
      */
     public function hasCacheableSupportsMethod(): bool
     {
+        trigger_deprecation('symfony/serializer', '6.3', 'The "%s()" method is deprecated, implement "%s::getSupportedTypes()" instead.', __METHOD__, get_debug_type($this));
+
         return __CLASS__ === static::class;
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @throws InvalidArgumentException
      * @throws UnexpectedValueException
      */
@@ -118,8 +123,6 @@ class DateIntervalNormalizer implements NormalizerInterface, DenormalizerInterfa
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @param array $context
      */
     public function supportsDenormalization(mixed $data, string $type, string $format = null /* , array $context = [] */): bool

@@ -27,9 +27,6 @@ class RoleVoter implements CacheableVoterInterface
         $this->prefix = $prefix;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function vote(TokenInterface $token, mixed $subject, array $attributes): int
     {
         $result = VoterInterface::ACCESS_ABSTAIN;
@@ -61,6 +58,9 @@ class RoleVoter implements CacheableVoterInterface
         return true;
     }
 
+    /**
+     * @return array
+     */
     protected function extractRoles(TokenInterface $token)
     {
         return $token->getRoleNames();

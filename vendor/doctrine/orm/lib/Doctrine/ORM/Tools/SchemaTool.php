@@ -12,8 +12,10 @@ use Doctrine\DBAL\Schema\AbstractSchemaManager;
 use Doctrine\DBAL\Schema\Comparator;
 use Doctrine\DBAL\Schema\Index;
 use Doctrine\DBAL\Schema\Schema;
+use Doctrine\DBAL\Schema\Sequence;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Schema\Visitor\RemoveNamespacedAssets;
+use Doctrine\Deprecations\Deprecation;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\MappingException;
@@ -32,6 +34,7 @@ use function array_intersect_key;
 use function assert;
 use function count;
 use function current;
+use function func_num_args;
 use function implode;
 use function in_array;
 use function is_array;
@@ -44,6 +47,11 @@ use function strtolower;
  * <tt>ClassMetadata</tt> class descriptors.
  *
  * @link    www.doctrine-project.org
+ *
+ * @psalm-import-type AssociationMapping from ClassMetadata
+ * @psalm-import-type DiscriminatorColumnMapping from ClassMetadata
+ * @psalm-import-type FieldMapping from ClassMetadata
+ * @psalm-import-type JoinColumnData from ClassMetadata
  */
 class SchemaTool
 {
@@ -95,7 +103,7 @@ class SchemaTool
 
         foreach ($createSchemaSql as $sql) {
             try {
-                $conn->executeQuery($sql);
+                $conn->executeStatement($sql);
             } catch (Throwable $e) {
                 throw ToolsException::schemaToolFailure($sql, $e);
             }
@@ -108,7 +116,7 @@ class SchemaTool
      *
      * @psalm-param list<ClassMetadata> $classes
      *
-     * @return string[] The SQL statements needed to create the schema for the classes.
+     * @return list<string> The SQL statements needed to create the schema for the classes.
      */
     public function getCreateSchemaSql(array $classes)
     {
@@ -138,7 +146,7 @@ class SchemaTool
      *
      * @param mixed[] $indexData index or unique constraint data
      *
-     * @return string[] Column names from combined fields and columns mappings
+     * @return list<string> Column names from combined fields and columns mappings
      */
     private function getIndexColumns(ClassMetadata $class, array $indexData): array
     {
@@ -360,7 +368,8 @@ class SchemaTool
                     $uniqIndex = new Index($indexName, $this->getIndexColumns($class, $indexData), true, false, [], $indexData['options'] ?? []);
 
                     foreach ($table->getIndexes() as $tableIndexName => $tableIndex) {
-                        if ($tableIndex->isFullfilledBy($uniqIndex)) {
+                        $method = method_exists($tableIndex, 'isFulfilledBy') ? 'isFulfilledBy' : 'isFullfilledBy';
+                        if ($tableIndex->$method($uniqIndex)) {
                             $table->dropIndex($tableIndexName);
                             break;
                         }
@@ -398,8 +407,14 @@ class SchemaTool
             }
         }
 
-        if (! $this->platform->supportsSchemas() && ! $this->platform->canEmulateSchemas()) {
-            $schema->visit(new RemoveNamespacedAssets());
+        if (! $this->platform->supportsSchemas()) {
+            $filter = /** @param Sequence|Table $asset */ static function ($asset) use ($schema): bool {
+                return ! $asset->isInDefaultNamespace($schema->getName());
+            };
+
+            if (array_filter($schema->getSequences() + $schema->getTables(), $filter) && ! $this->platform->canEmulateSchemas()) {
+                $schema->visit(new RemoveNamespacedAssets());
+            }
         }
 
         if ($eventManager->hasListeners(ToolEvents::postGenerateSchema)) {
@@ -437,6 +452,7 @@ class SchemaTool
             $options['columnDefinition'] = $discrColumn['columnDefinition'];
         }
 
+        $options = $this->gatherColumnOptions($discrColumn) + $options;
         $table->addColumn($discrColumn['name'], $discrColumn['type'], $options);
     }
 
@@ -465,7 +481,7 @@ class SchemaTool
      * Creates a column definition as required by the DBAL from an ORM field mapping definition.
      *
      * @param ClassMetadata $class The class that owns the field mapping.
-     * @psalm-param array<string, mixed> $mapping The field mapping.
+     * @psalm-param FieldMapping $mapping The field mapping.
      */
     private function gatherColumn(
         ClassMetadata $class,
@@ -517,8 +533,9 @@ class SchemaTool
         }
 
         if ($table->hasColumn($columnName)) {
+            $method = method_exists($table, 'modifyColumn') ? 'modifyColumn' : 'changeColumn';
             // required in some inheritance scenarios
-            $table->changeColumn($columnName, $options);
+            $table->$method($columnName, $options);
         } else {
             $table->addColumn($columnName, $columnType, $options);
         }
@@ -653,8 +670,8 @@ class SchemaTool
     /**
      * Gathers columns and fk constraints that are required for one part of relationship.
      *
-     * @psalm-param array<string, mixed>             $joinColumns
-     * @psalm-param array<string, mixed>             $mapping
+     * @psalm-param array<string, JoinColumnData>    $joinColumns
+     * @psalm-param AssociationMapping               $mapping
      * @psalm-param list<string>                     $primaryKeyColumns
      * @psalm-param array<string, array{
      *                  foreignTableName: string,
@@ -784,7 +801,7 @@ class SchemaTool
     }
 
     /**
-     * @param mixed[] $mapping
+     * @psalm-param JoinColumnData|FieldMapping|DiscriminatorColumnMapping $mapping
      *
      * @return mixed[]
      */
@@ -804,8 +821,8 @@ class SchemaTool
             return [];
         }
 
-        $options                        = array_intersect_key($mappingOptions, array_flip(self::KNOWN_COLUMN_OPTIONS));
-        $options['customSchemaOptions'] = array_diff_key($mappingOptions, $options);
+        $options                    = array_intersect_key($mappingOptions, array_flip(self::KNOWN_COLUMN_OPTIONS));
+        $options['platformOptions'] = array_diff_key($mappingOptions, $options);
 
         return $options;
     }
@@ -827,7 +844,7 @@ class SchemaTool
 
         foreach ($dropSchemaSql as $sql) {
             try {
-                $conn->executeQuery($sql);
+                $conn->executeStatement($sql);
             } catch (Throwable $e) {
                 // ignored
             }
@@ -845,19 +862,23 @@ class SchemaTool
         $conn          = $this->em->getConnection();
 
         foreach ($dropSchemaSql as $sql) {
-            $conn->executeQuery($sql);
+            $conn->executeStatement($sql);
         }
     }
 
     /**
      * Gets the SQL needed to drop the database schema for the connections database.
      *
-     * @return string[]
+     * @return list<string>
      */
     public function getDropDatabaseSQL()
     {
+        $method = method_exists(AbstractSchemaManager::class, 'introspectSchema') ?
+            'introspectSchema' :
+            'createSchema';
+
         return $this->schemaManager
-            ->createSchema()
+            ->$method()
             ->toDropSql($this->platform);
     }
 
@@ -866,13 +887,13 @@ class SchemaTool
      *
      * @psalm-param list<ClassMetadata> $classes
      *
-     * @return string[]
+     * @return list<string>
      */
     public function getDropSchemaSQL(array $classes)
     {
         $schema = $this->getSchemaFromMetadata($classes);
 
-        $deployedSchema = $this->schemaManager->createSchema();
+        $deployedSchema = $this->introspectSchema();
 
         foreach ($schema->getTables() as $table) {
             if (! $deployedSchema->hasTable($table->getName())) {
@@ -888,13 +909,16 @@ class SchemaTool
             }
 
             foreach ($schema->getTables() as $table) {
-                if ($table->hasPrimaryKey()) {
-                    $columns = $table->getPrimaryKey()->getColumns();
-                    if (count($columns) === 1) {
-                        $checkSequence = $table->getName() . '_' . $columns[0] . '_seq';
-                        if ($deployedSchema->hasSequence($checkSequence) && ! $schema->hasSequence($checkSequence)) {
-                            $schema->createSequence($checkSequence);
-                        }
+                $primaryKey = $table->getPrimaryKey();
+                if ($primaryKey === null) {
+                    continue;
+                }
+
+                $columns = $primaryKey->getColumns();
+                if (count($columns) === 1) {
+                    $checkSequence = $table->getName() . '_' . $columns[0] . '_seq';
+                    if ($deployedSchema->hasSequence($checkSequence) && ! $schema->hasSequence($checkSequence)) {
+                        $schema->createSequence($checkSequence);
                     }
                 }
             }
@@ -915,11 +939,20 @@ class SchemaTool
      */
     public function updateSchema(array $classes, $saveMode = false)
     {
+        if (func_num_args() > 1) {
+            Deprecation::triggerIfCalledFromOutside(
+                'doctrine/orm',
+                'https://github.com/doctrine/orm/pull/10153',
+                'Passing $saveMode to %s() is deprecated and will not be possible in Doctrine ORM 3.0.',
+                __METHOD__
+            );
+        }
+
         $updateSchemaSql = $this->getUpdateSchemaSql($classes, $saveMode);
         $conn            = $this->em->getConnection();
 
         foreach ($updateSchemaSql as $sql) {
-            $conn->executeQuery($sql);
+            $conn->executeStatement($sql);
         }
     }
 
@@ -927,14 +960,23 @@ class SchemaTool
      * Gets the sequence of SQL statements that need to be performed in order
      * to bring the given class mappings in-synch with the relational schema.
      *
-     * @param mixed[] $classes  The classes to consider.
-     * @param bool    $saveMode If TRUE, only generates SQL for a partial update
-     *                           that does not include SQL for dropping assets which are scheduled for deletion.
+     * @param bool                $saveMode If TRUE, only generates SQL for a partial update
+     *                                      that does not include SQL for dropping assets which are scheduled for deletion.
+     * @param list<ClassMetadata> $classes  The classes to consider.
      *
-     * @return string[] The sequence of SQL statements.
+     * @return list<string> The sequence of SQL statements.
      */
     public function getUpdateSchemaSql(array $classes, $saveMode = false)
     {
+        if (func_num_args() > 1) {
+            Deprecation::triggerIfCalledFromOutside(
+                'doctrine/orm',
+                'https://github.com/doctrine/orm/pull/10153',
+                'Passing $saveMode to %s() is deprecated and will not be possible in Doctrine ORM 3.0.',
+                __METHOD__
+            );
+        }
+
         $toSchema   = $this->getSchemaFromMetadata($classes);
         $fromSchema = $this->createSchemaForComparison($toSchema);
 
@@ -950,7 +992,11 @@ class SchemaTool
             return $schemaDiff->toSaveSql($this->platform);
         }
 
-        return $schemaDiff->toSql($this->platform);
+        if (! method_exists(AbstractPlatform::class, 'getAlterSchemaSQL')) {
+            return $schemaDiff->toSql($this->platform);
+        }
+
+        return $this->platform->getAlterSchemaSQL($schemaDiff);
     }
 
     /**
@@ -965,7 +1011,7 @@ class SchemaTool
         $previousFilter = $config->getSchemaAssetsFilter();
 
         if ($previousFilter === null) {
-            return $this->schemaManager->createSchema();
+            return $this->introspectSchema();
         }
 
         // whitelist assets we already know about in $toSchema, use the existing filter otherwise
@@ -976,10 +1022,19 @@ class SchemaTool
         });
 
         try {
-            return $this->schemaManager->createSchema();
+            return $this->introspectSchema();
         } finally {
             // restore schema assets filter
             $config->setSchemaAssetsFilter($previousFilter);
         }
+    }
+
+    private function introspectSchema(): Schema
+    {
+        $method = method_exists($this->schemaManager, 'introspectSchema')
+            ? 'introspectSchema'
+            : 'createSchema';
+
+        return $this->schemaManager->$method();
     }
 }

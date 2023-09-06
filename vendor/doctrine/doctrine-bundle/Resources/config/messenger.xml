@@ -39,11 +39,11 @@
         </service>
 
         <!--
-        The following service isn't tagged as transport factory because the class may not exist.
-        The tag is added conditionally in DoctrineExtension.
+        The following service is removed conditionally in DoctrineExtension, if symfony/doctrine-messenger is not installed.
         -->
         <service id="messenger.transport.doctrine.factory" class="Symfony\Component\Messenger\Bridge\Doctrine\Transport\DoctrineTransportFactory" public="false">
             <argument type="service" id="doctrine" />
+            <tag name="messenger.transport_factory" />
         </service>
 
         <service id="doctrine.orm.messenger.event_subscriber.doctrine_clear_entity_manager" class="Symfony\Bridge\Doctrine\Messenger\DoctrineClearEntityManagerWorkerSubscriber" public="false">
@@ -54,6 +54,11 @@
         <service id="doctrine.orm.messenger.doctrine_schema_subscriber" class="Symfony\Bridge\Doctrine\SchemaListener\MessengerTransportDoctrineSchemaSubscriber">
             <argument type="tagged" tag="messenger.receiver" />
             <tag name="doctrine.event_subscriber" />
+        </service>
+        <service id="doctrine.orm.messenger.doctrine_schema_listener" class="Symfony\Bridge\Doctrine\SchemaListener\MessengerTransportDoctrineSchemaListener">
+            <argument type="tagged" tag="messenger.receiver" />
+            <tag name="doctrine.event_listener" event="postGenerateSchema" />
+            <tag name="doctrine.event_listener" event="onSchemaCreateTable" />
         </service>
     </services>
 </container>

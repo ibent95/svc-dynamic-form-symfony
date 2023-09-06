@@ -18,13 +18,14 @@ class EmptyCollectionComparisonExpression extends Node
     public $not;
 
     /** @param PathExpression $expression */
-    public function __construct($expression)
+    public function __construct($expression, bool $not = false)
     {
         $this->expression = $expression;
+        $this->not        = $not;
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function dispatch($sqlWalker)
     {

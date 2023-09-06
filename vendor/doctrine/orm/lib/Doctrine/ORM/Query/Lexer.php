@@ -20,6 +20,8 @@ use function substr;
 
 /**
  * Scans a DQL query for tokens.
+ *
+ * @extends AbstractLexer<Lexer::T_*, string>
  */
 class Lexer extends AbstractLexer
 {
@@ -120,7 +122,7 @@ class Lexer extends AbstractLexer
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     protected function getCatchablePatterns()
     {
@@ -134,7 +136,7 @@ class Lexer extends AbstractLexer
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     protected function getNonCatchablePatterns()
     {
@@ -142,7 +144,7 @@ class Lexer extends AbstractLexer
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     protected function getType(&$value)
     {

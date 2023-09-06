@@ -44,9 +44,6 @@ final class PropertyInfoLoader implements LoaderInterface
         $this->classValidatorRegexp = $classValidatorRegexp;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function loadClassMetadata(ClassMetadata $metadata): bool
     {
         $className = $metadata->getClassName();
@@ -147,7 +144,7 @@ final class PropertyInfoLoader implements LoaderInterface
         return new Type(['type' => $builtinType]);
     }
 
-    private function handleAllConstraint(string $property, ?All $allConstraint, PropertyInfoType $propertyInfoType, ClassMetadata $metadata)
+    private function handleAllConstraint(string $property, ?All $allConstraint, PropertyInfoType $propertyInfoType, ClassMetadata $metadata): void
     {
         $containsTypeConstraint = false;
         $containsNotNullConstraint = false;

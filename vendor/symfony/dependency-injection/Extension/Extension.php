@@ -29,7 +29,7 @@ abstract class Extension implements ExtensionInterface, ConfigurationExtensionIn
     private array $processedConfigs = [];
 
     /**
-     * {@inheritdoc}
+     * @return string|false
      */
     public function getXsdValidationBasePath()
     {
@@ -37,7 +37,7 @@ abstract class Extension implements ExtensionInterface, ConfigurationExtensionIn
     }
 
     /**
-     * {@inheritdoc}
+     * @return string
      */
     public function getNamespace()
     {
@@ -74,7 +74,7 @@ abstract class Extension implements ExtensionInterface, ConfigurationExtensionIn
     }
 
     /**
-     * {@inheritdoc}
+     * @return ConfigurationInterface|null
      */
     public function getConfiguration(array $config, ContainerBuilder $container)
     {

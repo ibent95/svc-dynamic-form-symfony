@@ -32,9 +32,6 @@ class RoleHierarchy implements RoleHierarchyInterface
         $this->buildRoleMap();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getReachableRoleNames(array $roles): array
     {
         $reachableRoles = $roles;
@@ -52,6 +49,9 @@ class RoleHierarchy implements RoleHierarchyInterface
         return array_values(array_unique($reachableRoles));
     }
 
+    /**
+     * @return void
+     */
     protected function buildRoleMap()
     {
         $this->map = [];

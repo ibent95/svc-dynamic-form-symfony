@@ -35,7 +35,7 @@ abstract class AbstractComparisonValidator extends ConstraintValidator
     }
 
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function validate(mixed $value, Constraint $constraint)
     {
@@ -93,11 +93,7 @@ abstract class AbstractComparisonValidator extends ConstraintValidator
 
     private function getPropertyAccessor(): PropertyAccessorInterface
     {
-        if (null === $this->propertyAccessor) {
-            $this->propertyAccessor = PropertyAccess::createPropertyAccessor();
-        }
-
-        return $this->propertyAccessor;
+        return $this->propertyAccessor ??= PropertyAccess::createPropertyAccessor();
     }
 
     /**

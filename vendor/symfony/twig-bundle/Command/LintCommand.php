@@ -23,10 +23,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 #[AsCommand(name: 'lint:twig', description: 'Lint a Twig template and outputs encountered errors')]
 final class LintCommand extends BaseLintCommand
 {
-    /**
-     * {@inheritdoc}
-     */
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
 

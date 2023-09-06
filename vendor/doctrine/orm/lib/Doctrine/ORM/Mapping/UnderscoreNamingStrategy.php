@@ -30,7 +30,10 @@ class UnderscoreNamingStrategy implements NamingStrategy
     /** @var int */
     private $case;
 
-    /** @var string */
+    /**
+     * @var string
+     * @psalm-var non-empty-string
+     */
     private $pattern;
 
     /**
@@ -73,7 +76,7 @@ class UnderscoreNamingStrategy implements NamingStrategy
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function classToTableName($className)
     {
@@ -85,7 +88,7 @@ class UnderscoreNamingStrategy implements NamingStrategy
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function propertyToColumnName($propertyName, $className = null)
     {
@@ -93,7 +96,7 @@ class UnderscoreNamingStrategy implements NamingStrategy
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function embeddedFieldToColumnName($propertyName, $embeddedColumnName, $className = null, $embeddedClassName = null)
     {
@@ -101,7 +104,7 @@ class UnderscoreNamingStrategy implements NamingStrategy
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function referenceColumnName()
     {
@@ -109,7 +112,7 @@ class UnderscoreNamingStrategy implements NamingStrategy
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      *
      * @param string       $propertyName
      * @param class-string $className
@@ -120,7 +123,7 @@ class UnderscoreNamingStrategy implements NamingStrategy
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function joinTableName($sourceEntity, $targetEntity, $propertyName = null)
     {
@@ -128,7 +131,7 @@ class UnderscoreNamingStrategy implements NamingStrategy
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function joinKeyColumnName($entityName, $referencedColumnName = null)
     {

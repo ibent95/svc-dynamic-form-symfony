@@ -44,9 +44,9 @@ final class LoginLinkHandler implements LoginLinkHandlerInterface
         ], $options);
     }
 
-    public function createLoginLink(UserInterface $user, Request $request = null): LoginLinkDetails
+    public function createLoginLink(UserInterface $user, Request $request = null, int $lifetime = null): LoginLinkDetails
     {
-        $expires = time() + $this->options['lifetime'];
+        $expires = time() + ($lifetime ?: $this->options['lifetime']);
         $expiresAt = new \DateTimeImmutable('@'.$expires);
 
         $parameters = [
@@ -83,17 +83,21 @@ final class LoginLinkHandler implements LoginLinkHandlerInterface
     {
         $userIdentifier = $request->get('user');
 
-        try {
-            $user = $this->userProvider->loadUserByIdentifier($userIdentifier);
-        } catch (UserNotFoundException $exception) {
-            throw new InvalidLoginLinkException('User not found.', 0, $exception);
+        if (!$hash = $request->get('hash')) {
+            throw new InvalidLoginLinkException('Missing "hash" parameter.');
+        }
+        if (!$expires = $request->get('expires')) {
+            throw new InvalidLoginLinkException('Missing "expires" parameter.');
         }
 
-        $hash = $request->get('hash');
-        $expires = $request->get('expires');
-
         try {
+            $this->signatureHasher->acceptSignatureHash($userIdentifier, $expires, $hash);
+
+            $user = $this->userProvider->loadUserByIdentifier($userIdentifier);
+
             $this->signatureHasher->verifySignatureHash($user, $expires, $hash);
+        } catch (UserNotFoundException $e) {
+            throw new InvalidLoginLinkException('User not found.', 0, $e);
         } catch (ExpiredSignatureException $e) {
             throw new ExpiredLoginLinkException(ucfirst(str_ireplace('signature', 'login link', $e->getMessage())), 0, $e);
         } catch (InvalidSignatureException $e) {

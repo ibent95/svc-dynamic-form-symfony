@@ -39,7 +39,7 @@ class FileValidator extends ConstraintValidator
     ];
 
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function validate(mixed $value, Constraint $constraint)
     {
@@ -143,6 +143,16 @@ class FileValidator extends ConstraintValidator
         $sizeInBytes = filesize($path);
         $basename = $value instanceof UploadedFile ? $value->getClientOriginalName() : basename($path);
 
+        if ($constraint->filenameMaxLength && $constraint->filenameMaxLength < $filenameLength = \strlen($basename)) {
+            $this->context->buildViolation($constraint->filenameTooLongMessage)
+                ->setParameter('{{ filename_max_length }}', $this->formatValue($constraint->filenameMaxLength))
+                ->setCode(File::FILENAME_TOO_LONG)
+                ->setPlural($constraint->filenameMaxLength)
+                ->addViolation();
+
+            return;
+        }
+
         if (0 === $sizeInBytes) {
             $this->context->buildViolation($constraint->disallowEmptyMessage)
                 ->setParameter('{{ file }}', $this->formatValue($path))
@@ -171,18 +181,60 @@ class FileValidator extends ConstraintValidator
             }
         }
 
-        if ($constraint->mimeTypes) {
+        $mimeTypes = (array) $constraint->mimeTypes;
+
+        if ($constraint->extensions) {
+            $fileExtension = strtolower(pathinfo($basename, \PATHINFO_EXTENSION));
+
+            $found = false;
+            $normalizedExtensions = [];
+            foreach ((array) $constraint->extensions as $k => $v) {
+                if (!\is_string($k)) {
+                    $k = $v;
+                    $v = null;
+                }
+
+                $normalizedExtensions[] = $k;
+
+                if ($fileExtension !== $k) {
+                    continue;
+                }
+
+                $found = true;
+                if (null === $v) {
+                    if (!class_exists(MimeTypes::class)) {
+                        throw new LogicException('You cannot validate the mime-type of files as the Mime component is not installed. Try running "composer require symfony/mime".');
+                    }
+
+                    $mimeTypesHelper = MimeTypes::getDefault();
+                    $v = $mimeTypesHelper->getMimeTypes($k);
+                }
+
+                $mimeTypes = $mimeTypes ? array_intersect($v, $mimeTypes) : (array) $v;
+                break;
+            }
+
+            if (!$found) {
+                $this->context->buildViolation($constraint->extensionsMessage)
+                    ->setParameter('{{ file }}', $this->formatValue($path))
+                    ->setParameter('{{ extension }}', $this->formatValue($fileExtension))
+                    ->setParameter('{{ extensions }}', $this->formatValues($normalizedExtensions))
+                    ->setParameter('{{ name }}', $this->formatValue($basename))
+                    ->setCode(File::INVALID_EXTENSION_ERROR)
+                    ->addViolation();
+            }
+        }
+
+        if ($mimeTypes) {
             if ($value instanceof FileObject) {
                 $mime = $value->getMimeType();
-            } elseif (class_exists(MimeTypes::class)) {
-                $mime = MimeTypes::getDefault()->guessMimeType($path);
+            } elseif (isset($mimeTypesHelper) || class_exists(MimeTypes::class)) {
+                $mime = ($mimeTypesHelper ?? MimeTypes::getDefault())->guessMimeType($path);
             } elseif (!class_exists(FileObject::class)) {
                 throw new LogicException('You cannot validate the mime-type of files as the Mime component is not installed. Try running "composer require symfony/mime".');
             } else {
                 $mime = (new FileObject($value))->getMimeType();
             }
-
-            $mimeTypes = (array) $constraint->mimeTypes;
 
             foreach ($mimeTypes as $mimeType) {
                 if ($mimeType === $mime) {

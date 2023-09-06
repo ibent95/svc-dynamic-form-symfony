@@ -20,16 +20,18 @@ use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 
+use function apcu_enabled;
 use function class_exists;
 use function extension_loaded;
 use function md5;
-use function sprintf;
 use function sys_get_temp_dir;
 
 final class ORMSetup
 {
     /**
      * Creates a configuration with an annotation metadata driver.
+     *
+     * @deprecated Use another mapping driver.
      *
      * @param string[] $paths
      */
@@ -39,6 +41,12 @@ final class ORMSetup
         ?string $proxyDir = null,
         ?CacheItemPoolInterface $cache = null
     ): Configuration {
+        Deprecation::trigger(
+            'doctrine/orm',
+            'https://github.com/doctrine/orm/issues/10098',
+            '%s is deprecated and will be removed in Doctrine ORM 3.0',
+            __METHOD__
+        );
         $config = self::createConfiguration($isDevMode, $proxyDir, $cache);
         $config->setMetadataDriverImpl(self::createDefaultAnnotationDriver($paths));
 
@@ -48,18 +56,27 @@ final class ORMSetup
     /**
      * Adds a new default annotation driver with a correctly configured annotation reader.
      *
+     * @deprecated Use another mapping driver.
+     *
      * @param string[] $paths
      */
     public static function createDefaultAnnotationDriver(
         array $paths = [],
-        ?CacheItemPoolInterface $cache = null
+        ?CacheItemPoolInterface $cache = null,
+        bool $reportFieldsWhereDeclared = false
     ): AnnotationDriver {
+        Deprecation::trigger(
+            'doctrine/orm',
+            'https://github.com/doctrine/orm/issues/10098',
+            '%s is deprecated and will be removed in Doctrine ORM 3.0',
+            __METHOD__
+        );
         if (! class_exists(AnnotationReader::class)) {
-            throw new LogicException(sprintf(
+            throw new LogicException(
                 'The annotation metadata driver cannot be enabled because the "doctrine/annotations" library'
                 . ' is not installed. Please run "composer require doctrine/annotations" or choose a different'
                 . ' metadata driver.'
-            ));
+            );
         }
 
         $reader = new AnnotationReader();
@@ -72,7 +89,7 @@ final class ORMSetup
             $reader = new PsrCachedReader($reader, $cache);
         }
 
-        return new AnnotationDriver($reader, $paths);
+        return new AnnotationDriver($reader, $paths, $reportFieldsWhereDeclared);
     }
 
     /**
@@ -84,10 +101,11 @@ final class ORMSetup
         array $paths,
         bool $isDevMode = false,
         ?string $proxyDir = null,
-        ?CacheItemPoolInterface $cache = null
+        ?CacheItemPoolInterface $cache = null,
+        bool $reportFieldsWhereDeclared = false
     ): Configuration {
         $config = self::createConfiguration($isDevMode, $proxyDir, $cache);
-        $config->setMetadataDriverImpl(new AttributeDriver($paths));
+        $config->setMetadataDriverImpl(new AttributeDriver($paths, $reportFieldsWhereDeclared));
 
         return $config;
     }
@@ -181,7 +199,7 @@ final class ORMSetup
 
         $namespace = 'dc2_' . md5($proxyDir);
 
-        if (extension_loaded('apcu')) {
+        if (extension_loaded('apcu') && apcu_enabled()) {
             return new ApcuAdapter($namespace);
         }
 

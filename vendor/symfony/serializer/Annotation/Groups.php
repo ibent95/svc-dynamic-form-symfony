@@ -28,7 +28,7 @@ class Groups
     /**
      * @var string[]
      */
-    private array $groups;
+    private readonly array $groups;
 
     /**
      * @param string|string[] $groups
@@ -37,7 +37,7 @@ class Groups
     {
         $this->groups = (array) $groups;
 
-        if (empty($this->groups)) {
+        if (!$this->groups) {
             throw new InvalidArgumentException(sprintf('Parameter of annotation "%s" cannot be empty.', static::class));
         }
 

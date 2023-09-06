@@ -27,7 +27,7 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 class TimezoneValidator extends ConstraintValidator
 {
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function validate(mixed $value, Constraint $constraint)
     {
@@ -55,8 +55,8 @@ class TimezoneValidator extends ConstraintValidator
         }
 
         if (
-            \in_array($value, self::getPhpTimezones($constraint->zone, $constraint->countryCode), true) ||
-            \in_array($value, self::getIntlTimezones($constraint->zone, $constraint->countryCode), true)
+            \in_array($value, self::getPhpTimezones($constraint->zone, $constraint->countryCode), true)
+            || \in_array($value, self::getIntlTimezones($constraint->zone, $constraint->countryCode), true)
         ) {
             return;
         }
@@ -114,9 +114,7 @@ class TimezoneValidator extends ConstraintValidator
                 continue;
             }
 
-            $filtered[] = array_filter($timezones, static function ($id) use ($const) {
-                return 0 === stripos($id, $const.'/');
-            });
+            $filtered[] = array_filter($timezones, static fn ($id) => 0 === stripos($id, $const.'/'));
         }
 
         return $filtered ? array_merge(...$filtered) : [];

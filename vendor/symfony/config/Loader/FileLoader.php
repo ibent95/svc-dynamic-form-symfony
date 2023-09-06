@@ -39,6 +39,8 @@ abstract class FileLoader extends Loader
 
     /**
      * Sets the current directory.
+     *
+     * @return void
      */
     public function setCurrentDir(string $dir)
     {
@@ -99,7 +101,7 @@ abstract class FileLoader extends Loader
     /**
      * @internal
      */
-    protected function glob(string $pattern, bool $recursive, array|GlobResource &$resource = null, bool $ignoreErrors = false, bool $forExclusion = false, array $excluded = [])
+    protected function glob(string $pattern, bool $recursive, array|GlobResource &$resource = null, bool $ignoreErrors = false, bool $forExclusion = false, array $excluded = []): iterable
     {
         if (\strlen($pattern) === $i = strcspn($pattern, '*?{[')) {
             $prefix = $pattern;
@@ -131,12 +133,20 @@ abstract class FileLoader extends Loader
         yield from $resource;
     }
 
-    private function doImport(mixed $resource, string $type = null, bool $ignoreErrors = false, string $sourceResource = null)
+    private function doImport(mixed $resource, string $type = null, bool $ignoreErrors = false, string $sourceResource = null): mixed
     {
         try {
             $loader = $this->resolve($resource, $type);
 
-            if ($loader instanceof self && null !== $this->currentDir) {
+            if ($loader instanceof DirectoryAwareLoaderInterface) {
+                $loader = $loader->forDirectory($this->currentDir);
+            }
+
+            if (!$loader instanceof self) {
+                return $loader->load($resource, $type);
+            }
+
+            if (null !== $this->currentDir) {
                 $resource = $loader->getLocator()->locate($resource, $this->currentDir, false);
             }
 

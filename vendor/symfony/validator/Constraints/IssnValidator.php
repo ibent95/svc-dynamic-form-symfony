@@ -27,7 +27,7 @@ use Symfony\Component\Validator\Exception\UnexpectedValueException;
 class IssnValidator extends ConstraintValidator
 {
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function validate(mixed $value, Constraint $constraint)
     {

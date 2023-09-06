@@ -50,6 +50,9 @@ class ServerLogCommand extends Command
         return parent::isEnabled();
     }
 
+    /**
+     * @return void
+     */
     protected function configure()
     {
         if (!class_exists(ConsoleFormatter::class)) {
@@ -80,7 +83,7 @@ EOF
         $filter = $input->getOption('filter');
         if ($filter) {
             if (!class_exists(ExpressionLanguage::class)) {
-                throw new LogicException('Package "symfony/expression-language" is required to use the "filter" option.');
+                throw new LogicException('Package "symfony/expression-language" is required to use the "filter" option. Try running "composer require symfony/expression-language".');
             }
             $this->el = new ExpressionLanguage();
         }
@@ -145,7 +148,7 @@ EOF
         }
     }
 
-    private function displayLog(OutputInterface $output, int $clientId, array $record)
+    private function displayLog(OutputInterface $output, int $clientId, array $record): void
     {
         if (isset($record['log_id'])) {
             $clientId = unpack('H*', $record['log_id'])[1];

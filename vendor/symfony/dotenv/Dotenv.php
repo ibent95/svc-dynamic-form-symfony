@@ -58,7 +58,7 @@ final class Dotenv
 
     /**
      * @param bool $usePutenv If `putenv()` should be used to define environment variables or not.
-     *                        Beware that `putenv()` is not thread safe, that's why this setting defaults to false
+     *                        Beware that `putenv()` is not thread safe, that's why it's not enabled by default
      *
      * @return $this
      */
@@ -72,8 +72,8 @@ final class Dotenv
     /**
      * Loads one or several .env files.
      *
-     * @param string   $path          A file to load
-     * @param string[] ...$extraPaths A list of additional files to load
+     * @param string $path          A file to load
+     * @param string ...$extraPaths A list of additional files to load
      *
      * @throws FormatException when a file has a syntax error
      * @throws PathException   when a file does not exist or is not readable
@@ -152,14 +152,14 @@ final class Dotenv
 
         $k = $this->debugKey;
         $debug = $_SERVER[$k] ?? !\in_array($_SERVER[$this->envKey], $this->prodEnvs, true);
-        $_SERVER[$k] = $_ENV[$k] = (int) $debug || (!\is_bool($debug) && filter_var($debug, \FILTER_VALIDATE_BOOLEAN)) ? '1' : '0';
+        $_SERVER[$k] = $_ENV[$k] = (int) $debug || (!\is_bool($debug) && filter_var($debug, \FILTER_VALIDATE_BOOL)) ? '1' : '0';
     }
 
     /**
      * Loads one or several .env files and enables override existing vars.
      *
-     * @param string   $path          A file to load
-     * @param string[] ...$extraPaths A list of additional files to load
+     * @param string $path          A file to load
+     * @param string ...$extraPaths A list of additional files to load
      *
      * @throws FormatException when a file has a syntax error
      * @throws PathException   when a file does not exist or is not readable
@@ -410,7 +410,7 @@ final class Dotenv
         return $value;
     }
 
-    private function skipEmptyLines()
+    private function skipEmptyLines(): void
     {
         if (preg_match('/(?:\s*+(?:#[^\n]*+)?+)++/A', $this->data, $match, 0, $this->cursor)) {
             $this->moveCursor($match[0]);
@@ -443,15 +443,10 @@ final class Dotenv
             }
 
             if (!class_exists(Process::class)) {
-                throw new \LogicException('Resolving commands requires the Symfony Process component.');
+                throw new \LogicException('Resolving commands requires the Symfony Process component. Try running "composer require symfony/process".');
             }
 
-            $process = method_exists(Process::class, 'fromShellCommandline') ? Process::fromShellCommandline('echo '.$matches[0]) : new Process('echo '.$matches[0]);
-
-            if (!method_exists(Process::class, 'fromShellCommandline') && method_exists(Process::class, 'inheritEnvironmentVariables')) {
-                // Symfony 3.4 does not inherit env vars by default:
-                $process->inheritEnvironmentVariables();
-            }
+            $process = Process::fromShellCommandline('echo '.$matches[0]);
 
             $env = [];
             foreach ($this->values as $name => $value) {
@@ -539,7 +534,7 @@ final class Dotenv
         return $value;
     }
 
-    private function moveCursor(string $text)
+    private function moveCursor(string $text): void
     {
         $this->cursor += \strlen($text);
         $this->lineno += substr_count($text, "\n");

@@ -32,7 +32,7 @@ class RoleHierarchyVoter extends RoleVoter
     }
 
     /**
-     * {@inheritdoc}
+     * @return array
      */
     protected function extractRoles(TokenInterface $token)
     {

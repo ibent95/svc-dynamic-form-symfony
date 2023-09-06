@@ -42,7 +42,7 @@ class Valid extends Constraint
     }
 
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function addImplicitGroupName(string $group)
     {

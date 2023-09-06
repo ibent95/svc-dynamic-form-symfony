@@ -11,6 +11,7 @@
 
 namespace Symfony\Bridge\Doctrine\Form\ChoiceList;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Types\ConversionException;
 use Doctrine\DBAL\Types\Type;
@@ -38,17 +39,11 @@ class ORMQueryBuilderLoader implements EntityLoaderInterface
         $this->queryBuilder = $queryBuilder;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getEntities(): array
     {
         return $this->queryBuilder->getQuery()->execute();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getEntitiesByIds(string $identifier, array $values): array
     {
         if (null !== $this->queryBuilder->getMaxResults() || 0 < (int) $this->queryBuilder->getFirstResult()) {
@@ -76,20 +71,16 @@ class ORMQueryBuilderLoader implements EntityLoaderInterface
         $entity = current($qb->getRootEntities());
         $metadata = $qb->getEntityManager()->getClassMetadata($entity);
         if (\in_array($type = $metadata->getTypeOfField($identifier), ['integer', 'bigint', 'smallint'])) {
-            $parameterType = Connection::PARAM_INT_ARRAY;
+            $parameterType = class_exists(ArrayParameterType::class) ? ArrayParameterType::INTEGER : Connection::PARAM_INT_ARRAY;
 
             // Filter out non-integer values (e.g. ""). If we don't, some
             // databases such as PostgreSQL fail.
-            $values = array_values(array_filter($values, function ($v) {
-                return (string) $v === (string) (int) $v || ctype_digit($v);
-            }));
+            $values = array_values(array_filter($values, fn ($v) => (string) $v === (string) (int) $v || ctype_digit($v)));
         } elseif (\in_array($type, ['ulid', 'uuid', 'guid'])) {
-            $parameterType = Connection::PARAM_STR_ARRAY;
+            $parameterType = class_exists(ArrayParameterType::class) ? ArrayParameterType::STRING : Connection::PARAM_STR_ARRAY;
 
             // Like above, but we just filter out empty strings.
-            $values = array_values(array_filter($values, function ($v) {
-                return '' !== (string) $v;
-            }));
+            $values = array_values(array_filter($values, fn ($v) => '' !== (string) $v));
 
             // Convert values into right type
             if (Type::hasType($type)) {
@@ -105,7 +96,7 @@ class ORMQueryBuilderLoader implements EntityLoaderInterface
                 unset($value);
             }
         } else {
-            $parameterType = Connection::PARAM_STR_ARRAY;
+            $parameterType = class_exists(ArrayParameterType::class) ? ArrayParameterType::STRING : Connection::PARAM_STR_ARRAY;
         }
         if (!$values) {
             return [];

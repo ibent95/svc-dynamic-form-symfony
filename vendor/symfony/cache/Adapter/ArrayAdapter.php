@@ -57,7 +57,7 @@ class ArrayAdapter implements AdapterInterface, CacheInterface, LoggerAwareInter
         $this->storeSerialized = $storeSerialized;
         $this->maxLifetime = $maxLifetime;
         $this->maxItems = $maxItems;
-        self::$createCacheItem ?? self::$createCacheItem = \Closure::bind(
+        self::$createCacheItem ??= \Closure::bind(
             static function ($key, $value, $isHit, $tags) {
                 $item = new CacheItem();
                 $item->key = $key;
@@ -74,9 +74,6 @@ class ArrayAdapter implements AdapterInterface, CacheInterface, LoggerAwareInter
         );
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function get(string $key, callable $callback, float $beta = null, array &$metadata = null): mixed
     {
         $item = $this->getItem($key);
@@ -94,17 +91,11 @@ class ArrayAdapter implements AdapterInterface, CacheInterface, LoggerAwareInter
         return $item->get();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function delete(string $key): bool
     {
         return $this->deleteItem($key);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function hasItem(mixed $key): bool
     {
         if (\is_string($key) && isset($this->expiries[$key]) && $this->expiries[$key] > microtime(true)) {
@@ -122,9 +113,6 @@ class ArrayAdapter implements AdapterInterface, CacheInterface, LoggerAwareInter
         return isset($this->expiries[$key]) && !$this->deleteItem($key);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getItem(mixed $key): CacheItem
     {
         if (!$isHit = $this->hasItem($key)) {
@@ -141,9 +129,6 @@ class ArrayAdapter implements AdapterInterface, CacheInterface, LoggerAwareInter
         return (self::$createCacheItem)($key, $value, $isHit, $this->tags[$key] ?? null);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getItems(array $keys = []): iterable
     {
         \assert(self::validateKeys($keys));
@@ -151,9 +136,6 @@ class ArrayAdapter implements AdapterInterface, CacheInterface, LoggerAwareInter
         return $this->generateItems($keys, microtime(true), self::$createCacheItem);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function deleteItem(mixed $key): bool
     {
         \assert('' !== CacheItem::validateKey($key));
@@ -162,9 +144,6 @@ class ArrayAdapter implements AdapterInterface, CacheInterface, LoggerAwareInter
         return true;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function deleteItems(array $keys): bool
     {
         foreach ($keys as $key) {
@@ -174,9 +153,6 @@ class ArrayAdapter implements AdapterInterface, CacheInterface, LoggerAwareInter
         return true;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function save(CacheItemInterface $item): bool
     {
         if (!$item instanceof CacheItem) {
@@ -231,25 +207,16 @@ class ArrayAdapter implements AdapterInterface, CacheInterface, LoggerAwareInter
         return true;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function saveDeferred(CacheItemInterface $item): bool
     {
         return $this->save($item);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function commit(): bool
     {
         return true;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function clear(string $prefix = ''): bool
     {
         if ('' !== $prefix) {
@@ -294,7 +261,7 @@ class ArrayAdapter implements AdapterInterface, CacheInterface, LoggerAwareInter
     }
 
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function reset()
     {
@@ -331,7 +298,7 @@ class ArrayAdapter implements AdapterInterface, CacheInterface, LoggerAwareInter
         }
     }
 
-    private function freeze($value, string $key)
+    private function freeze($value, string $key): string|int|float|bool|array|null
     {
         if (null === $value) {
             return 'N;';
@@ -350,7 +317,7 @@ class ArrayAdapter implements AdapterInterface, CacheInterface, LoggerAwareInter
                 $message = sprintf('Failed to save key "{key}" of type %s: %s', $type, $e->getMessage());
                 CacheItem::log($this->logger, $message, ['key' => $key, 'exception' => $e, 'cache-adapter' => get_debug_type($this)]);
 
-                return;
+                return null;
             }
             // Keep value serialized if it contains any objects or any internal references
             if ('C' === $serialized[0] || 'O' === $serialized[0] || preg_match('/;[OCRr]:[1-9]/', $serialized)) {
@@ -361,7 +328,7 @@ class ArrayAdapter implements AdapterInterface, CacheInterface, LoggerAwareInter
         return $value;
     }
 
-    private function unfreeze(string $key, bool &$isHit)
+    private function unfreeze(string $key, bool &$isHit): mixed
     {
         if ('N;' === $value = $this->values[$key]) {
             return null;

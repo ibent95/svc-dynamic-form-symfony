@@ -24,14 +24,15 @@ class CollectionMemberExpression extends Node
      * @param mixed          $entityExpr
      * @param PathExpression $collValuedPathExpr
      */
-    public function __construct($entityExpr, $collValuedPathExpr)
+    public function __construct($entityExpr, $collValuedPathExpr, bool $not = false)
     {
         $this->entityExpression               = $entityExpr;
         $this->collectionValuedPathExpression = $collValuedPathExpr;
+        $this->not                            = $not;
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function dispatch($walker)
     {

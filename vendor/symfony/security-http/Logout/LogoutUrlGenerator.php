@@ -46,6 +46,8 @@ class LogoutUrlGenerator
      * @param string|null $csrfTokenId   The ID of the CSRF token
      * @param string|null $csrfParameter The CSRF token parameter name
      * @param string|null $context       The listener context
+     *
+     * @return void
      */
     public function registerListener(string $key, string $logoutPath, ?string $csrfTokenId, ?string $csrfParameter, CsrfTokenManagerInterface $csrfTokenManager = null, string $context = null)
     {
@@ -68,6 +70,9 @@ class LogoutUrlGenerator
         return $this->generateLogoutUrl($key, UrlGeneratorInterface::ABSOLUTE_URL);
     }
 
+    /**
+     * @return void
+     */
     public function setCurrentFirewall(?string $key, string $context = null)
     {
         $this->currentFirewallName = $key;
@@ -100,7 +105,7 @@ class LogoutUrlGenerator
 
             $url = UrlGeneratorInterface::ABSOLUTE_URL === $referenceType ? $request->getUriForPath($logoutPath) : $request->getBaseUrl().$logoutPath;
 
-            if (!empty($parameters)) {
+            if ($parameters) {
                 $url .= '?'.http_build_query($parameters, '', '&');
             }
         } else {
@@ -151,6 +156,10 @@ class LogoutUrlGenerator
             }
         }
 
-        throw new \InvalidArgumentException('Unable to find the current firewall LogoutListener, please provide the provider key manually.');
+        if (null === $this->currentFirewallName) {
+            throw new \InvalidArgumentException('This request is not behind a firewall, pass the firewall name manually to generate a logout URL.');
+        }
+
+        throw new \InvalidArgumentException('Unable to find logout in the current firewall, pass the firewall name manually to generate a logout URL.');
     }
 }

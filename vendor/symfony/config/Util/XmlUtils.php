@@ -89,7 +89,7 @@ class XmlUtils
 
             if (!$valid) {
                 $messages = static::getXmlErrors($internalErrors);
-                if (empty($messages)) {
+                if (!$messages) {
                     throw new InvalidXmlException('The XML is not valid.', 0, $e);
                 }
                 throw new XmlParsingException(implode("\n", $messages), 0, $e);
@@ -238,6 +238,9 @@ class XmlUtils
         }
     }
 
+    /**
+     * @return array
+     */
     protected static function getXmlErrors(bool $internalErrors)
     {
         $errors = [];

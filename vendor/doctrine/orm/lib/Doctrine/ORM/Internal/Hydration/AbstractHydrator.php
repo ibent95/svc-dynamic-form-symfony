@@ -617,6 +617,7 @@ abstract class AbstractHydrator
                     'fieldName'    => $fieldName,
                     'type'         => $type,
                     'dqlAlias'     => $dqlAlias,
+                    'enumType'     => $this->_rsm->enumMappings[$key] ?? null,
                 ];
         }
 
@@ -697,7 +698,7 @@ abstract class AbstractHydrator
      *
      * @return BackedEnum|array<BackedEnum>
      */
-    private function buildEnum($value, string $enumType)
+    final protected function buildEnum($value, string $enumType)
     {
         if (is_array($value)) {
             return array_map(static function ($value) use ($enumType): BackedEnum {

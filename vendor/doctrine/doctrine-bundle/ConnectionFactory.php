@@ -6,16 +6,17 @@ use Doctrine\Common\EventManager;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\Exception as DBALException;
 use Doctrine\DBAL\Exception\DriverException;
+use Doctrine\DBAL\Exception\MalformedDsnException;
 use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Doctrine\DBAL\Platforms\MySqlPlatform;
+use Doctrine\DBAL\Tools\DsnParser;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\Deprecations\Deprecation;
 
 use function array_merge;
-use function defined;
 use function is_subclass_of;
 use function trigger_deprecation;
 
@@ -24,16 +25,31 @@ use const PHP_EOL;
 /** @psalm-import-type Params from DriverManager */
 class ConnectionFactory
 {
-    /** @var mixed[][] */
-    private $typesConfig = [];
+    /** @internal */
+    public const DEFAULT_SCHEME_MAP = [
+        'db2'        => 'ibm_db2',
+        'mssql'      => 'pdo_sqlsrv',
+        'mysql'      => 'pdo_mysql',
+        'mysql2'     => 'pdo_mysql', // Amazon RDS, for some weird reason
+        'postgres'   => 'pdo_pgsql',
+        'postgresql' => 'pdo_pgsql',
+        'pgsql'      => 'pdo_pgsql',
+        'sqlite'     => 'pdo_sqlite',
+        'sqlite3'    => 'pdo_sqlite',
+    ];
 
-    /** @var bool */
-    private $initialized = false;
+    /** @var mixed[][] */
+    private array $typesConfig = [];
+
+    private DsnParser $dsnParser;
+
+    private bool $initialized = false;
 
     /** @param mixed[][] $typesConfig */
-    public function __construct(array $typesConfig)
+    public function __construct(array $typesConfig, ?DsnParser $dsnParser = null)
     {
         $this->typesConfig = $typesConfig;
+        $this->dsnParser   = $dsnParser ?? new DsnParser(self::DEFAULT_SCHEME_MAP);
     }
 
     /**
@@ -58,6 +74,19 @@ class ConnectionFactory
             unset($params['connection_override_options']);
         }
 
+        $params = $this->parseDatabaseUrl($params);
+
+        // URL support for PrimaryReplicaConnection
+        if (isset($params['primary'])) {
+            $params['primary'] = $this->parseDatabaseUrl($params['primary']);
+        }
+
+        if (isset($params['replica'])) {
+            foreach ($params['replica'] as $key => $replicaParams) {
+                $params['replica'][$key] = $this->parseDatabaseUrl($replicaParams);
+            }
+        }
+
         if (! isset($params['pdo']) && (! isset($params['charset']) || $overriddenOptions || isset($params['dbname_suffix']))) {
             $wrapperClass = null;
 
@@ -76,16 +105,10 @@ class ConnectionFactory
             $platform   = $driver->getDatabasePlatform();
 
             if (! isset($params['charset'])) {
-                /** @psalm-suppress UndefinedClass AbstractMySQLPlatform exists since DBAL 3.x only */
-                if ($platform instanceof AbstractMySQLPlatform || $platform instanceof MySqlPlatform) {
+                if ($platform instanceof AbstractMySQLPlatform) {
                     $params['charset'] = 'utf8mb4';
 
-                    /* PARAM_ASCII_STR_ARRAY is defined since doctrine/dbal 3.3
-                       doctrine/dbal 3.3.2 adds support for the option "collation"
-                       Checking for that constant will no longer be necessary
-                       after dropping support for doctrine/dbal 2, since this
-                       package requires doctrine/dbal 3.3.2 or higher. */
-                    if (isset($params['defaultTableOptions']['collate']) && defined('Doctrine\DBAL\Connection::PARAM_ASCII_STR_ARRAY')) {
+                    if (isset($params['defaultTableOptions']['collate'])) {
                         Deprecation::trigger(
                             'doctrine/doctrine-bundle',
                             'https://github.com/doctrine/dbal/issues/5214',
@@ -95,9 +118,8 @@ class ConnectionFactory
                         unset($params['defaultTableOptions']['collate']);
                     }
 
-                    $collationOption = defined('Doctrine\DBAL\Connection::PARAM_ASCII_STR_ARRAY') ? 'collation' : 'collate';
-                    if (! isset($params['defaultTableOptions'][$collationOption])) {
-                        $params['defaultTableOptions'][$collationOption] = 'utf8mb4_unicode_ci';
+                    if (! isset($params['defaultTableOptions']['collation'])) {
+                        $params['defaultTableOptions']['collation'] = 'utf8mb4_unicode_ci';
                     }
                 } else {
                     $params['charset'] = 'utf8';
@@ -130,7 +152,8 @@ class ConnectionFactory
      *
      * This could fail if types should be registered to an predefined/unused connection
      * and the platform version is unknown.
-     * For details have a look at DoctrineBundle issue #673.
+     *
+     * @link https://github.com/doctrine/DoctrineBundle/issues/673
      *
      * @throws DBALException
      */
@@ -188,6 +211,50 @@ class ConnectionFactory
         if (isset($params['primary']['dbname'], $params['primary']['dbname_suffix'])) {
             $params['primary']['dbname'] .= $params['primary']['dbname_suffix'];
         }
+
+        return $params;
+    }
+
+    /**
+     * Extracts parts from a database URL, if present, and returns an
+     * updated list of parameters.
+     *
+     * @param mixed[] $params The list of parameters.
+     * @psalm-param Params $params
+     *
+     * @return mixed[] A modified list of parameters with info from a database
+     *                 URL extracted into individual parameter parts.
+     * @psalm-return Params
+     *
+     * @throws Exception
+     */
+    private function parseDatabaseUrl(array $params): array
+    {
+        if (! isset($params['url'])) {
+            return $params;
+        }
+
+        try {
+            $parsedParams = $this->dsnParser->parse($params['url']);
+        } catch (MalformedDsnException $e) {
+            throw new Exception('Malformed parameter "url".', 0, $e);
+        }
+
+        if (isset($parsedParams['driver'])) {
+            // The requested driver from the URL scheme takes precedence
+            // over the default custom driver from the connection parameters (if any).
+            unset($params['driverClass']);
+        }
+
+        $params = array_merge($params, $parsedParams);
+
+        // If a schemeless connection URL is given, we require a default driver or default custom driver
+        // as connection parameter.
+        if (! isset($params['driverClass']) && ! isset($params['driver'])) {
+            throw Exception::driverRequired($params['url']);
+        }
+
+        unset($params['url']);
 
         return $params;
     }

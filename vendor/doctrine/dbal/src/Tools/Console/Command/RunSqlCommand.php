@@ -31,6 +31,7 @@ class RunSqlCommand extends Command
     public function __construct(ConnectionProvider $connectionProvider)
     {
         parent::__construct();
+
         $this->connectionProvider = $connectionProvider;
     }
 
@@ -55,7 +56,7 @@ EOT);
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      *
      * @return int
      *

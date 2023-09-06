@@ -21,7 +21,7 @@ use Symfony\Component\Config\Definition\Exception\InvalidTypeException;
 class FloatNode extends NumericNode
 {
     /**
-     * {@inheritdoc}
+     * @return void
      */
     protected function validateType(mixed $value)
     {
@@ -41,9 +41,6 @@ class FloatNode extends NumericNode
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function getValidPlaceholderTypes(): array
     {
         return ['float'];

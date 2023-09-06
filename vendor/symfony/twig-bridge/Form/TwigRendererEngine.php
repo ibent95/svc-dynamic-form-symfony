@@ -30,9 +30,6 @@ class TwigRendererEngine extends AbstractRendererEngine
         $this->environment = $environment;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function renderBlock(FormView $view, mixed $resource, string $blockName, array $variables = []): string
     {
         $cacheKey = $view->vars[self::CACHE_KEY_VAR];
@@ -135,6 +132,8 @@ class TwigRendererEngine extends AbstractRendererEngine
      *                     to initialize the theme first. Any changes made to
      *                     this variable will be kept and be available upon
      *                     further calls to this method using the same theme.
+     *
+     * @return void
      */
     protected function loadResourcesFromTheme(string $cacheKey, mixed &$theme)
     {

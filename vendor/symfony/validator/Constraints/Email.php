@@ -25,13 +25,18 @@ use Symfony\Component\Validator\Exception\LogicException;
 #[\Attribute(\Attribute::TARGET_PROPERTY | \Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
 class Email extends Constraint
 {
+    public const VALIDATION_MODE_HTML5_ALLOW_NO_TLD = 'html5-allow-no-tld';
     public const VALIDATION_MODE_HTML5 = 'html5';
     public const VALIDATION_MODE_STRICT = 'strict';
+    /**
+     * @deprecated since Symfony 6.2, use VALIDATION_MODE_HTML5 instead
+     */
     public const VALIDATION_MODE_LOOSE = 'loose';
 
     public const INVALID_FORMAT_ERROR = 'bd79c0ab-ddba-46cc-a703-a7a4b08de310';
 
     public const VALIDATION_MODES = [
+        self::VALIDATION_MODE_HTML5_ALLOW_NO_TLD,
         self::VALIDATION_MODE_HTML5,
         self::VALIDATION_MODE_STRICT,
         self::VALIDATION_MODE_LOOSE,
@@ -68,8 +73,12 @@ class Email extends Constraint
         $this->mode = $mode ?? $this->mode;
         $this->normalizer = $normalizer ?? $this->normalizer;
 
+        if (self::VALIDATION_MODE_LOOSE === $this->mode) {
+            trigger_deprecation('symfony/validator', '6.2', 'The "%s" mode is deprecated. It will be removed in 7.0 and the default mode will be changed to "%s".', self::VALIDATION_MODE_LOOSE, self::VALIDATION_MODE_HTML5);
+        }
+
         if (self::VALIDATION_MODE_STRICT === $this->mode && !class_exists(StrictEmailValidator::class)) {
-            throw new LogicException(sprintf('The "egulias/email-validator" component is required to use the "%s" constraint in strict mode.', __CLASS__));
+            throw new LogicException(sprintf('The "egulias/email-validator" component is required to use the "%s" constraint in strict mode. Try running "composer require egulias/email-validator".', __CLASS__));
         }
 
         if (null !== $this->normalizer && !\is_callable($this->normalizer)) {

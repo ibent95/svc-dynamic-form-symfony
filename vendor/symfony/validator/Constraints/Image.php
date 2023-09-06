@@ -93,14 +93,12 @@ class Image extends File
     public $allowPortraitMessage = 'The image is portrait oriented ({{ width }}x{{ height }}px). Portrait oriented images are not allowed.';
     public $corruptedMessage = 'The image file is corrupted.';
 
-    /**
-     * {@inheritdoc}
-     */
     public function __construct(
         array $options = null,
         int|string $maxSize = null,
         bool $binaryFormat = null,
         array $mimeTypes = null,
+        int $filenameMaxLength = null,
         int $minWidth = null,
         int $maxWidth = null,
         int $maxHeight = null,
@@ -118,6 +116,7 @@ class Image extends File
         string $maxSizeMessage = null,
         string $mimeTypesMessage = null,
         string $disallowEmptyMessage = null,
+        string $filenameTooLongMessage = null,
         string $uploadIniSizeErrorMessage = null,
         string $uploadFormSizeErrorMessage = null,
         string $uploadPartialErrorMessage = null,
@@ -147,11 +146,13 @@ class Image extends File
             $maxSize,
             $binaryFormat,
             $mimeTypes,
+            $filenameMaxLength,
             $notFoundMessage,
             $notReadableMessage,
             $maxSizeMessage,
             $mimeTypesMessage,
             $disallowEmptyMessage,
+            $filenameTooLongMessage,
             $uploadIniSizeErrorMessage,
             $uploadFormSizeErrorMessage,
             $uploadPartialErrorMessage,

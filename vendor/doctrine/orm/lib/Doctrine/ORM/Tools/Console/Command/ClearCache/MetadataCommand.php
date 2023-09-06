@@ -18,9 +18,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class MetadataCommand extends AbstractEntityManagerCommand
 {
-    /**
-     * {@inheritdoc}
-     */
+    /** @return void */
     protected function configure()
     {
         $this->setName('orm:clear-cache:metadata')
@@ -34,13 +32,13 @@ EOT
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      *
      * @return int
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $ui = new SymfonyStyle($input, $output);
+        $ui = (new SymfonyStyle($input, $output))->getErrorStyle();
 
         $em          = $this->getEntityManager($input);
         $cacheDriver = $em->getConfiguration()->getMetadataCache();

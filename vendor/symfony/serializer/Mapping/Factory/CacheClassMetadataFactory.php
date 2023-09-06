@@ -24,26 +24,16 @@ class CacheClassMetadataFactory implements ClassMetadataFactoryInterface
     use ClassResolverTrait;
 
     /**
-     * @var ClassMetadataFactoryInterface
+     * @var array<string, ClassMetadataInterface>
      */
-    private $decorated;
+    private array $loadedClasses = [];
 
-    /**
-     * @var CacheItemPoolInterface
-     */
-    private $cacheItemPool;
-
-    private $loadedClasses = [];
-
-    public function __construct(ClassMetadataFactoryInterface $decorated, CacheItemPoolInterface $cacheItemPool)
-    {
-        $this->decorated = $decorated;
-        $this->cacheItemPool = $cacheItemPool;
+    public function __construct(
+        private readonly ClassMetadataFactoryInterface $decorated,
+        private readonly CacheItemPoolInterface $cacheItemPool,
+    ) {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getMetadataFor(string|object $value): ClassMetadataInterface
     {
         $class = $this->getClass($value);
@@ -65,9 +55,6 @@ class CacheClassMetadataFactory implements ClassMetadataFactoryInterface
         return $this->loadedClasses[$class] = $metadata;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function hasMetadataFor(mixed $value): bool
     {
         return $this->decorated->hasMetadataFor($value);

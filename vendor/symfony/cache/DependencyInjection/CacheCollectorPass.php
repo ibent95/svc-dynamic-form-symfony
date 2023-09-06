@@ -27,7 +27,7 @@ use Symfony\Component\DependencyInjection\Reference;
 class CacheCollectorPass implements CompilerPassInterface
 {
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function process(ContainerBuilder $container)
     {
@@ -42,7 +42,7 @@ class CacheCollectorPass implements CompilerPassInterface
         }
     }
 
-    private function addToCollector(string $id, string $name, ContainerBuilder $container)
+    private function addToCollector(string $id, string $name, ContainerBuilder $container): void
     {
         $definition = $container->getDefinition($id);
         if ($definition->isAbstract()) {

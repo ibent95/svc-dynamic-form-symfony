@@ -37,6 +37,8 @@ class PrototypedArrayNode extends ArrayNode
     /**
      * Sets the minimum number of elements that a prototype based node must
      * contain. By default this is zero, meaning no elements.
+     *
+     * @return void
      */
     public function setMinNumberOfElements(int $number)
     {
@@ -66,6 +68,8 @@ class PrototypedArrayNode extends ArrayNode
      *
      * @param string $attribute The name of the attribute which value is to be used as a key
      * @param bool   $remove    Whether or not to remove the key
+     *
+     * @return void
      */
     public function setKeyAttribute(string $attribute, bool $remove = true)
     {
@@ -83,15 +87,14 @@ class PrototypedArrayNode extends ArrayNode
 
     /**
      * Sets the default value of this node.
+     *
+     * @return void
      */
     public function setDefaultValue(array $value)
     {
         $this->defaultValue = $value;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function hasDefaultValue(): bool
     {
         return true;
@@ -101,6 +104,8 @@ class PrototypedArrayNode extends ArrayNode
      * Adds default children when none are set.
      *
      * @param int|string|array|null $children The number of children|The child name|The children names to be added
+     *
+     * @return void
      */
     public function setAddChildrenIfNoneSet(int|string|array|null $children = ['defaults'])
     {
@@ -112,8 +117,6 @@ class PrototypedArrayNode extends ArrayNode
     }
 
     /**
-     * {@inheritdoc}
-     *
      * The default value could be either explicited or derived from the prototype
      * default value.
      */
@@ -134,6 +137,8 @@ class PrototypedArrayNode extends ArrayNode
 
     /**
      * Sets the node prototype.
+     *
+     * @return void
      */
     public function setPrototype(PrototypeNodeInterface $node)
     {
@@ -151,6 +156,8 @@ class PrototypedArrayNode extends ArrayNode
     /**
      * Disable adding concrete children for prototyped nodes.
      *
+     * @return never
+     *
      * @throws Exception
      */
     public function addChild(NodeInterface $node)
@@ -158,9 +165,6 @@ class PrototypedArrayNode extends ArrayNode
         throw new Exception('A prototyped array node cannot have concrete children.');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function finalizeValue(mixed $value): mixed
     {
         if (false === $value) {
@@ -187,8 +191,6 @@ class PrototypedArrayNode extends ArrayNode
     }
 
     /**
-     * {@inheritdoc}
-     *
      * @throws DuplicateKeyException
      */
     protected function normalizeValue(mixed $value): mixed
@@ -255,9 +257,6 @@ class PrototypedArrayNode extends ArrayNode
         return $normalized;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function mergeValues(mixed $leftSide, mixed $rightSide): mixed
     {
         if (false === $rightSide) {

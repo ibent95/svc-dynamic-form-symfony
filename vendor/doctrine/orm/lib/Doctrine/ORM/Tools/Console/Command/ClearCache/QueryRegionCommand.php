@@ -20,9 +20,7 @@ use function sprintf;
  */
 class QueryRegionCommand extends AbstractEntityManagerCommand
 {
-    /**
-     * {@inheritdoc}
-     */
+    /** @return void */
     protected function configure()
     {
         $this->setName('orm:clear-cache:region:query')
@@ -59,13 +57,13 @@ EOT
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      *
      * @return int
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $ui = new SymfonyStyle($input, $output);
+        $ui = (new SymfonyStyle($input, $output))->getErrorStyle();
 
         $em    = $this->getEntityManager($input);
         $name  = $input->getArgument('region-name');

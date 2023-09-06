@@ -39,10 +39,7 @@ class CacheWarmupCommand extends Command
         $this->cacheWarmer = $cacheWarmer;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setDefinition([
@@ -58,9 +55,6 @@ EOF
         ;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);

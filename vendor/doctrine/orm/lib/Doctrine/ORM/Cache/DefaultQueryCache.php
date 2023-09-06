@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Doctrine\ORM\Cache;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Proxy\Proxy;
 use Doctrine\ORM\Cache;
 use Doctrine\ORM\Cache\Exception\FeatureNotImplemented;
 use Doctrine\ORM\Cache\Exception\NonCacheableEntity;
@@ -29,6 +28,8 @@ use function reset;
 
 /**
  * Default query cache implementation.
+ *
+ * @psalm-import-type AssociationMapping from ClassMetadata
  */
 class DefaultQueryCache implements QueryCache
 {
@@ -66,7 +67,7 @@ class DefaultQueryCache implements QueryCache
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function get(QueryCacheKey $key, ResultSetMapping $rsm, array $hints = [])
     {
@@ -225,7 +226,7 @@ class DefaultQueryCache implements QueryCache
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function put(QueryCacheKey $key, ResultSetMapping $rsm, $result, array $hints = [])
     {
@@ -326,8 +327,8 @@ class DefaultQueryCache implements QueryCache
     }
 
     /**
-     * @param array<string,mixed> $assoc
-     * @param mixed               $assocValue
+     * @param AssociationMapping $assoc
+     * @param mixed              $assocValue
      *
      * @return mixed[]|null
      * @psalm-return array{targetEntity: class-string, type: mixed, list?: array[], identifier?: array}|null
@@ -343,7 +344,7 @@ class DefaultQueryCache implements QueryCache
             $assocIdentifier = $this->uow->getEntityIdentifier($assocValue);
             $entityKey       = new EntityCacheKey($assocMetadata->rootEntityName, $assocIdentifier);
 
-            if (! $assocValue instanceof Proxy && ($key->cacheMode & Cache::MODE_REFRESH) || ! $assocRegion->contains($entityKey)) {
+            if (! $this->uow->isUninitializedObject($assocValue) && ($key->cacheMode & Cache::MODE_REFRESH) || ! $assocRegion->contains($entityKey)) {
                 // Entity put fail
                 if (! $assocPersister->storeEntityCache($assocValue, $entityKey)) {
                     return null;
@@ -448,7 +449,7 @@ class DefaultQueryCache implements QueryCache
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function clear()
     {
@@ -456,7 +457,7 @@ class DefaultQueryCache implements QueryCache
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     public function getRegion()
     {

@@ -315,9 +315,9 @@ class DockerComposeConfigurator extends AbstractConfigurator
             return [];
         }
 
-        $files = array_map(function ($file) use ($rootDir) {
+        $files = array_filter(array_map(function ($file) use ($rootDir) {
             return $this->findDockerComposeFile($rootDir, $file);
-        }, array_keys($config));
+        }, array_keys($config)));
 
         $originalContents = [];
         foreach ($files as $file) {
@@ -332,7 +332,11 @@ class DockerComposeConfigurator extends AbstractConfigurator
 
         $updatedContents = [];
         foreach ($files as $file) {
-            $localPath = ltrim(str_replace($rootDir, '', $file), '/\\');
+            $localPath = $file;
+            if (0 === strpos($file, $rootDir)) {
+                $localPath = substr($file, \strlen($rootDir) + 1);
+            }
+            $localPath = ltrim($localPath, '/\\');
             $updatedContents[$localPath] = file_exists($file) ? file_get_contents($file) : null;
         }
 

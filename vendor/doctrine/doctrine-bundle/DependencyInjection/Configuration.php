@@ -3,17 +3,19 @@
 namespace Doctrine\Bundle\DoctrineBundle\DependencyInjection;
 
 use Doctrine\Common\Proxy\AbstractProxyFactory;
+use Doctrine\DBAL\Schema\LegacySchemaManagerFactory;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadataFactory;
+use InvalidArgumentException;
 use ReflectionClass;
-use Symfony\Component\Config\Definition\BaseNode;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\DependencyInjection\Exception\LogicException;
 
+use function array_diff_key;
 use function array_intersect_key;
 use function array_key_exists;
 use function array_keys;
@@ -30,7 +32,6 @@ use function is_bool;
 use function is_int;
 use function is_string;
 use function key;
-use function method_exists;
 use function reset;
 use function sprintf;
 use function strlen;
@@ -44,11 +45,12 @@ use function trigger_deprecation;
  *
  * This information is solely responsible for how the different configuration
  * sections are normalized, and merged.
+ *
+ * @final since 2.9
  */
 class Configuration implements ConfigurationInterface
 {
-    /** @var bool */
-    private $debug;
+    private bool $debug;
 
     /** @param bool $debug Whether to use the debug mode */
     public function __construct(bool $debug)
@@ -72,17 +74,27 @@ class Configuration implements ConfigurationInterface
      */
     private function addDbalSection(ArrayNodeDefinition $node): void
     {
+        // Key that should not be rewritten to the connection config
+        $excludedKeys = ['default_connection' => true, 'driver_schemes' => true, 'driver_scheme' => true, 'types' => true, 'type' => true];
+
         $node
             ->children()
             ->arrayNode('dbal')
                 ->beforeNormalization()
-                    ->ifTrue(static function ($v) {
-                        return is_array($v) && ! array_key_exists('connections', $v) && ! array_key_exists('connection', $v);
+                    ->ifTrue(static function ($v) use ($excludedKeys) {
+                        if (! is_array($v)) {
+                            return false;
+                        }
+
+                        if (array_key_exists('connections', $v) || array_key_exists('connection', $v)) {
+                            return false;
+                        }
+
+                        // Is there actually anything to use once excluded keys are considered?
+                        return (bool) array_diff_key($v, $excludedKeys);
                     })
-                    ->then(static function ($v) {
-                        // Key that should not be rewritten to the connection config
-                        $excludedKeys = ['default_connection' => true, 'types' => true, 'type' => true];
-                        $connection   = [];
+                    ->then(static function ($v) use ($excludedKeys) {
+                        $connection = [];
                         foreach ($v as $key => $value) {
                             if (isset($excludedKeys[$key])) {
                                 continue;
@@ -92,8 +104,7 @@ class Configuration implements ConfigurationInterface
                             unset($v[$key]);
                         }
 
-                        $v['default_connection'] = isset($v['default_connection']) ? (string) $v['default_connection'] : 'default';
-                        $v['connections']        = [$v['default_connection'] => $connection];
+                        $v['connections'] = [($v['default_connection'] ?? 'default') => $connection];
 
                         return $v;
                     })
@@ -116,10 +127,41 @@ class Configuration implements ConfigurationInterface
                                 ->scalarNode('class')->isRequired()->end()
                                 ->booleanNode('commented')
                                     ->setDeprecated(
-                                        ...$this->getDeprecationMsg('The doctrine-bundle type commenting features were removed; the corresponding config parameter was deprecated in 2.0 and will be dropped in 3.0.', '2.0')
+                                        'doctrine/doctrine-bundle',
+                                        '2.0',
+                                        'The doctrine-bundle type commenting features were removed; the corresponding config parameter was deprecated in 2.0 and will be dropped in 3.0.',
                                     )
                                 ->end()
                             ->end()
+                        ->end()
+                    ->end()
+                ->end()
+                ->fixXmlConfig('driver_scheme')
+                ->children()
+                    ->arrayNode('driver_schemes')
+                        ->useAttributeAsKey('scheme')
+                        ->normalizeKeys(false)
+                        ->scalarPrototype()->end()
+                        ->info('Defines a driver for given URL schemes. Schemes being driver names cannot be redefined. However, other default schemes can be overwritten.')
+                        ->validate()
+                            ->always()
+                            ->then(static function (array $value) {
+                                $unsupportedSchemes = [];
+
+                                foreach ($value as $scheme => $driver) {
+                                    if (! in_array($scheme, ['pdo-mysql', 'pdo-sqlite', 'pdo-pgsql', 'pdo-oci', 'oci8', 'ibm-db2', 'pdo-sqlsrv', 'mysqli', 'pgsql', 'sqlsrv', 'sqlite3'], true)) {
+                                        continue;
+                                    }
+
+                                    $unsupportedSchemes[] = $scheme;
+                                }
+
+                                if ($unsupportedSchemes) {
+                                    throw new InvalidArgumentException(sprintf('Registering a scheme with the name of one of the official drivers is forbidden, as those are defined in DBAL itself. The following schemes are forbidden: %s', implode(', ', $unsupportedSchemes)));
+                                }
+
+                                return $value;
+                            })
                         ->end()
                     ->end()
                 ->end()
@@ -153,11 +195,16 @@ class Configuration implements ConfigurationInterface
             ->fixXmlConfig('mapping_type')
             ->fixXmlConfig('slave')
             ->fixXmlConfig('replica')
-            ->fixXmlConfig('shard')
             ->fixXmlConfig('default_table_option')
             ->children()
                 ->scalarNode('driver')->defaultValue('pdo_mysql')->end()
-                ->scalarNode('platform_service')->end()
+                ->scalarNode('platform_service')
+                    ->setDeprecated(
+                        'doctrine/doctrine-bundle',
+                        '2.9',
+                        'The "platform_service" configuration key is deprecated since doctrine-bundle 2.9. DBAL 4 will not support setting a custom platform via connection params anymore.'
+                    )
+                ->end()
                 ->booleanNode('auto_commit')->end()
                 ->scalarNode('schema_filter')->end()
                 ->booleanNode('logging')->defaultValue($this->debug)->end()
@@ -173,24 +220,11 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('server_version')->end()
                 ->scalarNode('driver_class')->end()
                 ->scalarNode('wrapper_class')->end()
-                ->scalarNode('shard_manager_class')
-                    ->setDeprecated(
-                        ...$this->getDeprecationMsg('The "shard_manager_class" configuration is deprecated and not supported anymore using DBAL 3.', '2.7')
-                    )
-                ->end()
-                ->scalarNode('shard_choser')
-                    ->setDeprecated(
-                        ...$this->getDeprecationMsg('The "shard_choser" configuration is deprecated and not supported anymore using DBAL 3.', '2.7')
-                    )
-                ->end()
-                ->scalarNode('shard_choser_service')
-                    ->setDeprecated(
-                        ...$this->getDeprecationMsg('The "shard_choser_service" configuration is deprecated and not supported anymore using DBAL 3.', '2.7')
-                    )
-                ->end()
                 ->booleanNode('keep_slave')
                     ->setDeprecated(
-                        ...$this->getDeprecationMsg('The "keep_slave" configuration key is deprecated since doctrine-bundle 2.2. Use the "keep_replica" configuration key instead.', '2.2')
+                        'doctrine/doctrine-bundle',
+                        '2.2',
+                        'The "keep_slave" configuration key is deprecated since doctrine-bundle 2.2. Use the "keep_replica" configuration key instead.',
                     )
                 ->end()
                 ->booleanNode('keep_replica')->end()
@@ -210,6 +244,10 @@ class Configuration implements ConfigurationInterface
                     ->useAttributeAsKey('name')
                     ->prototype('scalar')->end()
                 ->end()
+                ->scalarNode('schema_manager_factory')
+                    ->cannotBeEmpty()
+                    ->defaultValue($this->getDefaultSchemaManagerFactory())
+                ->end()
             ->end();
 
         // dbal < 2.11
@@ -217,7 +255,9 @@ class Configuration implements ConfigurationInterface
             ->children()
                 ->arrayNode('slaves')
                     ->setDeprecated(
-                        ...$this->getDeprecationMsg('The "slaves" configuration key will be renamed to "replicas" in doctrine-bundle 3.0. "slaves" is deprecated since doctrine-bundle 2.2.', '2.2')
+                        'doctrine/doctrine-bundle',
+                        '2.2',
+                        'The "slaves" configuration key will be renamed to "replicas" in doctrine-bundle 3.0. "slaves" is deprecated since doctrine-bundle 2.2.',
                     )
                     ->useAttributeAsKey('name')
                     ->prototype('array');
@@ -230,23 +270,6 @@ class Configuration implements ConfigurationInterface
                     ->useAttributeAsKey('name')
                     ->prototype('array');
         $this->configureDbalDriverNode($replicaNode);
-
-        $shardNode = $connectionNode
-            ->children()
-                ->arrayNode('shards')
-                    ->setDeprecated(
-                        ...$this->getDeprecationMsg('The "shards" configuration is deprecated and not supported anymore using DBAL 3.', '2.7')
-                    )
-                    ->prototype('array');
-
-        $shardNode
-            ->children()
-                ->integerNode('id')
-                    ->min(1)
-                    ->isRequired()
-                ->end()
-            ->end();
-        $this->configureDbalDriverNode($shardNode);
 
         return $node;
     }
@@ -289,7 +312,11 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('port')->info('Defaults to null at runtime.')->end()
                 ->scalarNode('user')->info('Defaults to "root" at runtime.')->end()
                 ->scalarNode('password')->info('Defaults to null at runtime.')->end()
-                ->booleanNode('override_url')->setDeprecated(...$this->getDeprecationMsg('The "doctrine.dbal.override_url" configuration key is deprecated.', '2.4'))->end()
+                ->booleanNode('override_url')->setDeprecated(
+                    'doctrine/doctrine-bundle',
+                    '2.4',
+                    'The "doctrine.dbal.override_url" configuration key is deprecated.',
+                )->end()
                 ->scalarNode('dbname_suffix')->end()
                 ->scalarNode('application_name')->end()
                 ->scalarNode('charset')->end()
@@ -393,28 +420,39 @@ class Configuration implements ConfigurationInterface
      */
     private function addOrmSection(ArrayNodeDefinition $node): void
     {
+        // Key that should not be rewritten to the entity-manager config
+        $excludedKeys = [
+            'default_entity_manager' => true,
+            'auto_generate_proxy_classes' => true,
+            'enable_lazy_ghost_objects' => true,
+            'proxy_dir' => true,
+            'proxy_namespace' => true,
+            'resolve_target_entities' => true,
+            'resolve_target_entity' => true,
+            'controller_resolver' => true,
+        ];
+
         $node
             ->children()
                 ->arrayNode('orm')
                     ->beforeNormalization()
-                        ->ifTrue(static function ($v) {
+                        ->ifTrue(static function ($v) use ($excludedKeys) {
                             if (! empty($v) && ! class_exists(EntityManager::class)) {
                                 throw new LogicException('The doctrine/orm package is required when the doctrine.orm config is set.');
                             }
 
-                            return $v === null || (is_array($v) && ! array_key_exists('entity_managers', $v) && ! array_key_exists('entity_manager', $v));
+                            if (! is_array($v)) {
+                                return false;
+                            }
+
+                            if (array_key_exists('entity_managers', $v) || array_key_exists('entity_manager', $v)) {
+                                return false;
+                            }
+
+                            // Is there actually anything to use once excluded keys are considered?
+                            return (bool) array_diff_key($v, $excludedKeys);
                         })
-                        ->then(static function ($v) {
-                            $v = (array) $v;
-                            // Key that should not be rewritten to the connection config
-                            $excludedKeys  = [
-                                'default_entity_manager' => true,
-                                'auto_generate_proxy_classes' => true,
-                                'proxy_dir' => true,
-                                'proxy_namespace' => true,
-                                'resolve_target_entities' => true,
-                                'resolve_target_entity' => true,
-                            ];
+                        ->then(static function ($v) use ($excludedKeys) {
                             $entityManager = [];
                             foreach ($v as $key => $value) {
                                 if (isset($excludedKeys[$key])) {
@@ -425,8 +463,7 @@ class Configuration implements ConfigurationInterface
                                 unset($v[$key]);
                             }
 
-                            $v['default_entity_manager'] = isset($v['default_entity_manager']) ? (string) $v['default_entity_manager'] : 'default';
-                            $v['entity_managers']        = [$v['default_entity_manager'] => $entityManager];
+                            $v['entity_managers'] = [($v['default_entity_manager'] ?? 'default') => $entityManager];
 
                             return $v;
                         })
@@ -463,6 +500,8 @@ class Configuration implements ConfigurationInterface
                                     return constant('Doctrine\Common\Proxy\AbstractProxyFactory::AUTOGENERATE_' . strtoupper($v));
                                 })
                             ->end()
+                        ->end()
+                        ->booleanNode('enable_lazy_ghost_objects')->defaultFalse()
                         ->end()
                         ->scalarNode('proxy_dir')->defaultValue('%kernel.cache_dir%/doctrine/orm/Proxies')->end()
                         ->scalarNode('proxy_namespace')->defaultValue('Proxies')->end()
@@ -619,6 +658,8 @@ class Configuration implements ConfigurationInterface
                     ->arrayNode('schema_ignore_classes')
                         ->prototype('scalar')->end()
                     ->end()
+                    ->scalarNode('report_fields_where_declared')->defaultFalse()->info('Set to "true" to opt-in to the new mapping driver mode that was added in Doctrine ORM 2.16 and will be mandatory in ORM 3.0. See https://github.com/doctrine/orm/pull/10455.')->end()
+                    ->booleanNode('validate_xml_mapping')->defaultFalse()->info('Set to "true" to opt-in to the new mapping driver mode that was added in Doctrine ORM 2.14 and will be mandatory in ORM 3.0. See https://github.com/doctrine/orm/pull/6728.')->end()
                 ->end()
                 ->children()
                     ->arrayNode('second_level_cache')
@@ -810,26 +851,12 @@ class Configuration implements ConfigurationInterface
         ];
     }
 
-    /**
-     * Returns the correct deprecation param's as an array for setDeprecated.
-     *
-     * Symfony/Config v5.1 introduces a deprecation notice when calling
-     * setDeprecation() with less than 3 args and the getDeprecation method was
-     * introduced at the same time. By checking if getDeprecation() exists,
-     * we can determine the correct param count to use when calling setDeprecated.
-     *
-     * @return list<string>|array{0:string, 1: numeric-string, string}
-     */
-    private function getDeprecationMsg(string $message, string $version): array
+    private function getDefaultSchemaManagerFactory(): string
     {
-        if (method_exists(BaseNode::class, 'getDeprecation')) {
-            return [
-                'doctrine/doctrine-bundle',
-                $version,
-                $message,
-            ];
+        if (class_exists(LegacySchemaManagerFactory::class)) {
+            return 'doctrine.dbal.legacy_schema_manager_factory';
         }
 
-        return [$message];
+        return 'doctrine.dbal.default_schema_manager_factory';
     }
 }

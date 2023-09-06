@@ -22,11 +22,12 @@ use Doctrine\Persistence\ObjectManager;
  *
  * @method Mapping\ClassMetadataFactory getMetadataFactory()
  * @method mixed wrapInTransaction(callable $func)
+ * @method void refresh(object $object, ?int $lockMode = null)
  */
 interface EntityManagerInterface extends ObjectManager
 {
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      *
      * @psalm-param class-string<T> $className
      *

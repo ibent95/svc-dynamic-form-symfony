@@ -21,7 +21,7 @@ use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 class JsonValidator extends ConstraintValidator
 {
     /**
-     * {@inheritdoc}
+     * @return void
      */
     public function validate(mixed $value, Constraint $constraint)
     {
@@ -39,9 +39,7 @@ class JsonValidator extends ConstraintValidator
 
         $value = (string) $value;
 
-        json_decode($value);
-
-        if (\JSON_ERROR_NONE !== json_last_error()) {
+        if (!json_validate($value)) {
             $this->context->buildViolation($constraint->message)
                 ->setParameter('{{ value }}', $this->formatValue($value))
                 ->setCode(Json::INVALID_JSON_ERROR)

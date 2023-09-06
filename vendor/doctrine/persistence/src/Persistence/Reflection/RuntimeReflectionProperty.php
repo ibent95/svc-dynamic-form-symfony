@@ -9,6 +9,7 @@ use Doctrine\Persistence\Proxy;
 use ReflectionProperty;
 use ReturnTypeWillChange;
 
+use function ltrim;
 use function method_exists;
 
 /**
@@ -25,7 +26,8 @@ class RuntimeReflectionProperty extends ReflectionProperty
     public function __construct(string $class, string $name)
     {
         parent::__construct($class, $name);
-        $this->key = $this->isPrivate() ? "\0" . $class . "\0" . $name : ($this->isProtected() ? "\0*\0" . $name : $name);
+
+        $this->key = $this->isPrivate() ? "\0" . ltrim($class, '\\') . "\0" . $name : ($this->isProtected() ? "\0*\0" . $name : $name);
     }
 
     /**
@@ -63,7 +65,9 @@ class RuntimeReflectionProperty extends ReflectionProperty
         if ($object instanceof CommonProxy) {
             $originalInitializer = $object->__getInitializer();
             $object->__setInitializer(null);
+
             parent::setValue($object, $value);
+
             $object->__setInitializer($originalInitializer);
 
             return;
@@ -74,7 +78,9 @@ class RuntimeReflectionProperty extends ReflectionProperty
         }
 
         $object->__setInitialized(true);
+
         parent::setValue($object, $value);
+
         $object->__setInitialized(false);
     }
 }

@@ -67,9 +67,6 @@ abstract class MemberMetadata extends GenericMetadata implements PropertyMetadat
         $this->property = $property;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function addConstraint(Constraint $constraint): static
     {
         $this->checkConstraint($constraint);
@@ -79,9 +76,6 @@ abstract class MemberMetadata extends GenericMetadata implements PropertyMetadat
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function __sleep(): array
     {
         return array_merge(parent::__sleep(), [
@@ -100,16 +94,13 @@ abstract class MemberMetadata extends GenericMetadata implements PropertyMetadat
     }
 
     /**
-     * {@inheritdoc}
+     * @return string
      */
     public function getClassName()
     {
         return $this->class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getPropertyName(): string
     {
         return $this->property;
@@ -144,7 +135,7 @@ abstract class MemberMetadata extends GenericMetadata implements PropertyMetadat
      */
     public function getReflectionMember(object|string $objectOrClassName): \ReflectionMethod|\ReflectionProperty
     {
-        $className = \is_string($objectOrClassName) ? $objectOrClassName : \get_class($objectOrClassName);
+        $className = \is_string($objectOrClassName) ? $objectOrClassName : $objectOrClassName::class;
         if (!isset($this->reflMember[$className])) {
             $this->reflMember[$className] = $this->newReflectionMember($objectOrClassName);
         }
@@ -157,7 +148,7 @@ abstract class MemberMetadata extends GenericMetadata implements PropertyMetadat
      */
     abstract protected function newReflectionMember(object|string $objectOrClassName): \ReflectionMethod|\ReflectionProperty;
 
-    private function checkConstraint(Constraint $constraint)
+    private function checkConstraint(Constraint $constraint): void
     {
         if (!\in_array(Constraint::PROPERTY_CONSTRAINT, (array) $constraint->getTargets(), true)) {
             throw new ConstraintDefinitionException(sprintf('The constraint "%s" cannot be put on properties or getters.', get_debug_type($constraint)));
