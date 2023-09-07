@@ -66,22 +66,22 @@ class Publication
     private $publication_meta;
 
     #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class, inversedBy: 'publications', fetch: 'EAGER')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(name: 'id_publication_general_type', referencedColumnName: 'id')]
     #[Ignore]
     private $publication_general_type;
 
     #[ORM\ManyToOne(targetEntity: PublicationType::class, inversedBy: 'publications', fetch: 'EAGER')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(name: 'id_publication_type', referencedColumnName: 'id')]
     #[Ignore]
     private $publication_type;
 
     #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'publications', fetch: 'EAGER')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(name: 'id_publication_form_version', referencedColumnName: 'id')]
     #[Ignore]
     private $publication_form_version;
 
     #[ORM\ManyToOne(targetEntity: PublicationStatus::class, inversedBy: 'publications', fetch: 'EAGER')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(name: 'id_publication_status', referencedColumnName: 'id')]
     #[Ignore]
     private $publication_status;
 
@@ -119,6 +119,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getIdPublicationGeneralType(): ?string
     {
         return $this->id_publication_general_type;
@@ -131,6 +132,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getIdPublicationType(): ?string
     {
         return $this->id_publication_type;
@@ -143,6 +145,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getIdPublicationFormVersion(): ?string
     {
         return $this->id_publication_form_version;
@@ -155,6 +158,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getIdPublicationStatus(): ?string
     {
         return $this->id_publication_status;

@@ -9,11 +9,15 @@ use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: PublicationFormRepository::class)]
 #[Table(name: 'publication_form')]
-class PublicationForm
+class PublicationMetaV2
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
     //#[Ignore]
     private $id;
+
+    #[ORM\Column(type: 'bigint')]
+    #[Ignore]
+    private $id_publication;
 
     #[ORM\Column(type: 'bigint')]
     //#[Ignore]
@@ -92,6 +96,9 @@ class PublicationForm
     #[ORM\Column(options: ['default' => false])]
     private ?bool $flag_field_publication_date = null;
 
+    #[ORM\Column(type: 'text', length: 65535, nullable: true)]
+    private $value;
+
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
     #[Ignore]
     private $flag_active;
@@ -115,9 +122,13 @@ class PublicationForm
     #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
+    #[ORM\ManyToOne(targetEntity: Publication::class, inversedBy: 'publication_meta')]
+    #[Ignore]
+    private $publication;
+
     #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'form')]
     #[Ignore]
-    private $publication_form_version;
+    private $publicationFormVersion;
 
     #[ORM\PrePersist]
     public function onPrePersist(): void
@@ -389,6 +400,18 @@ class PublicationForm
         return $this;
     }
 
+    public function getValue(): string
+    {
+        return $this->value;
+    }
+
+    public function setValue(?string $value): self
+    {
+        $this->value = $value;
+
+        return $this;
+    }
+
     #[Ignore]
     public function getCreatedUser(): ?string
     {
@@ -453,14 +476,26 @@ class PublicationForm
         return $this;
     }
 
-    public function getPublicationFormVersion(): ?PublicationFormVersion
+    public function getPublication(): ?Publication
     {
-        return $this->publication_form_version;
+        return $this->publication;
     }
 
-    public function setPublicationFormVersion(?PublicationFormVersion $publication_form_version): self
+    public function setPublication(?Publication $publication): self
     {
-        $this->publication_form_version = $publication_form_version;
+        $this->publication = $publication;
+
+        return $this;
+    }
+
+    public function getPublicationFormVersion(): ?PublicationFormVersion
+    {
+        return $this->publicationFormVersion;
+    }
+
+    public function setPublicationFormVersion(?PublicationFormVersion $publicationFormVersion): self
+    {
+        $this->publicationFormVersion = $publicationFormVersion;
 
         return $this;
     }

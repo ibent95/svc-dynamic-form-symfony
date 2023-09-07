@@ -48,6 +48,7 @@ class PublicationMeta
     private $uuid;
 
     #[ORM\ManyToOne(targetEntity: Publication::class, inversedBy: 'publication_meta')]
+    #[ORM\JoinColumn(name: 'id_publication', referencedColumnName: 'id')]
     #[Ignore]
     private $publication;
 
@@ -115,6 +116,11 @@ class PublicationMeta
         $this->flag_active = $flag_active;
 
         return $this;
+    }
+
+    public function isFlagActive(): ?bool
+    {
+        return $this->flag_active;
     }
 
     #[Ignore]
@@ -191,11 +197,6 @@ class PublicationMeta
         $this->publication = $publication;
 
         return $this;
-    }
-
-    public function isFlagActive(): ?bool
-    {
-        return $this->flag_active;
     }
 
 }

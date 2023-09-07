@@ -16,6 +16,9 @@ use Symfony\Component\Routing\Annotation\Route;
 class PublicationTypeQueryController extends AbstractController
 {
     private $logger;
+    private $request;
+    private $exprBuilder;
+    private $criteria;
     private $responseData;
     private $responseStatusCode;
 

@@ -18,8 +18,8 @@ class PublicationFormVersion
     protected $id;
 
     #[ORM\Column(type: 'bigint')]
-    //#[Ignore]
-    private $publication_type_id;
+    #[Ignore]
+    private $id_publication_type;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Ignore]
@@ -55,21 +55,22 @@ class PublicationFormVersion
     #[ORM\Column(type: 'guid')]
     protected $uuid;
 
-    #[ORM\ManyToOne(targetEntity: PublicationType::class, inversedBy: 'form_version')]
+    #[ORM\ManyToOne(targetEntity: PublicationType::class, inversedBy: 'publication_form_versions', fetch: 'EAGER')]
+    #[ORM\JoinColumn(name: 'id_publication_type', referencedColumnName: 'id')]
     #[Ignore]
-    protected $publicationType;
+    protected $publication_types;
 
-    #[ORM\OneToMany(mappedBy: 'publicationFormVersion', targetEntity: PublicationForm::class)]
+    #[ORM\OneToMany(mappedBy: 'publication_form_version', targetEntity: PublicationForm::class, fetch: 'EAGER')]
     #[Ignore]
-    protected $publicationForms;
+    protected $forms;
 
-    #[ORM\OneToMany(mappedBy: 'publicationFormVersion', targetEntity: Publication::class)]
+    #[ORM\OneToMany(mappedBy: 'publication_form_version', targetEntity: Publication::class, fetch: 'EAGER')]
     #[Ignore]
     private $publications;
 
     public function __construct()
     {
-        $this->publicationForms = new ArrayCollection();
+        $this->forms = new ArrayCollection();
         $this->publications = new ArrayCollection();
     }
 
@@ -92,12 +93,12 @@ class PublicationFormVersion
 
     public function getPublicationTypeId(): ?string
     {
-        return $this->publication_type_id;
+        return $this->id_publication_type;
     }
 
-    public function setPublicationTypeId(string $publication_type_id): self
+    public function setPublicationTypeId(string $id_publication_type): self
     {
-        $this->publication_type_id = $publication_type_id;
+        $this->id_publication_type = $id_publication_type;
 
         return $this;
     }
@@ -216,12 +217,12 @@ class PublicationFormVersion
 
     public function getPublicationType(): ?PublicationType
     {
-        return $this->publicationType;
+        return $this->publication_types;
     }
 
-    public function setPublicationType(?PublicationType $publicationType): self
+    public function setPublicationType(?PublicationType $publication_types): self
     {
-        $this->publicationType = $publicationType;
+        $this->publication_types = $publication_types;
 
         return $this;
     }
@@ -231,13 +232,13 @@ class PublicationFormVersion
      */
     public function getPublicationForms(): Collection
     {
-        return $this->publicationForms;
+        return $this->forms;
     }
 
     public function addPublicationForm(PublicationForm $publicationForm): self
     {
-        if (!$this->publicationForms->contains($publicationForm)) {
-            $this->publicationForms->add($publicationForm);
+        if (!$this->forms->contains($publicationForm)) {
+            $this->forms->add($publicationForm);
             $publicationForm->setPublicationFormVersion($this);
         }
 
@@ -246,7 +247,7 @@ class PublicationFormVersion
 
     public function removePublicationForm(PublicationForm $publicationForm): self
     {
-        if ($this->publicationForms->removeElement($publicationForm)) {
+        if ($this->forms->removeElement($publicationForm)) {
             // set the owning side to null (unless already changed)
             if ($publicationForm->getPublicationFormVersion() === $this) {
                 $publicationForm->setPublicationFormVersion(null);

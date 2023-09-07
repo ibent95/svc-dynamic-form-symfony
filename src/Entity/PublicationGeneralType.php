@@ -3,16 +3,17 @@
 namespace App\Entity;
 
 use App\Repository\PublicationGeneralTypeRepository;
+
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: PublicationGeneralTypeRepository::class)]
+#[ORM\Table(name: "publication_general_type")]
 class PublicationGeneralType
 {
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[ORM\Id, ORM\GeneratedValue(strategy: "IDENTITY"), ORM\Column(type: 'bigint', options: ["unsigned" => true])]
     #[Ignore]
     private $id;
 
@@ -47,18 +48,18 @@ class PublicationGeneralType
     #[ORM\Column(type: 'guid')]
     private $uuid;
 
-    #[ORM\OneToMany(mappedBy: 'publicationGeneralType', targetEntity: PublicationType::class)]
+    #[ORM\OneToMany(mappedBy: 'publication_general_type', targetEntity: PublicationType::class, fetch: 'EAGER')]
     #[Ignore]
-    private $publication_type;
+    private $publication_types;
 
-    #[ORM\OneToMany(mappedBy: 'publication_general_type', targetEntity: Publication::class)]
+    #[ORM\OneToMany(mappedBy: 'publication_general_type', targetEntity: Publication::class, fetch: 'EAGER')]
     #[Ignore]
     private $publications;
 
     public function __construct()
     {
+        $this->publication_types = new ArrayCollection();
         $this->publications = new ArrayCollection();
-        $this->publication_type = new ArrayCollection();
     }
 
     #[ORM\PrePersist]
@@ -145,6 +146,11 @@ class PublicationGeneralType
         return $this;
     }
 
+    public function isFlagActive(): ?bool
+    {
+        return $this->flag_active;
+    }
+
     #[Ignore]
     public function getCreatedUser(): ?string
     {
@@ -212,15 +218,16 @@ class PublicationGeneralType
     /**
      * @return Collection<int, PublicationType>
      */
+    #[Ignore]
     public function getPublicationType(): Collection
     {
-        return $this->publication_type;
+        return $this->publication_types;
     }
 
     public function addPublicationType(PublicationType $publicationType): self
     {
-        if (!$this->publication_type->contains($publicationType)) {
-            $this->publication_type[] = $publicationType;
+        if (!$this->publication_types->contains($publicationType)) {
+            $this->publication_types[] = $publicationType;
             $publicationType->setPublicationGeneralType($this);
         }
 
@@ -229,7 +236,7 @@ class PublicationGeneralType
 
     public function removePublicationType(PublicationType $publicationType): self
     {
-        if ($this->publication_type->removeElement($publicationType)) {
+        if ($this->publication_types->removeElement($publicationType)) {
             // set the owning side to null (unless already changed)
             if ($publicationType->getPublicationGeneralType() === $this) {
                 $publicationType->setPublicationGeneralType(null);
@@ -237,11 +244,6 @@ class PublicationGeneralType
         }
 
         return $this;
-    }
-
-    public function isFlagActive(): ?bool
-    {
-        return $this->flag_active;
     }
 
 }

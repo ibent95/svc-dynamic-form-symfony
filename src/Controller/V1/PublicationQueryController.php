@@ -2,38 +2,23 @@
 
 namespace App\Controller\V1;
 
-use App\Entity\PublicationFormVersion;
 use App\Entity\Publication;
 use App\Entity\PublicationForm;
 use App\Entity\PublicationGeneralType;
 use App\Entity\PublicationStatus;
 use App\Entity\PublicationType;
-use App\Repository\PublicationFormVersionRepository;
-use App\Repository\PublicationRepository;
 use App\Service\CommonService;
 use App\Service\DynamicFormService;
 use App\Service\PublicationService;
+
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\Common\Collections\Expr\Comparison;
 use Doctrine\Persistence\ManagerRegistry;
-use Doctrine\ORM\Query;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Serializer\Serializer;
-use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
-use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Encoder\XmlEncoder;
-use Symfony\Component\String\UnicodeString;
 
 class PublicationQueryController extends AbstractController
 {

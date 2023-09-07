@@ -3,9 +3,9 @@
 namespace App\Entity;
 
 use App\Repository\PublicationTypeRepository;
+
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
@@ -52,21 +52,22 @@ class PublicationType
     #[ORM\Column(type: 'guid')]
     private $uuid;
 
-    #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class, inversedBy: 'publication_type')]
+    #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class, inversedBy: 'publication_types', fetch: 'EAGER')]
+    #[ORM\JoinColumn(name: 'id_publication_general_type', referencedColumnName: 'id')]
     #[Ignore]
-    private $publicationGeneralType;
+    private PublicationGeneralType $publication_general_type;
 
-    #[ORM\OneToMany(mappedBy: 'publicationType', targetEntity: PublicationFormVersion::class)]
+    #[ORM\OneToMany(mappedBy: 'publication_types', targetEntity: PublicationFormVersion::class, fetch: 'EAGER')]
     #[Ignore]
-    private $form_version;
+    private $publication_form_versions;
 
-    #[ORM\OneToMany(mappedBy: 'publication_type', targetEntity: Publication::class)]
+    #[ORM\OneToMany(mappedBy: 'publication_type', targetEntity: Publication::class, fetch: 'EAGER')]
     #[Ignore]
     private $publications;
 
     public function __construct()
     {
-        $this->form_version = new ArrayCollection();
+        $this->publication_form_versions = new ArrayCollection();
         $this->publications = new ArrayCollection();
     }
 
@@ -141,6 +142,7 @@ class PublicationType
         return $this;
     }
 
+    #[Ignore]
     public function getIdPublicationGeneralType(): ?string
     {
         return $this->id_publication_general_type;
@@ -232,12 +234,12 @@ class PublicationType
 
     public function getPublicationGeneralType(): ?PublicationGeneralType
     {
-        return $this->publicationGeneralType;
+        return $this->publication_general_type;
     }
 
-    public function setPublicationGeneralType(?PublicationGeneralType $publicationGeneralType): self
+    public function setPublicationGeneralType(?PublicationGeneralType $publication_general_type): self
     {
-        $this->publicationGeneralType = $publicationGeneralType;
+        $this->publication_general_type = $publication_general_type;
 
         return $this;
     }
@@ -245,15 +247,16 @@ class PublicationType
     /**
      * @return Collection<int, PublicationFormVersion>
      */
+    #[Ignore]
     public function getFormVersion(): Collection
     {
-        return $this->form_version;
+        return $this->publication_form_versions;
     }
 
     public function addFormVersion(PublicationFormVersion $formVersion): self
     {
-        if (!$this->form_version->contains($formVersion)) {
-            $this->form_version[] = $formVersion;
+        if (!$this->publication_form_versions->contains($formVersion)) {
+            $this->publication_form_versions[] = $formVersion;
             $formVersion->setPublicationType($this);
         }
 
@@ -262,7 +265,7 @@ class PublicationType
 
     public function removeFormVersion(PublicationFormVersion $formVersion): self
     {
-        if ($this->form_version->removeElement($formVersion)) {
+        if ($this->publication_form_versions->removeElement($formVersion)) {
             // set the owning side to null (unless already changed)
             if ($formVersion->getPublicationType() === $this) {
                 $formVersion->setPublicationType(null);

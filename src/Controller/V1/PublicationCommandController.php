@@ -2,8 +2,6 @@
 
 namespace App\Controller\V1;
 
-use App\Entity\Publication;
-use App\Entity\PublicationForm;
 use App\Entity\PublicationFormVersion;
 use App\Entity\PublicationType;
 use App\Service\CommonService;
@@ -53,6 +51,7 @@ class PublicationCommandController extends AbstractController
     #[Route('/api/v1/publications/{uuid}', methods: ['PUT'], name: 'app_v1_publication_command_put')]
     public function save(ManagerRegistry $doctrine, Request $request, String $uuid = NULL): JsonResponse
     {
+        /** @var $entityManager EntityManager */
         $entityManager = $doctrine->getManager();
 
         $this->responseData['info']     = 'error';
@@ -87,9 +86,7 @@ class PublicationCommandController extends AbstractController
 
             // Update command
             if ($uuid) {
-
                 $this->logger->info('Update');
-
             }
 
             $entityManager->getConnection()->commit();
