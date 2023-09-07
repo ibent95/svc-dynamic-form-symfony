@@ -19,7 +19,7 @@ class PublicationService {
 
     public function __construct(SerializerInterface $serializer, CommonService $commonSvc)
     {
-        $this->serializer = $serializer;
+        $this->serializer       = $serializer;
 
         $this->exprBuilder 		= Criteria::expr();
         $this->criteria 		= new Criteria();
@@ -35,9 +35,9 @@ class PublicationService {
         $this->criteria->where(
             $this->exprBuilder->eq('flag_active', true)
         );
-
+        
         if ($otherData) $this->criteria->orWhere($this->exprBuilder->eq('id', $otherData->getId()));
-
+        
         // FormVersion data
         $data = $sourceData->matching($this->criteria)->first();
 

@@ -224,6 +224,7 @@ class PublicationQueryController extends AbstractController
             // PublicationType
             $publicationTypeParams 			= ['publication_type_code' => $publicationTypeCode];
             $publicationType 				= $entityManager->getRepository(PublicationType::class)->findActiveOneByCode($publicationTypeCode);
+            // $publicationType 				= $entityManager->getRepository(PublicationType::class)->findActiveOneByCode($publicationTypeCode);
 
             // FormVersion
             $formVersionRaw                 = $publicationType->getFormVersion();

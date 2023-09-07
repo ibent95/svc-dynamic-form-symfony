@@ -60,7 +60,7 @@ class PublicationFormVersion
     #[Ignore]
     protected $publication_types;
 
-    #[ORM\OneToMany(mappedBy: 'publication_form_version', targetEntity: PublicationForm::class, fetch: 'EAGER')]
+    #[ORM\OneToMany(mappedBy: 'form_version', targetEntity: PublicationForm::class, fetch: 'EAGER')]
     #[Ignore]
     protected $forms;
 
@@ -215,6 +215,7 @@ class PublicationFormVersion
         return $this;
     }
 
+    #[Ignore]
     public function getPublicationType(): ?PublicationType
     {
         return $this->publication_types;
@@ -240,7 +241,7 @@ class PublicationFormVersion
     {
         if (!$this->forms->contains($publicationForm)) {
             $this->forms->add($publicationForm);
-            $publicationForm->setPublicationFormVersion($this);
+            $publicationForm->setFormVersion($this);
         }
 
         return $this;
@@ -250,8 +251,8 @@ class PublicationFormVersion
     {
         if ($this->forms->removeElement($publicationForm)) {
             // set the owning side to null (unless already changed)
-            if ($publicationForm->getPublicationFormVersion() === $this) {
-                $publicationForm->setPublicationFormVersion(null);
+            if ($publicationForm->getFormVersion() === $this) {
+                $publicationForm->setFormVersion(null);
             }
         }
 

@@ -15,13 +15,13 @@ class PublicationForm
     //#[Ignore]
     private $id;
 
-    #[ORM\Column(type: 'bigint')]
+    #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
     //#[Ignore]
-    private $form_version_id;
+    private $id_form_version;
 
     #[ORM\Column(type: 'bigint', nullable: true)]
     //#[Ignore]
-    private $form_parent_id;
+    private $id_form_parent;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     //#[Ignore]
@@ -115,9 +115,10 @@ class PublicationForm
     #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
-    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms')]
+    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'EAGER')]
+    #[ORM\JoinColumn(name: 'id_form_version', referencedColumnName: 'id')]
     #[Ignore]
-    private $publication_form_version;
+    private $form_version;
 
     #[ORM\PrePersist]
     public function onPrePersist(): void
@@ -136,26 +137,27 @@ class PublicationForm
         return $this->id;
     }
 
-    public function getFormVersionId(): ?string
+    #[Ignore]
+    public function getIdFormVersion(): ?string
     {
-        return $this->form_version_id;
+        return $this->id_form_version;
     }
 
-    public function setFormVersionId(string $form_version_id): self
+    public function setIdFormVersion(string $id_form_version): self
     {
-        $this->form_version_id = $form_version_id;
+        $this->id_form_version = $id_form_version;
 
         return $this;
     }
 
-    public function getFormParentId(): ?string
+    public function getIdFormParent(): ?string
     {
-        return $this->form_parent_id;
+        return $this->id_form_parent;
     }
 
-    public function setFormParentId(?string $form_parent_id): self
+    public function setIdFormParent(?string $id_form_parent): self
     {
-        $this->form_parent_id = $form_parent_id;
+        $this->id_form_parent = $id_form_parent;
 
         return $this;
     }
@@ -453,14 +455,15 @@ class PublicationForm
         return $this;
     }
 
-    public function getPublicationFormVersion(): ?PublicationFormVersion
+    #[Ignore]
+    public function getFormVersion(): ?PublicationFormVersion
     {
-        return $this->publication_form_version;
+        return $this->form_version;
     }
 
-    public function setPublicationFormVersion(?PublicationFormVersion $publication_form_version): self
+    public function setFormVersion(?PublicationFormVersion $form_version): self
     {
-        $this->publication_form_version = $publication_form_version;
+        $this->form_version = $form_version;
 
         return $this;
     }

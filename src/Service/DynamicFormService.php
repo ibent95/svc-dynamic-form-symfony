@@ -94,10 +94,10 @@ class DynamicFormService
 	function setFields(Array $flatArray, Array $gridSystem = NULL): Array
 	{
 		// Set the array from flat to recursive
-		$recursiveData = $this->setRecursiveFields('id', 'form_parent_id', $flatArray, NULL, $gridSystem);
+		$recursiveData = $this->setRecursiveFields('id', 'id_form_parent', $flatArray, NULL, $gridSystem);
 
 		// Clean property of recursive data
-		$data = $this->cleanFields(["id", "form_version_id", "form_parent_id", "order", "flag_judul_publikasi", "flag_tgl_publikasi", "flag_peran"], $recursiveData);
+		$data = $this->cleanFields(["id", "id_form_version", "id_form_parent", "order", "flag_judul_publikasi", "flag_tgl_publikasi", "flag_peran"], $recursiveData);
 
 		// Return data
 		return $data;

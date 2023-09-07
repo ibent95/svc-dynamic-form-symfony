@@ -50,8 +50,7 @@ class CommonService {
 
 	public function normalizeObject($object, String $resultFormat = null, Bool $enableMaxDepth = false): ?Array
 	{
-		$this->result = [];
-		$result = [];
+		$this->results = [];
 
 		$classMetadataFactory = new ClassMetadataFactory(new AnnotationLoader(new AnnotationReader()));
 
@@ -72,9 +71,9 @@ class CommonService {
 
 		// $serializer = new Serializer();
 
-		$result = $this->serializer->normalize($object, $resultFormat);
+		$this->results = $this->serializer->normalize($object, $resultFormat);
 
-		return $result;
+		return $this->results;
 	}
 
 	public function serializeObject($object, String $resultFormat = null, Bool $enableMaxDepth = FALSE): ?String
