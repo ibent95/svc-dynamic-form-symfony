@@ -9,7 +9,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
-#[ORM\Entity(repositoryClass: PublicationFormVersionRepository::class), ORM\HasLifecycleCallbacks]
+#[ORM\Entity(repositoryClass: PublicationFormVersionRepository::class)]
 #[ORM\Table(name: "publication_form_version")]
 class PublicationFormVersion
 {
@@ -230,6 +230,7 @@ class PublicationFormVersion
     /**
      * @return Collection<int, PublicationForm>
      */
+    #[Ignore]
     public function getPublicationForms(): Collection
     {
         return $this->forms;
@@ -260,6 +261,7 @@ class PublicationFormVersion
     /**
      * @return Collection<int, Publication>
      */
+    #[Ignore]
     public function getPublications(): Collection
     {
         return $this->publications;

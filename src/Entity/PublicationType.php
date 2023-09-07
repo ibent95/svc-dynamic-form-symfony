@@ -55,7 +55,7 @@ class PublicationType
     #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class, inversedBy: 'publication_types', fetch: 'EAGER')]
     #[ORM\JoinColumn(name: 'id_publication_general_type', referencedColumnName: 'id')]
     #[Ignore]
-    private PublicationGeneralType $publication_general_type;
+    private $publication_general_type;
 
     #[ORM\OneToMany(mappedBy: 'publication_types', targetEntity: PublicationFormVersion::class, fetch: 'EAGER')]
     #[Ignore]

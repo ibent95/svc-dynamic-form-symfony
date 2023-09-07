@@ -263,6 +263,7 @@ class Publication
     /**
      * @return Collection<int, PublicationMeta>
      */
+    #[Ignore]
     public function getPublicationMeta(): Collection
     {
         return $this->publication_meta;
@@ -290,6 +291,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getPublicationGeneralType(): ?PublicationGeneralType
     {
         return $this->publication_general_type;
@@ -302,6 +304,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getPublicationType(): ?PublicationType
     {
         return $this->publication_type;
@@ -314,6 +317,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getPublicationFormVersion(): ?PublicationFormVersion
     {
         return $this->publication_form_version;
@@ -326,6 +330,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getPublicationStatus(): ?PublicationStatus
     {
         return $this->publication_status;

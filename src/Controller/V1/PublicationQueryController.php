@@ -177,14 +177,16 @@ class PublicationQueryController extends AbstractController
             $index = 0;
             $publications               = ($publicationsRaw) ? $publicationsRaw->map(function ($item) use (&$index) {
                 $resultItem                             = $this->commonSvc->normalizeObject($item);
-
+                
                 $resultItem['no']                       = $index + 1;
                 $resultItem['metadata']                 = $this->commonSvc->normalizeObject($item->getPublicationMeta());
                 $resultItem['publication_general_type'] = $this->commonSvc->normalizeObject($item->getPublicationGeneralType());
                 $resultItem['publication_type']         = $this->commonSvc->normalizeObject($item->getPublicationType());
                 $resultItem['publication_status']       = $this->commonSvc->normalizeObject($item->getPublicationStatus());
-
+                $resultItem['publication_form_version'] = $this->commonSvc->normalizeObject($item->getPublicationFormVersion());
+                
                 $index++;
+                // dump($resultItem);
                 return $resultItem;
             })->toArray() : NULL;
 

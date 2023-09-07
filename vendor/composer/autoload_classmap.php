@@ -17,6 +17,7 @@ return array(
     'App\\Entity\\PublicationFormVersion' => $baseDir . '/src/Entity/PublicationFormVersion.php',
     'App\\Entity\\PublicationGeneralType' => $baseDir . '/src/Entity/PublicationGeneralType.php',
     'App\\Entity\\PublicationMeta' => $baseDir . '/src/Entity/PublicationMeta.php',
+    'App\\Entity\\PublicationMetaV2' => $baseDir . '/src/Entity/PublicationMetaV2.php',
     'App\\Entity\\PublicationStatus' => $baseDir . '/src/Entity/PublicationStatus.php',
     'App\\Entity\\PublicationType' => $baseDir . '/src/Entity/PublicationType.php',
     'App\\Kernel' => $baseDir . '/src/Kernel.php',

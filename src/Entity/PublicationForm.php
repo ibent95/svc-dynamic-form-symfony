@@ -115,7 +115,7 @@ class PublicationForm
     #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
-    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'form')]
+    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms')]
     #[Ignore]
     private $publication_form_version;
 

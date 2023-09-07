@@ -3,11 +3,8 @@
 namespace App\Service;
 
 use Doctrine\Common\Annotations\AnnotationReader;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\Common\Collections\Expr\Comparison;
 use Doctrine\Persistence\ManagerRegistry;
-use phpDocumentor\Reflection\Types\Boolean;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -32,7 +29,7 @@ class CommonService {
 
 	public function __construct(SerializerInterface $serializer, ManagerRegistry $doctrine)
 	{
-		//$this->serializer = $serializer;
+		$this->serializer = $serializer;
 		$this->doctrine 		= $doctrine;
 		$this->doctrineManager 	= $doctrine->getManager();
 
@@ -42,13 +39,14 @@ class CommonService {
 
 	public function getEntityIdentifierFromUnit($object): ?Array
 	{
+		/** @var $result DoctrineManager */
 		$result = [];
 		$result = $this->doctrineManager->getUnitOfWork()->getEntityIdentifier($object);
 
 		return $result;
 	}
 
-	public function normalizeObject($object, String $resultFormat = null, Bool $enableMaxDepth = FALSE): ?Array
+	public function normalizeObject($object, String $resultFormat = null, Bool $enableMaxDepth = false): ?Array
 	{
 		$this->result = [];
 		$result = [];
@@ -61,22 +59,18 @@ class CommonService {
 		];
 
 		$objectNormalizerDefaultContext = [
-			AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($object, $format, $context) {
-				return $object->getName();
-			},
 			AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false,
 			AbstractObjectNormalizer::ENABLE_MAX_DEPTH => $enableMaxDepth
 		];
 
 		$normalizers = [
 			new DateTimeNormalizer($dateTimeNormalizerDefaultContext),
-			new ObjectNormalizer($classMetadataFactory, new CamelCaseToSnakeCaseNameConverter(), null, null, null, null, $objectNormalizerDefaultContext)
+			new ObjectNormalizer($classMetadataFactory, new CamelCaseToSnakeCaseNameConverter(), null, null, null, null)
 		];
-		//$encoders = [new XmlEncoder(), new JsonEncoder()];
 
-		$serializer = new Serializer($normalizers);
+		// $serializer = new Serializer();
 
-		$result = $serializer->normalize($object, $resultFormat);
+		$result = $this->serializer->normalize($object, $resultFormat);
 
 		return $result;
 	}
