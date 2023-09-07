@@ -20,7 +20,7 @@ use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\String\UnicodeString;
 
 class CommonService {
-	private $result;
+	private $results;
 	private $serializer;
 	private $doctrine;
 	private $doctrineManager;
@@ -29,21 +29,23 @@ class CommonService {
 
 	public function __construct(SerializerInterface $serializer, ManagerRegistry $doctrine)
 	{
-		$this->serializer = $serializer;
+		/** @var $serializer SerializeInterface */
+		$this->serializer 		= $serializer;
 		$this->doctrine 		= $doctrine;
 		$this->doctrineManager 	= $doctrine->getManager();
 
 		$this->exprBuilder 		= Criteria::expr();
 		$this->criteria 		= new Criteria();
+
+		$this->results			= [];
 	}
 
 	public function getEntityIdentifierFromUnit($object): ?Array
 	{
-		/** @var $result DoctrineManager */
-		$result = [];
-		$result = $this->doctrineManager->getUnitOfWork()->getEntityIdentifier($object);
+		/** @var $results ObjectManager */
+		$this->results = $this->doctrineManager->getUnitOfWork()->getEntityIdentifier($object);
 
-		return $result;
+		return $this->results;
 	}
 
 	public function normalizeObject($object, String $resultFormat = null, Bool $enableMaxDepth = false): ?Array
