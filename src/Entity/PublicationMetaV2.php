@@ -8,24 +8,24 @@ use Doctrine\ORM\Mapping\Table;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: PublicationFormRepository::class)]
-#[Table(name: 'publication_form')]
+#[Table(name: 'publication_meta_v2')]
 class PublicationMetaV2
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
     //#[Ignore]
     private $id;
 
-    #[ORM\Column(type: 'bigint')]
+    #[ORM\Column(type: 'bigint', options: ["unsigned" => true])]
     #[Ignore]
     private $id_publication;
 
-    #[ORM\Column(type: 'bigint')]
+    #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
     //#[Ignore]
-    private $form_version_id;
+    private $id_form_version;
 
-    #[ORM\Column(type: 'bigint', nullable: true)]
+    #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
     //#[Ignore]
-    private $form_parent_id;
+    private $id_form_parent;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     //#[Ignore]
@@ -122,13 +122,15 @@ class PublicationMetaV2
     #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
-    #[ORM\ManyToOne(targetEntity: Publication::class, inversedBy: 'publication_meta')]
+    #[ORM\ManyToOne(targetEntity: Publication::class, inversedBy: 'publication_metas_v2', fetch: 'EAGER')]
+    #[ORM\JoinColumn(name: 'id_publication', referencedColumnName: 'id')]
     #[Ignore]
     private $publication;
 
-    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'form')]
+    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'EAGER')]
+    #[ORM\JoinColumn(name: 'id_form_version', referencedColumnName: 'id')]
     #[Ignore]
-    private $publicationFormVersion;
+    private $form_version;
 
     #[ORM\PrePersist]
     public function onPrePersist(): void
@@ -147,26 +149,38 @@ class PublicationMetaV2
         return $this->id;
     }
 
-    public function getFormVersionId(): ?string
+    public function getIdPublication(): ?string
     {
-        return $this->form_version_id;
+        return $this->id_publication;
     }
 
-    public function setFormVersionId(string $form_version_id): self
+    public function setIdPublication(string $id_publication): self
     {
-        $this->form_version_id = $form_version_id;
+        $this->id_publication = $id_publication;
 
         return $this;
     }
 
-    public function getFormParentId(): ?string
+    public function getIdFormVersion(): ?string
     {
-        return $this->form_parent_id;
+        return $this->id_form_version;
     }
 
-    public function setFormParentId(?string $form_parent_id): self
+    public function setIdFormVersion(string $id_form_version): self
     {
-        $this->form_parent_id = $form_parent_id;
+        $this->id_form_version = $id_form_version;
+
+        return $this;
+    }
+
+    public function getIdFormParent(): ?string
+    {
+        return $this->id_form_parent;
+    }
+
+    public function setIdFormParent(?string $id_form_parent): self
+    {
+        $this->id_form_parent = $id_form_parent;
 
         return $this;
     }
@@ -488,14 +502,14 @@ class PublicationMetaV2
         return $this;
     }
 
-    public function getPublicationFormVersion(): ?PublicationFormVersion
+    public function getFormVersion(): ?PublicationFormVersion
     {
-        return $this->publicationFormVersion;
+        return $this->form_version;
     }
 
-    public function setPublicationFormVersion(?PublicationFormVersion $publicationFormVersion): self
+    public function setFormVersion(?PublicationFormVersion $form_version): self
     {
-        $this->publicationFormVersion = $publicationFormVersion;
+        $this->form_version = $form_version;
 
         return $this;
     }

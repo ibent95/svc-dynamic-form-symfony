@@ -14,7 +14,7 @@ class PublicationMeta
     #[Ignore]
     private $id;
 
-    #[ORM\Column(type: 'bigint')]
+    #[ORM\Column(type: 'bigint', options: ["unsigned" => true])]
     #[Ignore]
     private $id_publication;
 
@@ -47,7 +47,7 @@ class PublicationMeta
     #[ORM\Column(type: 'guid')]
     private $uuid;
 
-    #[ORM\ManyToOne(targetEntity: Publication::class, inversedBy: 'publication_meta')]
+    #[ORM\ManyToOne(targetEntity: Publication::class, inversedBy: 'publication_metas', fetch: 'EAGER')]
     #[ORM\JoinColumn(name: 'id_publication', referencedColumnName: 'id')]
     #[Ignore]
     private $publication;

@@ -19,19 +19,19 @@ class Publication
     #[ORM\Column(type: 'string', length: 500, nullable: true)]
     private $title;
 
-    #[ORM\Column(type: 'bigint')]
+    #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
     #[Ignore]
     private $id_publication_general_type;
 
-    #[ORM\Column(type: 'bigint')]
+    #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
     #[Ignore]
     private $id_publication_type;
 
-    #[ORM\Column(type: 'bigint')]
+    #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
     #[Ignore]
     private $id_publication_form_version;
 
-    #[ORM\Column(type: 'bigint')]
+    #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
     #[Ignore]
     private $id_publication_status;
 
@@ -63,7 +63,11 @@ class Publication
 
     #[ORM\OneToMany(mappedBy: 'publication', targetEntity: PublicationMeta::class, fetch: 'EAGER')]
     #[Ignore]
-    private $publication_meta;
+    private $publication_metas;
+
+    #[ORM\OneToMany(mappedBy: 'publication', targetEntity: PublicationMetaV2::class, fetch: 'EAGER')]
+    #[Ignore]
+    private $publication_metas_v2;
 
     #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class, inversedBy: 'publications', fetch: 'EAGER')]
     #[ORM\JoinColumn(name: 'id_publication_general_type', referencedColumnName: 'id')]
@@ -87,7 +91,8 @@ class Publication
 
     public function __construct()
     {
-        $this->publication_meta = new ArrayCollection();
+        $this->publication_metas = new ArrayCollection();
+        $this->publication_metas_v2 = new ArrayCollection();
     }
 
     #[ORM\PrePersist]
@@ -264,27 +269,58 @@ class Publication
      * @return Collection<int, PublicationMeta>
      */
     #[Ignore]
-    public function getPublicationMeta(): Collection
+    public function getPublicationMetas(): Collection
     {
-        return $this->publication_meta;
+        return $this->publication_metas;
     }
 
-    public function addPublicationMetum(PublicationMeta $publicationMetum): self
+    public function addPublicationMetas(PublicationMeta $publicationMetas): self
     {
-        if (!$this->publication_meta->contains($publicationMetum)) {
-            $this->publication_meta[] = $publicationMetum;
-            $publicationMetum->setPublication($this);
+        if (!$this->publication_metas->contains($publicationMetas)) {
+            $this->publication_metas[] = $publicationMetas;
+            $publicationMetas->setPublication($this);
         }
 
         return $this;
     }
 
-    public function removePublicationMetum(PublicationMeta $publicationMetum): self
+    public function removePublicationMetas(PublicationMeta $publicationMetas): self
     {
-        if ($this->publication_meta->removeElement($publicationMetum)) {
+        if ($this->publication_metas->removeElement($publicationMetas)) {
             // set the owning side to null (unless already changed)
-            if ($publicationMetum->getPublication() === $this) {
-                $publicationMetum->setPublication(null);
+            if ($publicationMetas->getPublication() === $this) {
+                $publicationMetas->setPublication(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PublicationMeta>
+     */
+    #[Ignore]
+    public function getPublicationMetasV2(): Collection
+    {
+        return $this->publication_metas_v2;
+    }
+
+    public function addPublicationMetasV2(PublicationMetaV2 $publicationMetasV2): self
+    {
+        if (!$this->publication_metas_v2->contains($publicationMetasV2)) {
+            $this->publication_metas_v2[] = $publicationMetasV2;
+            $publicationMetasV2->setPublication($this);
+        }
+
+        return $this;
+    }
+
+    public function removePublicationMetasV2(PublicationMetaV2 $publicationMetasV2): self
+    {
+        if ($this->publication_metas_v2->removeElement($publicationMetasV2)) {
+            // set the owning side to null (unless already changed)
+            if ($publicationMetasV2->getPublication() === $this) {
+                $publicationMetasV2->setPublication(null);
             }
         }
 

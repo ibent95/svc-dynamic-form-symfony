@@ -179,7 +179,7 @@ class PublicationQueryController extends AbstractController
                 $resultItem                             = $this->commonSvc->normalizeObject($item);
                 
                 $resultItem['no']                       = $index + 1;
-                $resultItem['metadata']                 = $this->commonSvc->normalizeObject($item->getPublicationMeta());
+                $resultItem['metadata']                 = $this->commonSvc->normalizeObject($item->getPublicationMetasV2());
                 $resultItem['publication_general_type'] = $this->commonSvc->normalizeObject($item->getPublicationGeneralType());
                 $resultItem['publication_type']         = $this->commonSvc->normalizeObject($item->getPublicationType());
                 $resultItem['publication_status']       = $this->commonSvc->normalizeObject($item->getPublicationStatus());
@@ -224,15 +224,14 @@ class PublicationQueryController extends AbstractController
             // PublicationType
             $publicationTypeParams 			= ['publication_type_code' => $publicationTypeCode];
             $publicationType 				= $entityManager->getRepository(PublicationType::class)->findActiveOneByCode($publicationTypeCode);
-            // $publicationType 				= $entityManager->getRepository(PublicationType::class)->findActiveOneByCode($publicationTypeCode);
 
             // FormVersion
-            $formVersionRaw                 = $publicationType->getFormVersion();
-            $formVersion                    = $this->publicationSvc->getOneFormVersionData($formVersionRaw);
+            $formVersionsRaw                 = $publicationType->getFormVersions();
+            $formVersion                    = $this->publicationSvc->getOneFormVersionData($formVersionsRaw);
             $formVersionNormalize           = ($formVersion) ? $this->commonSvc->normalizeObject($formVersion) : NULL;
 
             // Get Forms raw data
-            $formsRaw						= $this->publicationSvc->getAllFormMetaData($formVersion->getPublicationForms());
+            $formsRaw						= $this->publicationSvc->getAllFormMetaData($formVersion->getForms());
 
             $formsRawNormalizeCollection	= new ArrayCollection($this->commonSvc->normalizeObject($formsRaw));
             $forms							= $formsRawNormalizeCollection->map(function ($field) use ($entityManager) {
