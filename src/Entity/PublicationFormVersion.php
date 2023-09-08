@@ -60,9 +60,9 @@ class PublicationFormVersion
     #[Ignore]
     protected $publication_type;
 
-    #[ORM\OneToMany(mappedBy: 'form_version', targetEntity: PublicationMetaV2::class, fetch: 'EAGER')]
+    #[ORM\OneToMany(mappedBy: 'form_version', targetEntity: PublicationMeta::class, fetch: 'EAGER')]
     #[Ignore]
-    protected $publication_metas_v2;
+    protected $publication_metas;
 
     #[ORM\OneToMany(mappedBy: 'form_version', targetEntity: PublicationForm::class, fetch: 'EAGER')]
     #[Ignore]
@@ -74,7 +74,7 @@ class PublicationFormVersion
 
     public function __construct()
     {
-        $this->publication_metas_v2 = new ArrayCollection();
+        $this->publication_metas = new ArrayCollection();
         $this->forms = new ArrayCollection();
         $this->publications = new ArrayCollection();
     }
@@ -299,9 +299,9 @@ class PublicationFormVersion
      * @return Collection<int, Publication>
      */
     #[Ignore]
-    public function getPublicationMetasV2(): Collection
+    public function getPublicationMetas(): Collection
     {
-        return $this->publication_metas_v2;
+        return $this->publication_metas;
     }
 
 }

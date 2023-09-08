@@ -179,7 +179,7 @@ class PublicationQueryController extends AbstractController
                 $resultItem                             = $this->commonSvc->normalizeObject($item);
                 
                 $resultItem['no']                       = $index + 1;
-                $resultItem['metadata']                 = $this->commonSvc->normalizeObject($item->getPublicationMetasV2());
+                $resultItem['metadata']                 = $this->commonSvc->normalizeObject($item->getPublicationMetas());
                 $resultItem['publication_general_type'] = $this->commonSvc->normalizeObject($item->getPublicationGeneralType());
                 $resultItem['publication_type']         = $this->commonSvc->normalizeObject($item->getPublicationType());
                 $resultItem['publication_status']       = $this->commonSvc->normalizeObject($item->getPublicationStatus());

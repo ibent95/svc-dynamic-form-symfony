@@ -2,27 +2,102 @@
 
 namespace App\Entity;
 
-use App\Repository\PublicationMetaRepository;
-use Doctrine\DBAL\Types\Types;
+use App\Repository\PublicationFormRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\Table;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
-#[ORM\Entity(repositoryClass: PublicationMetaRepository::class)]
+#[ORM\Entity(repositoryClass: PublicationFormRepository::class)]
+#[Table(name: 'publication_meta')]
 class PublicationMeta
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
-    #[Ignore]
+    //#[Ignore]
     private $id;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true])]
     #[Ignore]
     private $id_publication;
 
-    #[ORM\Column(type: 'string', length: 150)]
+    #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
+    //#[Ignore]
+    private $id_form_version;
+
+    #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
+    //#[Ignore]
+    private $id_form_parent;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    //#[Ignore]
+    private $field_label;
+
+    #[ORM\Column(type: 'string', length: 100)]
+    //#[Ignore]
+    private $field_type;
+
+    #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    //#[Ignore]
     private $field_name;
 
-    #[ORM\Column(type: 'string', length: 1000, nullable: true)]
-    private $field_value;
+    #[ORM\Column(type: 'string', length: 100)]
+    //#[Ignore]
+    private $field_id;
+
+    #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    //#[Ignore]
+    private $field_class;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    //#[Ignore]
+    private $field_placeholder;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Ignore]
+    private $field_options;
+
+    #[ORM\Column(type: 'json', nullable: true)]
+    //#[Ignore]
+    private $field_configs = [];
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    //#[Ignore]
+    private $description;
+
+    #[ORM\Column(type: 'integer', nullable: true)]
+    //#[Ignore]
+    private $order_position;
+
+    #[ORM\Column(type: 'json', nullable: true)]
+    //#[Ignore]
+    private $validation_configs = [];
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    //#[Ignore]
+    private $error_message;
+
+    #[ORM\Column(type: 'json', nullable: true)]
+    //#[Ignore]
+    private $dependency_child = [];
+
+    #[ORM\Column(type: 'json', nullable: true)]
+    //#[Ignore]
+    private $dependency_parent = [];
+
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    //#[Ignore]
+    private $flag_required;
+
+    #[ORM\Column(options: ['default' => false])]
+    private ?bool $flag_field_publication_type = null;
+
+    #[ORM\Column(options: ['default' => false])]
+    private ?bool $flag_field_title = null;
+
+    #[ORM\Column(options: ['default' => false])]
+    private ?bool $flag_field_publication_date = null;
+
+    #[ORM\Column(type: 'text', length: 65535, nullable: true)]
+    private $value;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
     #[Ignore]
@@ -32,7 +107,7 @@ class PublicationMeta
     #[Ignore]
     private $created_user;
 
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\Column(type: 'datetime', nullable: false)]
     #[Ignore]
     private $created_at;
 
@@ -40,17 +115,22 @@ class PublicationMeta
     #[Ignore]
     private $updated_user;
 
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\Column(type: 'datetime', nullable: false)]
     #[Ignore]
     private $updated_at;
 
-    #[ORM\Column(type: 'guid')]
+    #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
     #[ORM\ManyToOne(targetEntity: Publication::class, inversedBy: 'publication_metas', fetch: 'EAGER')]
     #[ORM\JoinColumn(name: 'id_publication', referencedColumnName: 'id')]
     #[Ignore]
     private $publication;
+
+    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'EAGER')]
+    #[ORM\JoinColumn(name: 'id_form_version', referencedColumnName: 'id')]
+    #[Ignore]
+    private $form_version;
 
     #[ORM\PrePersist]
     public function onPrePersist(): void
@@ -81,26 +161,242 @@ class PublicationMeta
         return $this;
     }
 
+    public function getIdFormVersion(): ?string
+    {
+        return $this->id_form_version;
+    }
+
+    public function setIdFormVersion(string $id_form_version): self
+    {
+        $this->id_form_version = $id_form_version;
+
+        return $this;
+    }
+
+    public function getIdFormParent(): ?string
+    {
+        return $this->id_form_parent;
+    }
+
+    public function setIdFormParent(?string $id_form_parent): self
+    {
+        $this->id_form_parent = $id_form_parent;
+
+        return $this;
+    }
+
+    public function getFieldLabel(): ?string
+    {
+        return $this->field_label;
+    }
+
+    public function setFieldLabel(?string $field_label): self
+    {
+        $this->field_label = $field_label;
+
+        return $this;
+    }
+
+    public function getFieldType(): ?string
+    {
+        return $this->field_type;
+    }
+
+    public function setFieldType(string $field_type): self
+    {
+        $this->field_type = $field_type;
+
+        return $this;
+    }
+
     public function getFieldName(): ?string
     {
         return $this->field_name;
     }
 
-    public function setFieldName(string $field_name): self
+    public function setFieldName(?string $field_name): self
     {
         $this->field_name = $field_name;
 
         return $this;
     }
 
-    public function getFieldValue(): ?string
+    public function getFieldId(): ?string
     {
-        return $this->field_value;
+        return $this->field_id;
     }
 
-    public function setFieldValue(?string $field_value): self
+    public function setFieldId(string $field_id): self
     {
-        $this->field_value = $field_value;
+        $this->field_id = $field_id;
+
+        return $this;
+    }
+
+    public function getFieldClass(): ?string
+    {
+        return $this->field_class;
+    }
+
+    public function setFieldClass(?string $field_class): self
+    {
+        $this->field_class = $field_class;
+
+        return $this;
+    }
+
+    public function getFieldPlaceholder(): ?string
+    {
+        return $this->field_placeholder;
+    }
+
+    public function setFieldPlaceholder(?string $field_placeholder): self
+    {
+        $this->field_placeholder = $field_placeholder;
+
+        return $this;
+    }
+
+    public function getFieldOptions(): ?string
+    {
+        return $this->field_options;
+    }
+
+    public function setFieldOptions(?string $field_options): self
+    {
+        $this->field_options = $field_options;
+
+        return $this;
+    }
+
+    public function getFieldConfigs(): ?array
+    {
+        return $this->field_configs;
+    }
+
+    public function setFieldConfigs(?array $field_configs): self
+    {
+        $this->field_configs = $field_configs;
+
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): self
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    public function getOrderPosition(): ?int
+    {
+        return $this->order_position;
+    }
+
+    public function setOrderPosition(?int $order_position): self
+    {
+        $this->order_position = $order_position;
+
+        return $this;
+    }
+
+    public function getValidationConfigs(): ?array
+    {
+        return $this->validation_configs;
+    }
+
+    public function setValidationConfigs(?array $validation_configs): self
+    {
+        $this->validation_configs = $validation_configs;
+
+        return $this;
+    }
+
+    public function getErrorMessage(): ?string
+    {
+        return $this->error_message;
+    }
+
+    public function setErrorMessage(?string $error_message): self
+    {
+        $this->error_message = $error_message;
+
+        return $this;
+    }
+
+    public function getDependencyChild(): ?array
+    {
+        return $this->dependency_child;
+    }
+
+    public function setDependencyChild(?array $dependency_child): self
+    {
+        $this->dependency_child = $dependency_child;
+
+        return $this;
+    }
+
+    public function getDependencyParent(): ?array
+    {
+        return $this->dependency_parent;
+    }
+
+    public function setDependencyParent(?array $dependency_parent): self
+    {
+        $this->dependency_parent = $dependency_parent;
+
+        return $this;
+    }
+
+    public function getFlagRequired(): ?bool
+    {
+        return $this->flag_required;
+    }
+
+    public function setFlagRequired(bool $flag_required): self
+    {
+        $this->flag_required = $flag_required;
+
+        return $this;
+    }
+
+    public function isFlagFieldPublicationType(): ?bool
+    {
+        return $this->flag_field_publication_type;
+    }
+
+    public function setFlagFieldPublicationType(bool $flag_field_publication_type): self
+    {
+        $this->flag_field_publication_type = $flag_field_publication_type;
+
+        return $this;
+    }
+
+    public function isFlagFieldTitle(): ?bool
+    {
+        return $this->flag_field_title;
+    }
+
+    public function setFlagFieldTitle(bool $flag_field_title): self
+    {
+        $this->flag_field_title = $flag_field_title;
+
+        return $this;
+    }
+
+    public function isFlagFieldPublicationDate(): ?bool
+    {
+        return $this->flag_field_publication_date;
+    }
+
+    public function setFlagFieldPublicationDate(bool $flag_field_publication_date): self
+    {
+        $this->flag_field_publication_date = $flag_field_publication_date;
 
         return $this;
     }
@@ -118,9 +414,16 @@ class PublicationMeta
         return $this;
     }
 
-    public function isFlagActive(): ?bool
+    public function getValue(): string
     {
-        return $this->flag_active;
+        return $this->value;
+    }
+
+    public function setValue(?string $value): self
+    {
+        $this->value = $value;
+
+        return $this;
     }
 
     #[Ignore]
@@ -195,6 +498,18 @@ class PublicationMeta
     public function setPublication(?Publication $publication): self
     {
         $this->publication = $publication;
+
+        return $this;
+    }
+
+    public function getFormVersion(): ?PublicationFormVersion
+    {
+        return $this->form_version;
+    }
+
+    public function setFormVersion(?PublicationFormVersion $form_version): self
+    {
+        $this->form_version = $form_version;
 
         return $this;
     }

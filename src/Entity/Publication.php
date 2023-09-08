@@ -65,10 +65,6 @@ class Publication
     #[Ignore]
     private $publication_metas;
 
-    #[ORM\OneToMany(mappedBy: 'publication', targetEntity: PublicationMetaV2::class, fetch: 'EAGER')]
-    #[Ignore]
-    private $publication_metas_v2;
-
     #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class, inversedBy: 'publications', fetch: 'EAGER')]
     #[ORM\JoinColumn(name: 'id_publication_general_type', referencedColumnName: 'id')]
     #[Ignore]
@@ -92,7 +88,6 @@ class Publication
     public function __construct()
     {
         $this->publication_metas = new ArrayCollection();
-        $this->publication_metas_v2 = new ArrayCollection();
     }
 
     #[ORM\PrePersist]
@@ -290,37 +285,6 @@ class Publication
             // set the owning side to null (unless already changed)
             if ($publicationMetas->getPublication() === $this) {
                 $publicationMetas->setPublication(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, PublicationMeta>
-     */
-    #[Ignore]
-    public function getPublicationMetasV2(): Collection
-    {
-        return $this->publication_metas_v2;
-    }
-
-    public function addPublicationMetasV2(PublicationMetaV2 $publicationMetasV2): self
-    {
-        if (!$this->publication_metas_v2->contains($publicationMetasV2)) {
-            $this->publication_metas_v2[] = $publicationMetasV2;
-            $publicationMetasV2->setPublication($this);
-        }
-
-        return $this;
-    }
-
-    public function removePublicationMetasV2(PublicationMetaV2 $publicationMetasV2): self
-    {
-        if ($this->publication_metas_v2->removeElement($publicationMetasV2)) {
-            // set the owning side to null (unless already changed)
-            if ($publicationMetasV2->getPublication() === $this) {
-                $publicationMetasV2->setPublication(null);
             }
         }
 
