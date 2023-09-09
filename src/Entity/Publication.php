@@ -63,22 +63,22 @@ class Publication
     #[Ignore]
     private $publication_metas;
 
-    #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class, inversedBy: 'publications', fetch: 'EAGER')]
+    #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class, inversedBy: 'publications', fetch: 'EAGER', cascade: ["persist"])]
     #[ORM\JoinColumn(name: 'id_publication_general_type', referencedColumnName: 'id')]
     #[Ignore]
     private $publication_general_type;
 
-    #[ORM\ManyToOne(targetEntity: PublicationType::class, inversedBy: 'publications', fetch: 'EAGER')]
+    #[ORM\ManyToOne(targetEntity: PublicationType::class, inversedBy: 'publications', fetch: 'EAGER', cascade: ["persist"])]
     #[ORM\JoinColumn(name: 'id_publication_type', referencedColumnName: 'id')]
     #[Ignore]
     private $publication_type;
 
-    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'publications', fetch: 'EAGER')]
+    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'publications', fetch: 'EAGER', cascade: ["persist"])]
     #[ORM\JoinColumn(name: 'id_publication_form_version', referencedColumnName: 'id')]
     #[Ignore]
     private $publication_form_version;
 
-    #[ORM\ManyToOne(targetEntity: PublicationStatus::class, inversedBy: 'publications', fetch: 'EAGER')]
+    #[ORM\ManyToOne(targetEntity: PublicationStatus::class, inversedBy: 'publications', fetch: 'EAGER', cascade: ["persist"])]
     #[ORM\JoinColumn(name: 'id_publication_status', referencedColumnName: 'id')]
     #[Ignore]
     private $publication_status;

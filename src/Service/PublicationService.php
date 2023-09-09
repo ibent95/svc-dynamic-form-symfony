@@ -6,7 +6,7 @@ use App\Entity\Publication;
 use App\Entity\PublicationFormVersion;
 use App\Entity\PublicationMeta;
 use App\Entity\PublicationStatus;
-use App\Entity\PublicationType;
+
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
@@ -145,13 +145,16 @@ class PublicationService {
 		foreach ($formConfigs as $fieldIndex => $previousFieldConfig) {
 			$meta       = new PublicationMeta();
 
+            // Ids
 			$meta->setId($this->commonSvc->createUUIDShort());
 			$meta->setUuid($this->commonSvc->createUUID());
 
+            // Master data
 			$meta->setIdPublication($publication->getId());
 			$meta->setIdFormVersion($formVersion->getId());
 			$meta->setIdFormParent($previousFieldConfig['id_form_parent']);
 
+            // Field configs
             $meta->setFieldLabel($previousFieldConfig['field_label']);
             $meta->setFieldType($previousFieldConfig['field_type']);
             $meta->setFieldName($previousFieldConfig['field_name']);
@@ -174,6 +177,7 @@ class PublicationService {
             $meta->setValue(null);
 			$meta->setOtherValue(null);
 
+            // Specifict handling by type of field
 			switch ($previousFieldConfig['field_type']) {
 				case 'panel':
                 case 'accordion':

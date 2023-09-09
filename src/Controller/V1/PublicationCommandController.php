@@ -8,6 +8,7 @@ use App\Entity\PublicationType;
 use App\Service\CommonService;
 use App\Service\DynamicFormService;
 use App\Service\PublicationService;
+
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
@@ -85,11 +86,12 @@ class PublicationCommandController extends AbstractController
                 $entityManager->persist($publicationData);
                 $this->loggerMessage = 'Create publication data: ';
             }
-
+            
             // Update command
             if ($uuid) {
                 $this->loggerMessage = 'Update publication data: ';
             }
+            // dd($publicationData);
             
             $entityManager->flush();
             $entityManager->getConnection()->commit();

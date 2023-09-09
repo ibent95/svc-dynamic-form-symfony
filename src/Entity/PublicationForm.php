@@ -5,12 +5,11 @@ namespace App\Entity;
 use App\Repository\PublicationFormRepository;
 
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\ORM\Mapping\Table;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: PublicationFormRepository::class)]
 #[ORM\HasLifecycleCallbacks]
-#[Table(name: 'publication_form')]
+#[ORM\Table(name: 'publication_form')]
 class PublicationForm
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
@@ -117,7 +116,7 @@ class PublicationForm
     #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
-    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'EAGER')]
+    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'EAGER', cascade: ["persist"])]
     #[ORM\JoinColumn(name: 'id_form_version', referencedColumnName: 'id')]
     #[Ignore]
     private $form_version;

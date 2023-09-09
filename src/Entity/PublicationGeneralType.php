@@ -49,11 +49,11 @@ class PublicationGeneralType
     #[ORM\Column(type: 'guid')]
     private $uuid;
 
-    #[ORM\OneToMany(mappedBy: 'publication_general_type', targetEntity: PublicationType::class, fetch: 'EAGER')]
+    #[ORM\OneToMany(mappedBy: 'publication_general_type', targetEntity: PublicationType::class, fetch: 'EAGER', cascade: ["persist"])]
     #[Ignore]
     private $publication_types;
 
-    #[ORM\OneToMany(mappedBy: 'publication_general_type', targetEntity: Publication::class, fetch: 'EAGER')]
+    #[ORM\OneToMany(mappedBy: 'publication_general_type', targetEntity: Publication::class, fetch: 'EAGER', cascade: ["persist"])]
     #[Ignore]
     private $publications;
 

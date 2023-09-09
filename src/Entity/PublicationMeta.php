@@ -10,7 +10,7 @@ use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: PublicationFormRepository::class)]
 #[ORM\HasLifecycleCallbacks]
-#[Table(name: 'publication_meta')]
+#[ORM\Table(name: 'publication_meta')]
 class PublicationMeta
 {
     #[ORM\Id, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
@@ -20,7 +20,7 @@ class PublicationMeta
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true])]
     private $id_publication;
 
-    #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
+    #[ORM\Column(type: 'bigint', options: ["unsigned" => true])]
     private $id_form_version;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
@@ -126,12 +126,12 @@ class PublicationMeta
     #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
-    #[ORM\ManyToOne(targetEntity: Publication::class, inversedBy: 'publication_metas', fetch: 'EAGER')]
+    #[ORM\ManyToOne(targetEntity: Publication::class, inversedBy: 'publication_metas', fetch: 'EAGER', cascade: ["persist"])]
     #[ORM\JoinColumn(name: 'id_publication', referencedColumnName: 'id')]
     #[Ignore]
     private $publication;
 
-    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'EAGER')]
+    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'EAGER', cascade: ["persist"])]
     #[ORM\JoinColumn(name: 'id_form_version', referencedColumnName: 'id')]
     #[Ignore]
     private $form_version;
@@ -165,6 +165,7 @@ class PublicationMeta
         return $this;
     }
 
+    #[Ignore]
     public function getIdPublication(): ?string
     {
         return $this->id_publication;
@@ -177,6 +178,7 @@ class PublicationMeta
         return $this;
     }
 
+    #[Ignore]
     public function getIdFormVersion(): ?string
     {
         return $this->id_form_version;
@@ -189,6 +191,7 @@ class PublicationMeta
         return $this;
     }
 
+    #[Ignore]
     public function getIdFormParent(): ?string
     {
         return $this->id_form_parent;
