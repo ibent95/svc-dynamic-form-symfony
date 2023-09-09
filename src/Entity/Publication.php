@@ -22,19 +22,15 @@ class Publication
     private $title;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
-    #[Ignore]
     private $id_publication_general_type;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
-    #[Ignore]
     private $id_publication_type;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
-    #[Ignore]
     private $id_publication_form_version;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
-    #[Ignore]
     private $id_publication_status;
 
     #[ORM\Column(type: 'datetime', nullable: true)]
@@ -44,7 +40,7 @@ class Publication
     #[Ignore]
     private $flag_active;
 
-    #[ORM\Column(type: 'string', length: 50, options: ['default' => 'system'], nullable: true)]
+    #[ORM\Column(type: 'string', length: 50, options: ['default' => 'system'])]
     #[Ignore]
     private $create_user;
 
@@ -52,7 +48,7 @@ class Publication
     #[Ignore]
     private $created_at;
 
-    #[ORM\Column(type: 'string', length: 50, options: ['default' => 'system'], nullable: true)]
+    #[ORM\Column(type: 'string', length: 50, options: ['default' => 'system'])]
     #[Ignore]
     private $update_user;
 
@@ -96,14 +92,17 @@ class Publication
     public function onPrePersist(): void
     {
         $this->flag_active = true;
-        $this->created_at = new \DateTime("now");
-        $this->updated_at = new \DateTime("now");
+        $this->created_at = new \DateTimeImmutable();
+        $this->create_user = 'system';
+        $this->updated_at = new \DateTimeImmutable();
+        $this->update_user = 'system';
     }
 
     #[ORM\PreUpdate]
     public function onPreUpdate(): void
     {
-        $this->updated_at = new \DateTime("now");
+        $this->updated_at = new \DateTimeImmutable();
+        $this->update_user = 'system';
     }
 
     public function getId(): ?string

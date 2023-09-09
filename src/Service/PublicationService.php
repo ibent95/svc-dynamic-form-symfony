@@ -102,12 +102,12 @@ class PublicationService {
 		$publishDateFieldConfig = $this->getFieldConfigFromFormConfigs($formConfigs, 'flag_field_publish_date', true) ?: 'publication_date';
 
 		// Organize the Main Data
-        $generalFormTypeId 		= $formVersion->getPublicationType()->getPublicationGeneralType()->getId() ?? null;
-		$formTypeId 			= $formVersion->getPublicationType()->getId() ?? null;
-		$formVersionId 			= $formVersion->getId() ?? null;
+        $generalFormTypeId 		= $formVersion->getPublicationType()->getPublicationGeneralType()->getId() ?: null;
+		$formTypeId 			= $formVersion->getPublicationType()->getId() ?: null;
+		$formVersionId 			= $formVersion->getId() ?: null;
 		$formStatusId 			= ($this->doctrineManager->getRepository(PublicationStatus::class))->findOneBy([
 			'publication_status_code' => 'DRF'
-		])->getId() ?? null;
+		])->getId() ?: null;
 		$title 					= $requestData[
 			(is_string($titleFieldConfig)) ? $titleFieldConfig : $titleFieldConfig->getFieldName()
 		] ?? null;
@@ -118,12 +118,12 @@ class PublicationService {
 		// Wrapp the Main Data
         $results->setId($this->commonSvc->createUUIDShort());
         $results->setUuid($this->commonSvc->createUUID());
-        $results->setIdPublicationGeneralType($generalFormTypeId ?? null);
-        $results->setIdPublicationType($formTypeId ?? null);
-        $results->setIdPublicationFormVersion($formVersionId ?? null);
-        $results->setIdPublicationStatus($formStatusId ?? null);
-        $results->setTitle($title ?? null);
-        $results->setPublicationDate($publishDate ?? null);
+        $results->setIdPublicationGeneralType($generalFormTypeId);
+        $results->setIdPublicationType($formTypeId);
+        $results->setIdPublicationFormVersion($formVersionId);
+        $results->setIdPublicationStatus($formStatusId);
+        $results->setTitle($title);
+        $results->setPublicationDate($publishDate);
         $results->setFlagActive(true);
 		
 		return $results;

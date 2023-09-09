@@ -18,11 +18,9 @@ class PublicationMeta
     private $id;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true])]
-    #[Ignore]
     private $id_publication;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
-    //#[Ignore]
     private $id_form_version;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
@@ -109,7 +107,7 @@ class PublicationMeta
     #[Ignore]
     private $flag_active;
 
-    #[ORM\Column(type: 'string', length: 50, options: ['default' => 'system'], nullable: true)]
+    #[ORM\Column(type: 'string', length: 50, options: ['default' => 'system'])]
     #[Ignore]
     private $create_user;
 
@@ -117,7 +115,7 @@ class PublicationMeta
     #[Ignore]
     private $created_at;
 
-    #[ORM\Column(type: 'string', length: 50, options: ['default' => 'system'], nullable: true)]
+    #[ORM\Column(type: 'string', length: 50, options: ['default' => 'system'])]
     #[Ignore]
     private $update_user;
 
@@ -142,14 +140,17 @@ class PublicationMeta
     public function onPrePersist(): void
     {
         $this->flag_active = true;
-        $this->created_at = new \DateTime("now");
-        $this->updated_at = new \DateTime("now");
+        $this->created_at = new \DateTimeImmutable();
+        $this->create_user = 'system';
+        $this->updated_at = new \DateTimeImmutable();
+        $this->update_user = 'system';
     }
 
     #[ORM\PreUpdate]
     public function onPreUpdate(): void
     {
-        $this->updated_at = new \DateTime("now");
+        $this->updated_at = new \DateTimeImmutable();
+        $this->update_user = 'system';
     }
 
     public function getId(): ?string
