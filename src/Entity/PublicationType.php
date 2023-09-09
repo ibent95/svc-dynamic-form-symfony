@@ -10,6 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: PublicationTypeRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 #[ORM\Table(name: "publication_type")]
 class PublicationType
 {

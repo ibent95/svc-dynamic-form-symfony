@@ -3,15 +3,15 @@
 namespace App\Entity;
 
 use App\Repository\PublicationRepository;
+
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Exception;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: PublicationRepository::class)]
 #[ORM\HasLifecycleCallbacks]
+#[ORM\Table(name: "publication")]
 class Publication
 {
     #[ORM\Id, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
