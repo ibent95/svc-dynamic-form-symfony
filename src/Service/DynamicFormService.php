@@ -2,23 +2,32 @@
 
 namespace App\Service;
 
+use App\Entity\PublicationStatus;
+use App\Repository\PublicationStatusRepository;
 use App\Service\CommonService;
 
 use Psr\Log\LoggerInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\PersistentCollection;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\HttpFoundation\Request;
-
-use function PHPSTORM_META\map;
 
 class DynamicFormService
 {
+	private $doctrine;
+	private $doctrineManager;
 	private $logger;
 	private $mainFieldColumns;
 	private $mainFieldColumnMappingInMeta;
+    private $exprBuilder;
+    private $criteria;
 	private $commonSvc;
 
-	public function __construct(LoggerInterface $logger, CommonService $commonSvc) {
+	public function __construct(ManagerRegistry $doctrine, LoggerInterface $logger, CommonService $commonSvc) {
+		$this->doctrine 						= $doctrine;
+		$this->doctrineManager 					= $doctrine->getManager();
+
 		$this->logger							= $logger;
 		$this->commonSvc						= $commonSvc;
 
@@ -86,6 +95,8 @@ class DynamicFormService
 				'request_property' => 'publication_date',
 			],
 		];
+        $this->exprBuilder 		= Criteria::expr();
+        $this->criteria 		= new Criteria();
 	}
 
 	/**
@@ -237,137 +248,161 @@ class DynamicFormService
 		return $result;
 	}
 
-
-	public function getDataByDynamicForm(Request $request, Array $formConfigs = []): ArrayCollection
+	/**
+	 * This function response to get Main and Meta Data of input from Dynamic Form
+	 */
+	public function getDataByDynamicForm(Request $request, $formVersion = null, string $titleFieldName = 'title', string $generalFormTypeIdFieldName = null, string $formTypeIdFieldName = null, string $formVersionIdFieldName = null, string $formStatusIdFieldName = null, string $publishDateFieldName = null): Array
 	{
-		$results = new ArrayCollection([]);
+		$results = [];
 
-		$mainData = $this->getMainDataByDynamicForm($request, $formConfigs);
-		$metaData = $this->getMetaDataByDynamicForm($request, $formConfigs);
+		$mainData = $this->getMainDataByDynamicForm($request, $formVersion, $titleFieldName, $generalFormTypeIdFieldName, $formTypeIdFieldName, $formVersionIdFieldName, $formStatusIdFieldName, $publishDateFieldName);
+		$metaData = $this->getMetaDataByDynamicForm($request, $formVersion, $mainData);
 
-		$results->add([
+		$results = [
 			'main_data' => $mainData,
 			'meta_data' => $metaData
-		]);
+		];
 
 		return $results;
 	}
 
-	public function getMainDataByDynamicForm(Request $request, Array $formConfigs = []): ArrayCollection
+	/**
+	 * This function response to organize Main Data of input from Dynamic Form
+	 */
+	public function getMainDataByDynamicForm(Request | Array $request, $formVersion, string $titleFieldName = 'title', string $generalFormTypeIdFieldName = null, string $formTypeIdFieldName = null, string $formVersionIdFieldName = null, string $formStatusIdFieldName = null, string $publishDateFieldName = null): Array
 	{
-		$results = new ArrayCollection([]);
+		$results 				= [];
 
-		$rawRequestData = $request->request->all();
+		$requestData 			= (is_array($request)) ? $request : $request->request->all();
 
-		$formConfigs = $this->getMainFormConfigsByDynamicForm($formConfigs)->toArray();
+		// Get Form Configs of Main Data (if exists)
+		$formConfigs 			= $formVersion->getForms();
+		$formTypeFieldConfig 	= $this->getFieldConfigFromFormConfigs($formConfigs, 'flag_field_form_type', true) ?: 'form_type';
+		$titleFieldConfig 		= $this->getFieldConfigFromFormConfigs($formConfigs, 'flag_field_title', true) ?: 'title';
+		$publishDateFieldConfig = $this->getFieldConfigFromFormConfigs($formConfigs, 'flag_field_publish_date', true) ?: 'publication_date';
 
-		dd($formConfigs);
+		// Organize the Main Data
+		$formTypeId 			= $requestData[
+			(is_string($formTypeFieldConfig)) ?
+				$formTypeFieldConfig :
+				$formTypeFieldConfig->getFieldName()
+		] ?? null;
+		$generalFormTypeId 		= $formVersion->getPublicationType()->getPublicationGeneralType()->getId() ?? null;
+		$formVersionId 			= $formVersion->getId() ?? null;
+		$formStatusId 			= ($this->doctrineManager->getRepository(PublicationStatus::class))->findOneBy([
+			'publication_status_code' => 'DRF'
+		])->getId() ?? null;
+		$title 					= $requestData[
+			(is_string($titleFieldConfig)) ?
+				$titleFieldConfig :
+				$titleFieldConfig->getFieldName()
+		] ?? null;
+		$publishDate 			= $requestData[
+			(is_string($publishDateFieldConfig)) ?
+				$publishDateFieldConfig :
+				$publishDateFieldConfig->getFieldName()
+		] ?? null;
 
-		//$metaRequestData = $this->commonSvc->filterRequestProperties($request, $mainFieldNames)->request->all();
-		$metaRequestData = $this->dynamicDataAdjustment($request, $formConfigs);
-
-		//foreach ($formConfigs as $fieldIndex => $fieldConfig) {
-
-		//	if ($fieldConfig['field_name']) switch ($fieldConfig['field_type']) {
-		//		case 'step':
-		//		case 'multiple':
-		//			$this->getDataByDynamicForm($metaRequestData[$fieldConfig['field_name']], $fieldConfig['children']);
-		//			break;
-
-		//		case 'select':
-		//		case 'autoselect':
-		//		case 'autocomplete':
-		//			$results->add([
-		//				$fieldConfig['field_name'] => $metaRequestData[$fieldConfig['field_name']]
-		//			]);
-		//			break;
-
-		//		default:
-		//			$results->add([
-		//				$fieldConfig['field_name'] => $metaRequestData[$fieldConfig['field_name']]
-		//			]);
-		//			break;
-		//	}
-		//}
-
+		// Wrapp the Main Data
+		$results = [
+			'id' 						=> $this->commonSvc->createUUIDShort(),
+			'uuid' 						=> $this->commonSvc->createUUID(),
+			$formTypeIdFieldName 		=> $formTypeId 			?? null,
+			$generalFormTypeIdFieldName => $generalFormTypeId 	?? null,
+			$formVersionIdFieldName 	=> $formVersionId 		?? null,
+			$formStatusIdFieldName 		=> $formStatusId 		?? null,
+			$titleFieldName 			=> $title 				?? null,
+			$publishDateFieldName 		=> $publishDate 		?? null,
+		];
+		
 		return $results;
 	}
 
-	public function getMetaDataByDynamicForm(Request $request, Array $formConfigs = []): ArrayCollection
+	/**
+	 * This function response to organize Meta Data of input from Dynamic Form
+	 */
+	public function getMetaDataByDynamicForm(Request $request, $formVersion, Array $mainData): Array
 	{
-		$results = new ArrayCollection([]);
+		$results = [];
 
-		$rawRequestData = $request->request->all();
+		$requestData = (is_array($request)) ? $request : $request->request->all();
 
-		$mainFieldNames = new ArrayCollection($this->mainFieldColumnMappingInMeta);
-		$mainFieldNames = $mainFieldNames->map(function ($element) {
-			return $element['request_property'];
-		})->toArray();
-
-		$metaRequestData = $this->commonSvc->removeRequestProperties($request, $mainFieldNames)->request->all();
+		$formConfigs = $formVersion->getForms()->toArray();
+		$formConfigsArray = $this->commonSvc->normalizeObject($formVersion->getForms());
 
 		foreach ($formConfigs as $fieldIndex => $fieldConfig) {
+			$item = $formConfigsArray[$fieldIndex];
+			$item['id'] = $this->commonSvc->createUUIDShort();
+			$item['uuid'] = $this->commonSvc->createUUID();
+			$item['id_publication'] = $mainData['id'];
+			$item['value'] = null;
+			$item['other_value'] = null;
 
-			if ($fieldConfig['field_name']) switch ($fieldConfig['field_type']) {
-				case 'step':
-				case 'multiple':
-					$this->getDataByDynamicForm($metaRequestData[$fieldConfig['field_name']], $fieldConfig['children']);
-					break;
-
-				case 'select':
-				case 'autoselect':
-				case 'autocomplete':
-					$results->add([
-						$fieldConfig['field_name'] => $metaRequestData[$fieldConfig['field_name']]
-					]);
-					break;
-
-				default:
-					$results->add([
-						$fieldConfig['field_name'] => $metaRequestData[$fieldConfig['field_name']]
-					]);
-					break;
+			switch ($fieldConfig->getFieldType()) {
+				case 'panel':
+					case 'accordion':
+					case 'well':
+					case 'step':
+					case 'multiple':
+						$item['value'] = $this->getMainDataByDynamicForm($requestData[$fieldConfig->getFieldName()], $fieldConfig->getChildren());
+						break;
+	
+					case 'select':
+					case 'autoselect':
+					case 'autocomplete':
+						$item['value'] = $requestData[$fieldConfig->getFieldName()];
+						$item['other_value'] = $requestData[$fieldConfig->getFieldName()];
+						break;
+	
+					default:
+						$item['value'] = $requestData[$fieldConfig->getFieldName()];
+						break;
 			}
-
+			$results[] = $item;
 		}
 
+		dd($results);
+
 		return $results;
 	}
-
-	public function getMainFormConfigsByDynamicForm(Array $formConfigs): ArrayCollection
+	
+	function getFieldConfigFromFormConfigs(PersistentCollection $formConfigs, string $key, mixed $value): object | false
 	{
-		$results = new ArrayCollection($formConfigs);
-		$results = $results->map(function($formConfig) {
 
-			switch ($formConfig['field_type']) {
-				case 'select':
-				case 'autoselect':
-				case 'autocomplete':
-					$formConfig['field_name'] = $this->commonSvc->stringReplace($formConfig['field_name'], 'uuid_', 'id_');
-					break;
+		/**
+		 * [Experimental]
+		 * return $this->getSrcFiles()->filter(function(SrcFile $srcFile) {
+		 *  return ($srcFile->getKind() === 'master' && $srcFile->getSrcSheet()->getName() === 'MainData');
+		 * });
+		 */
+		
 
-				default:
-					break;
-			}
+        $this->criteria->where(
+			$this->exprBuilder->eq($key, $value)
+		);
 
-			return $formConfig;
-		});
+		$result = $formConfigs->matching($this->criteria)->first();
 
-		return $results;
+		return $result;
 	}
 
-	public function dynamicDataAdjustment(Request $request, Array $formConfigs): ArrayCollection
+	/**
+	 * [Experimental] This function response to organize all type of Data input from Dynamic Form
+	 */
+	public function dynamicDataAdjustment(Request | Array $request, Array $formConfigs): ArrayCollection
 	{
 		$results = new ArrayCollection([]);
 
-		$requestData = $request->request->all();
+		$requestData = (is_array($request)) ? $request : $request->request->all();
 
 		foreach ($formConfigs as $fieldIndex => $fieldConfig) {
 
 			if ($fieldConfig->getFieldName()) switch ($fieldConfig->getFieldType()) {
 				case 'step':
 				case 'multiple':
-					$this->getDataByDynamicForm($requestData[$fieldConfig->getFieldName()], $fieldConfig->children);
+					$results->add([
+						$fieldConfig->getFieldName() => $this->dynamicDataAdjustment($requestData[$fieldConfig->getFieldName()], $fieldConfig->getChildren())
+					]);
 					break;
 
 				case 'select':

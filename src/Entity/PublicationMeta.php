@@ -8,10 +8,11 @@ use Doctrine\ORM\Mapping\Table;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: PublicationFormRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 #[Table(name: 'publication_meta')]
 class PublicationMeta
 {
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[ORM\Id, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
     //#[Ignore]
     private $id;
 
@@ -88,32 +89,36 @@ class PublicationMeta
     private $flag_required;
 
     #[ORM\Column(options: ['default' => false])]
-    private ?bool $flag_field_publication_type = null;
+    private ?bool $flag_field_form_type = null;
 
     #[ORM\Column(options: ['default' => false])]
     private ?bool $flag_field_title = null;
 
     #[ORM\Column(options: ['default' => false])]
-    private ?bool $flag_field_publication_date = null;
+    private ?bool $flag_field_publish_date = null;
 
     #[ORM\Column(type: 'text', length: 65535, nullable: true)]
     private $value;
+
+    #[ORM\Column(type: 'json', nullable: true)]
+    //#[Ignore]
+    private $other_value = null;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
     #[Ignore]
     private $flag_active;
 
-    #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    #[ORM\Column(type: 'string', length: 50, options: ['default' => 'system'], nullable: true)]
     #[Ignore]
-    private $created_user;
+    private $create_user;
 
     #[ORM\Column(type: 'datetime', nullable: false)]
     #[Ignore]
     private $created_at;
 
-    #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    #[ORM\Column(type: 'string', length: 50, options: ['default' => 'system'], nullable: true)]
     #[Ignore]
-    private $updated_user;
+    private $update_user;
 
     #[ORM\Column(type: 'datetime', nullable: false)]
     #[Ignore]
@@ -135,7 +140,9 @@ class PublicationMeta
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {
+        $this->flag_active = true;
         $this->created_at = new \DateTime("now");
+        $this->updated_at = new \DateTime("now");
     }
 
     #[ORM\PreUpdate]
@@ -147,6 +154,13 @@ class PublicationMeta
     public function getId(): ?string
     {
         return $this->id;
+    }
+
+    public function setId(?string $id): self
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     public function getIdPublication(): ?string
@@ -365,14 +379,14 @@ class PublicationMeta
         return $this;
     }
 
-    public function isFlagFieldPublicationType(): ?bool
+    public function isFlagFieldFormType(): ?bool
     {
-        return $this->flag_field_publication_type;
+        return $this->flag_field_form_type;
     }
 
-    public function setFlagFieldPublicationType(bool $flag_field_publication_type): self
+    public function setFlagFieldFormType(bool $flag_field_form_type): self
     {
-        $this->flag_field_publication_type = $flag_field_publication_type;
+        $this->flag_field_form_type = $flag_field_form_type;
 
         return $this;
     }
@@ -389,14 +403,38 @@ class PublicationMeta
         return $this;
     }
 
-    public function isFlagFieldPublicationDate(): ?bool
+    public function isFlagFieldPublishDate(): ?bool
     {
-        return $this->flag_field_publication_date;
+        return $this->flag_field_publish_date;
     }
 
-    public function setFlagFieldPublicationDate(bool $flag_field_publication_date): self
+    public function setFlagFieldPublishDate(bool $flag_field_publish_date): self
     {
-        $this->flag_field_publication_date = $flag_field_publication_date;
+        $this->flag_field_publish_date = $flag_field_publish_date;
+
+        return $this;
+    }
+
+    public function getValue(): string
+    {
+        return $this->value;
+    }
+
+    public function setValue(?string $value): self
+    {
+        $this->value = $value;
+
+        return $this;
+    }
+
+    public function getOtherValue(): ?array
+    {
+        return $this->other_value;
+    }
+
+    public function setOtherValue(?array $other_value): self
+    {
+        $this->other_value = $other_value;
 
         return $this;
     }
@@ -414,27 +452,15 @@ class PublicationMeta
         return $this;
     }
 
-    public function getValue(): string
-    {
-        return $this->value;
-    }
-
-    public function setValue(?string $value): self
-    {
-        $this->value = $value;
-
-        return $this;
-    }
-
     #[Ignore]
-    public function getCreatedUser(): ?string
+    public function getCreateUser(): ?string
     {
-        return $this->created_user;
+        return $this->create_user;
     }
 
-    public function setCreatedUser(?string $created_user): self
+    public function setCreateUser(?string $create_user): self
     {
-        $this->created_user = $created_user;
+        $this->create_user = $create_user;
 
         return $this;
     }
@@ -453,14 +479,14 @@ class PublicationMeta
     }
 
     #[Ignore]
-    public function getUpdatedUser(): ?string
+    public function getUpdateUser(): ?string
     {
-        return $this->updated_user;
+        return $this->update_user;
     }
 
-    public function setUpdatedUser(?string $updated_user): self
+    public function setUpdateUser(?string $update_user): self
     {
-        $this->updated_user = $updated_user;
+        $this->update_user = $update_user;
 
         return $this;
     }

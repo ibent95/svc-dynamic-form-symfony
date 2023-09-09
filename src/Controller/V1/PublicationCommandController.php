@@ -2,11 +2,12 @@
 
 namespace App\Controller\V1;
 
+use App\Entity\Publication;
 use App\Entity\PublicationFormVersion;
 use App\Entity\PublicationType;
 use App\Service\CommonService;
 use App\Service\DynamicFormService;
-
+use App\Service\PublicationService;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
@@ -18,6 +19,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class PublicationCommandController extends AbstractController
 {
     private $logger;
+    private $loggerMessage;
     private $responseData;
     private $responseStatusCode;
     private $request;
@@ -25,10 +27,12 @@ class PublicationCommandController extends AbstractController
     private $criteria;
     private $commonSvc;
     private $dynamicFormSvc;
+    private $publicationSvc;
 
-    public function __construct(LoggerInterface $logger, CommonService $commonSvc, DynamicFormService $dynamicFormSvc)
+    public function __construct(LoggerInterface $logger, CommonService $commonSvc, DynamicFormService $dynamicFormSvc, PublicationService $publicationSvc)
     {
         $this->logger               = $logger;
+        $this->loggerMessage        = 'No process is running.';
 
         $this->request              = Request::createFromGlobals();
 
@@ -45,6 +49,7 @@ class PublicationCommandController extends AbstractController
 
         $this->commonSvc            = $commonSvc;
         $this->dynamicFormSvc       = $dynamicFormSvc;
+        $this->publicationSvc       = $publicationSvc;
     }
 
     #[Route('/api/v1/publications', methods: ['POST'], name: 'app_v1_publication_command_post')]
@@ -57,42 +62,41 @@ class PublicationCommandController extends AbstractController
         $this->responseData['info']     = 'error';
         $this->responseData['message']  = '';
         $this->responseStatusCode       = 200;
-
+        $this->loggerMessage            = 'Save Publication data is running.';
 
         try {
             $entityManager->getConnection()->beginTransaction();
 
+            $publication                = ($uuid) ? $entityManager->getRepository(Publication::class)->findOneBy([
+                'uuid' => $uuid
+            ]) : null;
+            $publicationType            = $entityManager->getRepository(PublicationType::class)->findOneBy([
+                'publication_type_code' => $request->request->get('publication_type_code')
+            ]);
+            $publicationFormVersion     = $entityManager->getRepository(PublicationFormVersion::class)->findOneBy([
+                'id_publication_type' => $publicationType->getId(),
+                'flag_active' => TRUE
+            ]);
+
+            $publicationData                = $this->publicationSvc->getDataByDynamicForm($request, $publicationFormVersion, $publication);
+
             // Create command
             if (!$uuid) {
-
-                $publicationType            = $entityManager->getRepository(PublicationType::class)->findOneBy([
-                    'publication_type_code' => $request->request->get('publication_type_code')
-                ]);
-
-                $publicationFormVersion     = $entityManager->getRepository(PublicationFormVersion::class)->findOneBy([
-                    'publication_type_id' => $publicationType->getId(),
-                    'flag_active' => TRUE
-                ]);
-
-                $publicationFormConfigs     = $publicationFormVersion->getPublicationForms();
-
-                //$this->responseData['data']['form_data']    = $request->request->all();
-                //$this->responseData['data']['form_configs'] = $publicationFormConfigs;
-                $dynamicFormData            = $this->dynamicFormSvc->getDataByDynamicForm($request, $this->commonSvc->normalizeObject($publicationFormConfigs));
-
-                $this->logger->info('Create', $dynamicFormData->toArray());
-
+                $entityManager->persist($publicationData);
+                $this->loggerMessage = 'Create publication data: ';
             }
 
             // Update command
             if ($uuid) {
-                $this->logger->info('Update');
+                $this->loggerMessage = 'Update publication data: ';
             }
-
+            
+            $entityManager->flush();
             $entityManager->getConnection()->commit();
-
+            
             $this->responseData['info']     = 'success';
             $this->responseData['message']  = 'Success on save publication data!';
+            $this->logger->info($this->loggerMessage, $this->commonSvc->normalizeObject($publicationData));
         } catch (\Exception $e) {
             $entityManager->getConnection()->rollBack();
 
@@ -103,7 +107,6 @@ class PublicationCommandController extends AbstractController
 
         return $this->json($this->responseData, $this->responseStatusCode);
     }
-
 
     //#[Route('/api/v1/publication-test', methods: ['POST'], name: 'app_v1_publication_insert')]
     //public function insert(ManagerRegistry $doctrine): JsonResponse
