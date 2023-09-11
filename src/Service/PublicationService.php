@@ -56,6 +56,21 @@ class PublicationService {
         return $data;
     }
 
+    public function getOnePublicationMetaData(PersistentCollection $sourceData, String $id): PublicationMeta
+    {
+        $data = [];
+
+        // Criteria or Query
+        $this->criteria->where(
+            $this->exprBuilder->eq('id', $id)
+        );
+        
+        // FormVersion data
+        $data = $sourceData->matching($this->criteria)->first();
+
+        return $data;
+    }
+
     public function getAllFormMetaData(PersistentCollection $sourceData, $otherData = null): Collection
     {
         $data = [];
@@ -72,12 +87,12 @@ class PublicationService {
 	/**
 	 * This function response to get Main and Meta Data of input from Dynamic Form
 	 */
-	public function getDataByDynamicForm(Request $request, PublicationFormVersion $formVersion, Publication $publication = null): Publication | Array
+	public function setDataByDynamicForm(Request $request, PublicationFormVersion $formVersion, Publication $publication = null): Publication | Array
 	{
 		$results    = [];
 
-		$mainData   = $this->getMainDataByDynamicForm($request, $formVersion, $publication);
-		$results    = $this->getMetaDataByDynamicForm($request, $formVersion, $mainData);
+		$mainData   = $this->setMainData($request, $formVersion, $publication);
+		$results    = $this->setMetaData($request, $formVersion, $mainData);
 
 		return $results;
 	}
@@ -85,7 +100,7 @@ class PublicationService {
 	/**
 	 * This function response to organize Main Data of input from Dynamic Form
 	 */
-	public function getMainDataByDynamicForm(Request | Array $request, PublicationFormVersion $formVersion, ?Publication $publication = null): Publication | Array
+	private function setMainData(Request | Array $request, PublicationFormVersion $formVersion, ?Publication $publication = null): Publication | Array
 	{
         /**
          *  Initial value
@@ -97,9 +112,9 @@ class PublicationService {
 
 		// Get Form Configs of Main Data (if exists)
 		$formConfigs 			= $formVersion->getForms();
-		$formTypeFieldConfig 	= $this->getFieldConfigFromFormConfigs($formConfigs, 'flag_field_form_type', true) ?: 'form_type';
-		$titleFieldConfig 		= $this->getFieldConfigFromFormConfigs($formConfigs, 'flag_field_title', true) ?: 'title';
-		$publishDateFieldConfig = $this->getFieldConfigFromFormConfigs($formConfigs, 'flag_field_publish_date', true) ?: 'publication_date';
+		$formTypeFieldConfig 	= $this->setFieldConfigFromFormConfigs($formConfigs, 'flag_field_form_type', true) ?: 'form_type';
+		$titleFieldConfig 		= $this->setFieldConfigFromFormConfigs($formConfigs, 'flag_field_title', true) ?: 'title';
+		$publishDateFieldConfig = $this->setFieldConfigFromFormConfigs($formConfigs, 'flag_field_publish_date', true) ?: 'publication_date';
 
 		// Organize the Main Data
         $generalFormType 		= $formVersion->getPublicationType()->getPublicationGeneralType() ?: null;
@@ -116,8 +131,10 @@ class PublicationService {
 		] ?? null;
 
 		// Wrapp the Main Data
-        $results->setId($this->commonSvc->createUUIDShort());
-        $results->setUuid($this->commonSvc->createUUID());
+        if ($request->getMethod() == 'POST') {
+            $results->setId($this->commonSvc->createUUIDShort());
+            $results->setUuid($this->commonSvc->createUUID());
+        }
         $results->setPublicationGeneralType($generalFormType);
         $results->setPublicationType($formType);
         $results->setPublicationFormVersion($formVersion);
@@ -132,27 +149,35 @@ class PublicationService {
 	/**
 	 * This function response to organize Meta Data of input from Dynamic Form
 	 */
-	public function getMetaDataByDynamicForm(Request $request, PublicationFormVersion $formVersion, Publication $publication): Publication | Array
+	private function setMetaData(Request $request, PublicationFormVersion $formVersion, Publication $publication): Publication | Array
 	{
+        // dump($publication);
         // Initial value
 		$results = $publication;
 		$requestData = (is_array($request)) ? $request : $request->request->all();
+        $formConfigs = $this->commonSvc->normalizeObject($formVersion->getForms());
 
-		// Get Form Configs of Meta Data
-		$formConfigs = $this->commonSvc->normalizeObject($formVersion->getForms());
+        // Remove the old Meta Data if there is Meta Data
+        if (count($publication->getPublicationMetas()->toArray()) > 0) foreach ($publication->getPublicationMetas() as $metaIndex => $meta) {
+            // dump('Meta ' . $metaIndex . ' : ', $meta);
+            // $meta->setFlagActive(false);
+            $results->removePublicationMetas($meta);
+        }
 
-        // Organize the Meta Data
-		foreach ($formConfigs as $fieldIndex => $previousFieldConfig) {
-			$meta       = new PublicationMeta();
+        // Organize the new Meta Data (create or update)
+        foreach ($formConfigs as $fieldIndex => $previousFieldConfig) {
+            $meta       = new PublicationMeta();
 
-            // Ids
-			$meta->setId($this->commonSvc->createUUIDShort());
-			$meta->setUuid($this->commonSvc->createUUID());
+            // Ids 
+            $meta->setId($this->commonSvc->createUUIDShort());
+            $meta->setUuid($this->commonSvc->createUUID());
 
             // Master data
-			$meta->setPublication($publication);
-			$meta->setFormVersion($formVersion);
-			$meta->setIdFormParent($previousFieldConfig['id_form_parent']);
+            // $meta->setIdPublication($publication->getId());
+            $meta->setPublication($publication);
+            // $meta->setIdFormVersion($formVersion->getId());
+            $meta->setFormVersion($formVersion);
+            $meta->setIdFormParent($previousFieldConfig['id_form_parent']);
 
             // Field configs
             $meta->setFieldLabel($previousFieldConfig['field_label']);
@@ -175,7 +200,7 @@ class PublicationService {
             $meta->setFlagFieldPublishDate($previousFieldConfig['flag_field_publish_date']);
             $meta->setFlagActive(true);
             $meta->setValue(null);
-			$meta->setOtherValue(null);
+            $meta->setOtherValue(null);
 
             // Specifict handling by type of field
 			switch ($previousFieldConfig['field_type']) {
@@ -224,23 +249,14 @@ class PublicationService {
 			}
 
             // Push the Meta Data to Main Data
-			$results->addPublicationMetas($meta);
+            $results->addPublicationMetas($meta);
 		}
-
+        // dump($results);
 		return $results;
 	}
-	
-	function getFieldConfigFromFormConfigs(PersistentCollection $formConfigs, string $key, mixed $value): object | false
+
+	private function setFieldConfigFromFormConfigs(PersistentCollection $formConfigs, string $key, mixed $value): object | false
 	{
-
-		/**
-		 * [Experimental]
-		 * return $this->getSrcFiles()->filter(function(SrcFile $srcFile) {
-		 *  return ($srcFile->getKind() === 'master' && $srcFile->getSrcSheet()->getName() === 'MainData');
-		 * });
-		 */
-		
-
         $this->criteria->where(
 			$this->exprBuilder->eq($key, $value)
 		);

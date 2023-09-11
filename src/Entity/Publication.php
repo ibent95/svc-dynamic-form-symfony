@@ -59,7 +59,7 @@ class Publication
     #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
-    #[ORM\OneToMany(mappedBy: 'publication', targetEntity: PublicationMeta::class, fetch: 'EAGER', cascade: ["ALL"])]
+    #[ORM\OneToMany(mappedBy: 'publication', targetEntity: PublicationMeta::class, fetch: 'EAGER', cascade: ["ALL"], orphanRemoval: true)]
     #[Ignore]
     private $publication_metas;
 

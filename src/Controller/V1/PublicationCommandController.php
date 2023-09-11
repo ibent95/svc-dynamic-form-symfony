@@ -79,7 +79,8 @@ class PublicationCommandController extends AbstractController
                 'flag_active' => TRUE
             ]);
 
-            $publicationData                = $this->publicationSvc->getDataByDynamicForm($request, $publicationFormVersion, $publication);
+            // Get organized data
+            $publicationData                = $this->publicationSvc->setDataByDynamicForm($request, $publicationFormVersion, $publication);
 
             // Create command
             if (!$uuid) {
@@ -89,6 +90,7 @@ class PublicationCommandController extends AbstractController
             
             // Update command
             if ($uuid) {
+                $entityManager->persist($publicationData);
                 $this->loggerMessage = 'Update publication data: ';
             }
             
