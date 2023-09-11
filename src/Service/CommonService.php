@@ -4,6 +4,7 @@ namespace App\Service;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
@@ -18,21 +19,25 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\String\UnicodeString;
+use Symfony\Component\Uid\Uuid;
 
 class CommonService {
+	/** @var $results Mixed */
 	private $results;
 	private $serializer;
 	private $doctrine;
 	private $doctrineManager;
+	private $entityManager;
 	private $exprBuilder;
 	private $criteria;
 
-	public function __construct(SerializerInterface $serializer, ManagerRegistry $doctrine)
+	public function __construct(SerializerInterface $serializer, ManagerRegistry $doctrine, EntityManagerInterface $entityManager)
 	{
 		/** @var $serializer SerializeInterface */
 		$this->serializer 		= $serializer;
 		$this->doctrine 		= $doctrine;
 		$this->doctrineManager 	= $doctrine->getManager();
+		$this->entityManager 	= $entityManager;
 
 		$this->exprBuilder 		= Criteria::expr();
 		$this->criteria 		= new Criteria();
@@ -40,12 +45,23 @@ class CommonService {
 		$this->results			= [];
 	}
 
-	public function getEntityIdentifierFromUnit($object): ?Array
+	public function getEntityIdentifierFromUnit($object): Mixed
 	{
-		/** @var $results ObjectManager */
+		/** @var $results EntityManager */
 		$this->results = $this->doctrineManager->getUnitOfWork()->getEntityIdentifier($object);
 
 		return $this->results;
+	}
+
+	public function createUUIDShort() : string
+	{
+		/** @var $this->doctrineManager EntityManager */
+		return $this->doctrineManager->getConnection()->executeQuery('SELECT UUID_SHORT() AS uuid_short')->fetchOne();
+	}
+
+	public function createUUID() : string
+	{
+		return Uuid::v4();
 	}
 
 	public function normalizeObject($object, String $resultFormat = null, Bool $enableMaxDepth = false): ?Array

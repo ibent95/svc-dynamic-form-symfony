@@ -3,13 +3,14 @@
 namespace App\Entity;
 
 use App\Repository\PublicationFormVersionRepository;
+
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: PublicationFormVersionRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 #[ORM\Table(name: "publication_form_version")]
 class PublicationFormVersion
 {
@@ -38,7 +39,7 @@ class PublicationFormVersion
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
     #[Ignore]
-    protected $created_user;
+    protected $create_user;
 
     #[ORM\Column(type: 'datetime')]
     #[Ignore]
@@ -46,7 +47,7 @@ class PublicationFormVersion
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
     #[Ignore]
-    protected $updated_user;
+    protected $update_user;
 
     #[ORM\Column(type: 'datetime')]
     #[Ignore]
@@ -56,19 +57,19 @@ class PublicationFormVersion
     protected $uuid;
 
     #[ORM\ManyToOne(targetEntity: PublicationType::class, inversedBy: 'form_versions', fetch: 'EAGER')]
-    #[ORM\JoinColumn(name: 'id_publication_type', referencedColumnName: 'id')]
+    #[ORM\JoinColumn(name: 'id_publication_type', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
     protected $publication_type;
 
-    #[ORM\OneToMany(mappedBy: 'form_version', targetEntity: PublicationMeta::class, fetch: 'EAGER')]
+    #[ORM\OneToMany(mappedBy: 'form_version', targetEntity: PublicationMeta::class, fetch: 'EAGER', cascade: ["ALL"])]
     #[Ignore]
     protected $publication_metas;
 
-    #[ORM\OneToMany(mappedBy: 'form_version', targetEntity: PublicationForm::class, fetch: 'EAGER')]
+    #[ORM\OneToMany(mappedBy: 'form_version', targetEntity: PublicationForm::class, fetch: 'EAGER', cascade: ["ALL"])]
     #[Ignore]
     protected $forms;
 
-    #[ORM\OneToMany(mappedBy: 'publication_form_version', targetEntity: Publication::class, fetch: 'EAGER')]
+    #[ORM\OneToMany(mappedBy: 'publication_form_version', targetEntity: Publication::class, fetch: 'EAGER', cascade: ["ALL"])]
     #[Ignore]
     private $publications;
 
@@ -82,13 +83,18 @@ class PublicationFormVersion
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {
-        $this->created_at = new \DateTime("now");
+        $this->flag_active = true;
+        $this->created_at = new \DateTimeImmutable();
+        $this->create_user = 'system';
+        $this->updated_at = new \DateTimeImmutable();
+        $this->update_user = 'system';
     }
 
     #[ORM\PreUpdate]
     public function onPreUpdate(): void
     {
-        $this->updated_at = new \DateTime("now");
+        $this->updated_at = new \DateTimeImmutable();
+        $this->update_user = 'system';
     }
 
     public function getId(): ?string
@@ -157,14 +163,14 @@ class PublicationFormVersion
     }
 
     #[Ignore]
-    public function getCreatedUser(): ?string
+    public function getCreateUser(): ?string
     {
-        return $this->created_user;
+        return $this->create_user;
     }
 
-    public function setCreatedUser(?string $created_user): self
+    public function setCreateUser(?string $create_user): self
     {
-        $this->created_user = $created_user;
+        $this->create_user = $create_user;
 
         return $this;
     }
@@ -183,14 +189,14 @@ class PublicationFormVersion
     }
 
     #[Ignore]
-    public function getUpdatedUser(): ?string
+    public function getUpdateUser(): ?string
     {
-        return $this->updated_user;
+        return $this->update_user;
     }
 
-    public function setUpdatedUser(?string $updated_user): self
+    public function setUpdateUser(?string $update_user): self
     {
-        $this->updated_user = $updated_user;
+        $this->update_user = $update_user;
 
         return $this;
     }
