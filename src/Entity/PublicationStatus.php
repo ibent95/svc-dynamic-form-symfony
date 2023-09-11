@@ -47,7 +47,7 @@ class PublicationStatus
     #[ORM\Column(type: 'guid')]
     private $uuid;
 
-    #[ORM\OneToMany(mappedBy: 'publication_status', targetEntity: Publication::class, fetch: 'EAGER', cascade: ["persist"])]
+    #[ORM\OneToMany(mappedBy: 'publication_status', targetEntity: Publication::class, fetch: 'EAGER', cascade: ["ALL"])]
     #[Ignore]
     private $publications;
 

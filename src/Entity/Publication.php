@@ -59,27 +59,27 @@ class Publication
     #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
-    #[ORM\OneToMany(mappedBy: 'publication', targetEntity: PublicationMeta::class, fetch: 'EAGER', cascade: ["persist"])]
+    #[ORM\OneToMany(mappedBy: 'publication', targetEntity: PublicationMeta::class, fetch: 'EAGER', cascade: ["ALL"])]
     #[Ignore]
     private $publication_metas;
 
-    #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class, inversedBy: 'publications', fetch: 'EAGER', cascade: ["persist"])]
-    #[ORM\JoinColumn(name: 'id_publication_general_type', referencedColumnName: 'id')]
+    #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class, inversedBy: 'publications', fetch: 'EAGER')]
+    #[ORM\JoinColumn(name: 'id_publication_general_type', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
     private $publication_general_type;
 
-    #[ORM\ManyToOne(targetEntity: PublicationType::class, inversedBy: 'publications', fetch: 'EAGER', cascade: ["persist"])]
-    #[ORM\JoinColumn(name: 'id_publication_type', referencedColumnName: 'id')]
+    #[ORM\ManyToOne(targetEntity: PublicationType::class, inversedBy: 'publications', fetch: 'EAGER')]
+    #[ORM\JoinColumn(name: 'id_publication_type', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
     private $publication_type;
 
-    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'publications', fetch: 'EAGER', cascade: ["persist"])]
-    #[ORM\JoinColumn(name: 'id_publication_form_version', referencedColumnName: 'id')]
+    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'publications', fetch: 'EAGER')]
+    #[ORM\JoinColumn(name: 'id_publication_form_version', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
     private $publication_form_version;
 
-    #[ORM\ManyToOne(targetEntity: PublicationStatus::class, inversedBy: 'publications', fetch: 'EAGER', cascade: ["persist"])]
-    #[ORM\JoinColumn(name: 'id_publication_status', referencedColumnName: 'id')]
+    #[ORM\ManyToOne(targetEntity: PublicationStatus::class, inversedBy: 'publications', fetch: 'EAGER')]
+    #[ORM\JoinColumn(name: 'id_publication_status', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
     private $publication_status;
 

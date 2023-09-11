@@ -102,12 +102,12 @@ class PublicationService {
 		$publishDateFieldConfig = $this->getFieldConfigFromFormConfigs($formConfigs, 'flag_field_publish_date', true) ?: 'publication_date';
 
 		// Organize the Main Data
-        $generalFormTypeId 		= $formVersion->getPublicationType()->getPublicationGeneralType()->getId() ?: null;
-		$formTypeId 			= $formVersion->getPublicationType()->getId() ?: null;
-		$formVersionId 			= $formVersion->getId() ?: null;
-		$formStatusId 			= ($this->doctrineManager->getRepository(PublicationStatus::class))->findOneBy([
+        $generalFormType 		= $formVersion->getPublicationType()->getPublicationGeneralType() ?: null;
+		$formType    			= $formVersion->getPublicationType() ?: null;
+		$formVersion 			= $formVersion ?: null;
+		$formStatus 			= ($this->doctrineManager->getRepository(PublicationStatus::class))->findOneBy([
 			'publication_status_code' => 'DRF'
-		])->getId() ?: null;
+		]) ?: null;
 		$title 					= $requestData[
 			(is_string($titleFieldConfig)) ? $titleFieldConfig : $titleFieldConfig->getFieldName()
 		] ?? null;
@@ -118,10 +118,10 @@ class PublicationService {
 		// Wrapp the Main Data
         $results->setId($this->commonSvc->createUUIDShort());
         $results->setUuid($this->commonSvc->createUUID());
-        $results->setIdPublicationGeneralType($generalFormTypeId);
-        $results->setIdPublicationType($formTypeId);
-        $results->setIdPublicationFormVersion($formVersionId);
-        $results->setIdPublicationStatus($formStatusId);
+        $results->setPublicationGeneralType($generalFormType);
+        $results->setPublicationType($formType);
+        $results->setPublicationFormVersion($formVersion);
+        $results->setPublicationStatus($formStatus);
         $results->setTitle($title);
         $results->setPublicationDate($publishDate);
         $results->setFlagActive(true);
@@ -150,8 +150,8 @@ class PublicationService {
 			$meta->setUuid($this->commonSvc->createUUID());
 
             // Master data
-			$meta->setIdPublication($publication->getId());
-			$meta->setIdFormVersion($formVersion->getId());
+			$meta->setPublication($publication);
+			$meta->setFormVersion($formVersion);
 			$meta->setIdFormParent($previousFieldConfig['id_form_parent']);
 
             // Field configs

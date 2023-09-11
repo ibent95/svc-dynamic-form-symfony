@@ -116,8 +116,8 @@ class PublicationForm
     #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
-    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'EAGER', cascade: ["persist"])]
-    #[ORM\JoinColumn(name: 'id_form_version', referencedColumnName: 'id')]
+    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'EAGER')]
+    #[ORM\JoinColumn(name: 'id_form_version', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
     private $form_version;
 

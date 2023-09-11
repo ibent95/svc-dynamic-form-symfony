@@ -53,16 +53,16 @@ class PublicationType
     #[ORM\Column(type: 'guid')]
     private $uuid;
 
-    #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class, inversedBy: 'publication_types', fetch: 'EAGER', cascade: ["persist"])]
-    #[ORM\JoinColumn(name: 'id_publication_general_type', referencedColumnName: 'id')]
+    #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class, inversedBy: 'publication_types', fetch: 'EAGER')]
+    #[ORM\JoinColumn(name: 'id_publication_general_type', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
     private $publication_general_type;
 
-    #[ORM\OneToMany(mappedBy: 'publication_type', targetEntity: PublicationFormVersion::class, fetch: 'EAGER', cascade: ["persist"])]
+    #[ORM\OneToMany(mappedBy: 'publication_type', targetEntity: PublicationFormVersion::class, fetch: 'EAGER', cascade: ["ALL"])]
     #[Ignore]
     private $form_versions;
 
-    #[ORM\OneToMany(mappedBy: 'publication_type', targetEntity: Publication::class, fetch: 'EAGER', cascade: ["persist"])]
+    #[ORM\OneToMany(mappedBy: 'publication_type', targetEntity: Publication::class, fetch: 'EAGER', cascade: ["ALL"])]
     #[Ignore]
     private $publications;
 
