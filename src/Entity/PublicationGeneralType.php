@@ -223,7 +223,7 @@ class PublicationGeneralType
      * @return Collection<int, PublicationType>
      */
     #[Ignore]
-    public function getPublicationType(): Collection
+    public function getPublicationTypes(): Collection
     {
         return $this->publication_types;
     }
