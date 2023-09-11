@@ -90,10 +90,9 @@ class PublicationCommandController extends AbstractController
             
             // Update command
             if ($uuid) {
-                $entityManager->persist($publicationData);
+                // $entityManager->persist($publicationData);
                 $this->loggerMessage = 'Update publication data: ';
             }
-            
             $entityManager->flush();
             $entityManager->getConnection()->commit();
             

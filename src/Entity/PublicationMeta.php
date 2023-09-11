@@ -165,6 +165,10 @@ class PublicationMeta
         return $this;
     }
 
+    public function isId(string $id) : bool {
+        return $this->id == $id;
+    }
+
     #[Ignore]
     public function getIdPublication(): ?string
     {

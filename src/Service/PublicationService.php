@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Publication;
+use App\Entity\PublicationForm;
 use App\Entity\PublicationFormVersion;
 use App\Entity\PublicationMeta;
 use App\Entity\PublicationStatus;
@@ -40,7 +41,7 @@ class PublicationService {
         $this->commonSvc 		= $commonSvc;
     }
 
-    public function getOneFormVersionData(PersistentCollection $sourceData, $otherData = null): PublicationFormVersion
+    public function getActiveFormVersionData(PersistentCollection $sourceData, $otherData = null): PublicationFormVersion
     {
         $data = [];
         // Criteria or Query
@@ -56,13 +57,58 @@ class PublicationService {
         return $data;
     }
 
-    public function getOnePublicationMetaData(PersistentCollection $sourceData, String $id): PublicationMeta
+    public function getPublicationFormDataById(PersistentCollection | ArrayCollection $sourceData, String $id): PublicationForm | FALSE
     {
         $data = [];
 
         // Criteria or Query
         $this->criteria->where(
             $this->exprBuilder->eq('id', $id)
+        );
+        
+        // FormVersion data
+        $data = $sourceData->matching($this->criteria)->first();
+
+        return $data;
+    }
+
+    public function getPublicationFormDataByUuid(PersistentCollection | ArrayCollection $sourceData, String $uuid): PublicationForm | FALSE
+    {
+        $data = [];
+
+        // Criteria or Query
+        $this->criteria->where(
+            $this->exprBuilder->eq('uuid', $uuid)
+        );
+        
+        // FormVersion data
+        $data = $sourceData->matching($this->criteria)->first();
+
+        return $data;
+    }
+
+    public function getPublicationMetaDataById(PersistentCollection | ArrayCollection $sourceData, String $id): PublicationMeta | FALSE
+    {
+        $data = [];
+
+        // Criteria or Query
+        $this->criteria->where(
+            $this->exprBuilder->eq('id', $id)
+        );
+        
+        // FormVersion data
+        $data = $sourceData->matching($this->criteria)->first();
+
+        return $data;
+    }
+
+    public function getPublicationMetaDataByUuid(PersistentCollection | ArrayCollection $sourceData, String $uuid): PublicationMeta | FALSE
+    {
+        $data = [];
+
+        // Criteria or Query
+        $this->criteria->where(
+            $this->exprBuilder->eq('uuid', $uuid)
         );
         
         // FormVersion data
@@ -123,12 +169,19 @@ class PublicationService {
 		$formStatus 			= ($this->doctrineManager->getRepository(PublicationStatus::class))->findOneBy([
 			'publication_status_code' => 'DRF'
 		]) ?: null;
-		$title 					= $requestData[
-			(is_string($titleFieldConfig)) ? $titleFieldConfig : $titleFieldConfig->getFieldName()
-		] ?? null;
-		$publishDate 			= $requestData[
-			(is_string($publishDateFieldConfig)) ? $publishDateFieldConfig : $publishDateFieldConfig->getFieldName()
-		] ?? null;
+        $title 					=  null;
+		$publishDate 			= null;
+
+        foreach ($requestData['meta_data'] as $metaDataIndex => $metaData) {
+            switch ($metaData['field_name']) {
+                case (is_string($titleFieldConfig)) ? $titleFieldConfig : $titleFieldConfig->getFieldName():
+                    $title          = $metaData['value'];
+                    break;
+                case (is_string($publishDateFieldConfig)) ? $publishDateFieldConfig : $publishDateFieldConfig->getFieldName():
+                    $publishDate    = $metaData['value'];
+                    break;
+            }
+        }
 
 		// Wrapp the Main Data
         if ($request->getMethod() == 'POST') {
@@ -151,70 +204,74 @@ class PublicationService {
 	 */
 	private function setMetaData(Request $request, PublicationFormVersion $formVersion, Publication $publication): Publication | Array
 	{
-        // dump($publication);
         // Initial value
-		$results = $publication;
-		$requestData = (is_array($request)) ? $request : $request->request->all();
-        $formConfigs = $this->commonSvc->normalizeObject($formVersion->getForms());
-
-        // Remove the old Meta Data if there is Meta Data
-        if (count($publication->getPublicationMetas()->toArray()) > 0) foreach ($publication->getPublicationMetas() as $metaIndex => $meta) {
-            // dump('Meta ' . $metaIndex . ' : ', $meta);
-            // $meta->setFlagActive(false);
-            $results->removePublicationMetas($meta);
-        }
+		$results        = $publication;
+		$requestData    = (is_array($request)) ? $request : $request->request->all();
 
         // Organize the new Meta Data (create or update)
-        foreach ($formConfigs as $fieldIndex => $previousFieldConfig) {
-            $meta       = new PublicationMeta();
+        if ($request->getMethod() == 'POST') {
+            $results    = $this->updateMetaData($requestData, $formVersion, $publication);
+        }
 
-            // Ids 
-            $meta->setId($this->commonSvc->createUUIDShort());
-            $meta->setUuid($this->commonSvc->createUUID());
+        if ($request->getMethod() == 'PUT') {
+            $results    = $this->updateMetaData($requestData, $formVersion, $publication);
+        }
 
-            // Master data
-            // $meta->setIdPublication($publication->getId());
-            $meta->setPublication($publication);
-            // $meta->setIdFormVersion($formVersion->getId());
-            $meta->setFormVersion($formVersion);
-            $meta->setIdFormParent($previousFieldConfig['id_form_parent']);
+		return $results;
+	}
 
-            // Field configs
-            $meta->setFieldLabel($previousFieldConfig['field_label']);
-            $meta->setFieldType($previousFieldConfig['field_type']);
-            $meta->setFieldName($previousFieldConfig['field_name']);
-            $meta->setFieldId($previousFieldConfig['field_id']);
-            $meta->setFieldClass($previousFieldConfig['field_class']);
-            $meta->setFieldPlaceholder($previousFieldConfig['field_placeholder']);
-            $meta->setFieldOptions($previousFieldConfig['field_options']);
-            $meta->setFieldConfigs($previousFieldConfig['field_configs']);
-            $meta->setDescription($previousFieldConfig['description']);
-            $meta->setOrderPosition($previousFieldConfig['order_position']);
-            $meta->setValidationConfigs($previousFieldConfig['validation_configs']);
-            $meta->setErrorMessage($previousFieldConfig['error_message']);
-            $meta->setDependencyChild($previousFieldConfig['dependency_child']);
-            $meta->setDependencyParent($previousFieldConfig['dependency_parent']);
-            $meta->setFlagRequired($previousFieldConfig['flag_required']);
-            $meta->setFlagFieldFormType($previousFieldConfig['flag_field_form_type']);
-            $meta->setFlagFieldTitle($previousFieldConfig['flag_field_title']);
-            $meta->setFlagFieldPublishDate($previousFieldConfig['flag_field_publish_date']);
-            $meta->setFlagActive(true);
-            $meta->setValue(null);
-            $meta->setOtherValue(null);
+    private function updateMetaData(Array $requestData, PublicationFormVersion $formVersion, Publication $publication) : Publication | Array
+    {
+        $results = $publication;
+        $metaDataConfigs = $publication->getPublicationMetas();
+        $formConfigs = $formVersion->getForms();
+
+        /**
+         * Remove the old Meta Data if there is Meta Data.
+         * There are two options:
+         * 1. Set active flag to false (0)
+         * 2. Remove existing data from PersistenceCollection (array)
+         */
+        if (count($metaDataConfigs->toArray()) > 0) foreach ($metaDataConfigs as $metaDataConfigIndex => $metaDataConfig) {
+            $metaDataConfig->setFlagActive(false);
+            // $results->removePublicationMetas($metaDataConfig);
+        }
+
+        // Organize data
+        foreach ($requestData['meta_data'] as $metaDataIndex => $metaData) {
+            /**
+             * Initial value:
+             * If there is Meta Data in previous Publication Meta Data, then use it as initial value.
+             * Other than that, set Meta Data by Form Configuration.
+             */
+            $metaDataConfig     = ($this->getPublicationMetaDataByUuid($metaDataConfigs, $metaData['uuid'])) ?
+                $this->getPublicationMetaDataByUuid(
+                    $metaDataConfigs,
+                    $metaData['uuid']
+                )
+            :
+                $this->setPublicationMetaDataByPublicationFormConfig(
+                    new PublicationMeta(),
+                    $publication,
+                    $formVersion,
+                    $this->getPublicationFormDataByUuid($formConfigs, $metaData['uuid']),
+                    $metaData
+                )
+            ;
+
+            $metaDataConfig->setFlagActive(true);
 
             // Specifict handling by type of field
-			switch ($previousFieldConfig['field_type']) {
+			switch ($metaDataConfig->getFieldType()) {
 				case 'panel':
                 case 'accordion':
                 case 'well':
                 case 'step':
                 case 'multiple':
                     /** 
-                     * $meta->setValue(
+                     * $metaDataConfig->setValue(
                      *  $this->getMainDataByDynamicForm(
-                     *      $requestData[
-                     *          $fieldConfig->getFieldName()
-                     *      ],
+                     *      $metaData['value'],
                      *      $fieldConfig->getChildren()
                      *  )
                      * ); 
@@ -224,36 +281,107 @@ class PublicationService {
                 case 'select':
                 case 'autoselect':
                 case 'autocomplete':
-                    $meta->setValue(
-                        $requestData[
-                            $previousFieldConfig['field_name']
-                        ]
+                    $metaDataConfig->setValue(
+                        $metaData['value']
                     );
-                    $meta->setOtherValue([
-                        'text' => $requestData[
-                            $previousFieldConfig['field_name']
-                        ],
-                        'uuid' => $requestData[
-                            $previousFieldConfig['field_name']
-                        ],
+                    $metaDataConfig->setOtherValue([
+                        'text' => $metaData['value'],
+                        'uuid' => $metaData['value'],
                     ]);
                     break;
 
                 default:
-                    $meta->setValue(
-                        $requestData[
-                            $previousFieldConfig['field_name']
-                        ]
-                    );
+                    $metaDataConfig->setValue($metaData['value']);
                     break;
 			}
 
             // Push the Meta Data to Main Data
-            $results->addPublicationMetas($meta);
+            $results->addPublicationMetas($metaDataConfig);
 		}
-        // dump($results);
-		return $results;
-	}
+
+        return $results;
+    }
+
+    private function setPublicationMetaDataByPublicationFormConfig(PublicationMeta $publicationMeta, Publication $publication, PublicationFormVersion $formVersion, PublicationForm $fieldConfig, Array $metaData) : PublicationMeta
+    {
+        $results = $publicationMeta;
+
+        /**
+         * Organize data
+         */
+
+        // Ids 
+        $results->setId($this->commonSvc->createUUIDShort());
+        $results->setUuid($this->commonSvc->createUUID());
+
+        // Master data
+        $results->setIdPublication($publication->getId());
+        $results->setPublication($publication);
+        $results->setIdFormVersion($formVersion->getId());
+        $results->setFormVersion($formVersion);
+        $results->setIdFormParent($fieldConfig->getIdFormParent());
+
+        // Field configs
+        $results->setFieldLabel($fieldConfig->getFieldLabel());
+        $results->setFieldType($fieldConfig->getFieldType());
+        $results->setFieldName($fieldConfig->getFieldName());
+        $results->setFieldId($fieldConfig->getFieldId());
+        $results->setFieldClass($fieldConfig->getFieldClass());
+        $results->setFieldPlaceholder($fieldConfig->getFieldPlaceholder());
+        $results->setFieldOptions($fieldConfig->getFieldOptions());
+        $results->setFieldConfigs($fieldConfig->getFieldConfigs());
+        $results->setDescription($fieldConfig->getDescription());
+        $results->setOrderPosition($fieldConfig->getOrderPosition());
+        $results->setValidationConfigs($fieldConfig->getValidationConfigs());
+        $results->setErrorMessage($fieldConfig->getErrorMessage());
+        $results->setDependencyChild($fieldConfig->getDependencyChild());
+        $results->setDependencyParent($fieldConfig->getDependencyParent());
+        $results->setFlagRequired($fieldConfig->getFlagRequired());
+        $results->setFlagFieldFormType($fieldConfig->getFlagFieldFormType());
+        $results->setFlagFieldTitle($fieldConfig->getFlagFieldTitle());
+        $results->setFlagFieldPublishDate($fieldConfig->getFlagFieldPublishDate());
+        $results->setFlagActive(true);
+        $results->setValue(null);
+        $results->setOtherValue(null);
+
+        // Specifict handling by type of field
+        switch ($fieldConfig->getFieldType()) {
+            case 'panel':
+            case 'accordion':
+            case 'well':
+            case 'step':
+            case 'multiple':
+                /** 
+                 * $results->setValue(
+                 *  $this->getMainDataByDynamicForm(
+                 *      $metaData['value'],
+                 *      $fieldConfig->getChildren()
+                 *  )
+                 * ); 
+                 */
+                break;
+
+            case 'select':
+            case 'autoselect':
+            case 'autocomplete':
+                $results->setValue(
+                    $metaData['value']
+                );
+                $results->setOtherValue([
+                    'text' => $metaData['value'],
+                    'uuid' => $metaData['value'],
+                ]);
+                break;
+
+            default:
+                $results->setValue(
+                    $metaData['value']
+                );
+                break;
+        }
+
+        return $results;
+    }
 
 	private function setFieldConfigFromFormConfigs(PersistentCollection $formConfigs, string $key, mixed $value): object | false
 	{

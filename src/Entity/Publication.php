@@ -117,6 +117,10 @@ class Publication
         return $this;
     }
 
+    public function isId(string $id) : bool {
+        return $this->id == $id;
+    }
+
     public function getTitle(): ?string
     {
         return $this->title;

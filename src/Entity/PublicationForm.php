@@ -348,6 +348,11 @@ class PublicationForm
         return $this;
     }
 
+    public function getFlagFieldFormType(): ?bool
+    {
+        return $this->flag_field_form_type;
+    }
+
     public function isFlagFieldFormType(): ?bool
     {
         return $this->flag_field_form_type;
@@ -360,6 +365,11 @@ class PublicationForm
         return $this;
     }
 
+    public function getFlagFieldTitle(): ?bool
+    {
+        return $this->flag_field_title;
+    }
+
     public function isFlagFieldTitle(): ?bool
     {
         return $this->flag_field_title;
@@ -370,6 +380,11 @@ class PublicationForm
         $this->flag_field_title = $flag_field_title;
 
         return $this;
+    }
+
+    public function getFlagFieldPublishDate(): ?bool
+    {
+        return $this->flag_field_publish_date;
     }
 
     public function isFlagFieldPublishDate(): ?bool
