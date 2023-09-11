@@ -3,36 +3,34 @@
 namespace App\Entity;
 
 use App\Repository\PublicationRepository;
+
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: PublicationRepository::class)]
+#[ORM\HasLifecycleCallbacks]
+#[ORM\Table(name: "publication")]
 class Publication
 {
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[ORM\Id, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
     #[Ignore]
     private $id;
 
     #[ORM\Column(type: 'string', length: 500, nullable: true)]
     private $title;
 
-    #[ORM\Column(type: 'bigint')]
-    #[Ignore]
+    #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
     private $id_publication_general_type;
 
-    #[ORM\Column(type: 'bigint')]
-    #[Ignore]
+    #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
     private $id_publication_type;
 
-    #[ORM\Column(type: 'bigint')]
-    #[Ignore]
+    #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
     private $id_publication_form_version;
 
-    #[ORM\Column(type: 'bigint')]
-    #[Ignore]
+    #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
     private $id_publication_status;
 
     #[ORM\Column(type: 'datetime', nullable: true)]
@@ -42,17 +40,17 @@ class Publication
     #[Ignore]
     private $flag_active;
 
-    #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    #[ORM\Column(type: 'string', length: 50, options: ['default' => 'system'])]
     #[Ignore]
-    private $created_user;
+    private $create_user;
 
     #[ORM\Column(type: 'datetime', nullable: false)]
     #[Ignore]
     private $created_at;
 
-    #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    #[ORM\Column(type: 'string', length: 50, options: ['default' => 'system'])]
     #[Ignore]
-    private $updated_user;
+    private $update_user;
 
     #[ORM\Column(type: 'datetime', nullable: false)]
     #[Ignore]
@@ -61,50 +59,66 @@ class Publication
     #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
-    #[ORM\OneToMany(mappedBy: 'publication', targetEntity: PublicationMeta::class, fetch: 'EAGER')]
+    #[ORM\OneToMany(mappedBy: 'publication', targetEntity: PublicationMeta::class, fetch: 'EAGER', cascade: ["ALL"], orphanRemoval: true)]
     #[Ignore]
-    private $publication_meta;
+    private $publication_metas;
 
     #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class, inversedBy: 'publications', fetch: 'EAGER')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(name: 'id_publication_general_type', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
     private $publication_general_type;
 
     #[ORM\ManyToOne(targetEntity: PublicationType::class, inversedBy: 'publications', fetch: 'EAGER')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(name: 'id_publication_type', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
     private $publication_type;
 
     #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'publications', fetch: 'EAGER')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(name: 'id_publication_form_version', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
     private $publication_form_version;
 
     #[ORM\ManyToOne(targetEntity: PublicationStatus::class, inversedBy: 'publications', fetch: 'EAGER')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(name: 'id_publication_status', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
     private $publication_status;
 
     public function __construct()
     {
-        $this->publication_meta = new ArrayCollection();
+        $this->publication_metas = new ArrayCollection();
     }
 
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {
-        $this->created_at = new \DateTime("now");
+        $this->flag_active = true;
+        $this->created_at = new \DateTimeImmutable();
+        $this->create_user = 'system';
+        $this->updated_at = new \DateTimeImmutable();
+        $this->update_user = 'system';
     }
 
     #[ORM\PreUpdate]
     public function onPreUpdate(): void
     {
-        $this->updated_at = new \DateTime("now");
+        $this->updated_at = new \DateTimeImmutable();
+        $this->update_user = 'system';
     }
 
     public function getId(): ?string
     {
         return $this->id;
+    }
+
+    public function setId(?string $id): self
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
+    public function isId(string $id) : bool {
+        return $this->id == $id;
     }
 
     public function getTitle(): ?string
@@ -119,6 +133,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getIdPublicationGeneralType(): ?string
     {
         return $this->id_publication_general_type;
@@ -131,6 +146,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getIdPublicationType(): ?string
     {
         return $this->id_publication_type;
@@ -143,6 +159,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getIdPublicationFormVersion(): ?string
     {
         return $this->id_publication_form_version;
@@ -155,6 +172,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getIdPublicationStatus(): ?string
     {
         return $this->id_publication_status;
@@ -193,14 +211,14 @@ class Publication
     }
 
     #[Ignore]
-    public function getCreatedUser(): ?string
+    public function getCreateUser(): ?string
     {
-        return $this->created_user;
+        return $this->create_user;
     }
 
-    public function setCreatedUser(?string $created_user): self
+    public function setCreateUser(?string $create_user): self
     {
-        $this->created_user = $created_user;
+        $this->create_user = $create_user;
 
         return $this;
     }
@@ -219,14 +237,14 @@ class Publication
     }
 
     #[Ignore]
-    public function getUpdatedUser(): ?string
+    public function getUpdateUser(): ?string
     {
-        return $this->updated_user;
+        return $this->update_user;
     }
 
-    public function setUpdatedUser(?string $updated_user): self
+    public function setUpdateUser(?string $update_user): self
     {
-        $this->updated_user = $updated_user;
+        $this->update_user = $update_user;
 
         return $this;
     }
@@ -259,33 +277,35 @@ class Publication
     /**
      * @return Collection<int, PublicationMeta>
      */
-    public function getPublicationMeta(): Collection
+    #[Ignore]
+    public function getPublicationMetas(): Collection
     {
-        return $this->publication_meta;
+        return $this->publication_metas;
     }
 
-    public function addPublicationMetum(PublicationMeta $publicationMetum): self
+    public function addPublicationMetas(PublicationMeta $publicationMetas): self
     {
-        if (!$this->publication_meta->contains($publicationMetum)) {
-            $this->publication_meta[] = $publicationMetum;
-            $publicationMetum->setPublication($this);
+        if (!$this->publication_metas->contains($publicationMetas)) {
+            $this->publication_metas[] = $publicationMetas;
+            $publicationMetas->setPublication($this);
         }
 
         return $this;
     }
 
-    public function removePublicationMetum(PublicationMeta $publicationMetum): self
+    public function removePublicationMetas(PublicationMeta $publicationMetas): self
     {
-        if ($this->publication_meta->removeElement($publicationMetum)) {
+        if ($this->publication_metas->removeElement($publicationMetas)) {
             // set the owning side to null (unless already changed)
-            if ($publicationMetum->getPublication() === $this) {
-                $publicationMetum->setPublication(null);
+            if ($publicationMetas->getPublication() === $this) {
+                $publicationMetas->setPublication(null);
             }
         }
 
         return $this;
     }
 
+    #[Ignore]
     public function getPublicationGeneralType(): ?PublicationGeneralType
     {
         return $this->publication_general_type;
@@ -298,6 +318,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getPublicationType(): ?PublicationType
     {
         return $this->publication_type;
@@ -310,6 +331,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getPublicationFormVersion(): ?PublicationFormVersion
     {
         return $this->publication_form_version;
@@ -322,6 +344,7 @@ class Publication
         return $this;
     }
 
+    #[Ignore]
     public function getPublicationStatus(): ?PublicationStatus
     {
         return $this->publication_status;

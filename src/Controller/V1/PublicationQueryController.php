@@ -2,38 +2,23 @@
 
 namespace App\Controller\V1;
 
-use App\Entity\PublicationFormVersion;
 use App\Entity\Publication;
 use App\Entity\PublicationForm;
 use App\Entity\PublicationGeneralType;
 use App\Entity\PublicationStatus;
 use App\Entity\PublicationType;
-use App\Repository\PublicationFormVersionRepository;
-use App\Repository\PublicationRepository;
 use App\Service\CommonService;
 use App\Service\DynamicFormService;
 use App\Service\PublicationService;
+
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\Common\Collections\Expr\Comparison;
 use Doctrine\Persistence\ManagerRegistry;
-use Doctrine\ORM\Query;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Serializer\Serializer;
-use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
-use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Encoder\XmlEncoder;
-use Symfony\Component\String\UnicodeString;
 
 class PublicationQueryController extends AbstractController
 {
@@ -192,14 +177,16 @@ class PublicationQueryController extends AbstractController
             $index = 0;
             $publications               = ($publicationsRaw) ? $publicationsRaw->map(function ($item) use (&$index) {
                 $resultItem                             = $this->commonSvc->normalizeObject($item);
-
+                
                 $resultItem['no']                       = $index + 1;
-                $resultItem['metadata']                 = $this->commonSvc->normalizeObject($item->getPublicationMeta());
+                $resultItem['metadata']                 = $this->commonSvc->normalizeObject($item->getPublicationMetas());
                 $resultItem['publication_general_type'] = $this->commonSvc->normalizeObject($item->getPublicationGeneralType());
                 $resultItem['publication_type']         = $this->commonSvc->normalizeObject($item->getPublicationType());
                 $resultItem['publication_status']       = $this->commonSvc->normalizeObject($item->getPublicationStatus());
-
+                $resultItem['publication_form_version'] = $this->commonSvc->normalizeObject($item->getPublicationFormVersion());
+                
                 $index++;
+                // dump($resultItem);
                 return $resultItem;
             })->toArray() : NULL;
 
@@ -239,12 +226,12 @@ class PublicationQueryController extends AbstractController
             $publicationType 				= $entityManager->getRepository(PublicationType::class)->findActiveOneByCode($publicationTypeCode);
 
             // FormVersion
-            $formVersionRaw                 = $publicationType->getFormVersion();
-            $formVersion                    = $this->publicationSvc->getOneFormVersionData($formVersionRaw);
+            $formVersionsRaw                 = $publicationType->getFormVersions();
+            $formVersion                    = $this->publicationSvc->getOneFormVersionData($formVersionsRaw);
             $formVersionNormalize           = ($formVersion) ? $this->commonSvc->normalizeObject($formVersion) : NULL;
 
             // Get Forms raw data
-            $formsRaw						= $this->publicationSvc->getAllFormMetaData($formVersion->getPublicationForms());
+            $formsRaw						= $this->publicationSvc->getAllFormMetaData($formVersion->getForms());
 
             $formsRawNormalizeCollection	= new ArrayCollection($this->commonSvc->normalizeObject($formsRaw));
             $forms							= $formsRawNormalizeCollection->map(function ($field) use ($entityManager) {

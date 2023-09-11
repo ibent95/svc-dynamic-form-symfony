@@ -3,25 +3,26 @@
 namespace App\Entity;
 
 use App\Repository\PublicationFormRepository;
+
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\ORM\Mapping\Table;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: PublicationFormRepository::class)]
-#[Table(name: 'publication_form')]
+#[ORM\HasLifecycleCallbacks]
+#[ORM\Table(name: 'publication_form')]
 class PublicationForm
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
     //#[Ignore]
     private $id;
 
-    #[ORM\Column(type: 'bigint')]
+    #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
     //#[Ignore]
-    private $form_version_id;
+    private $id_form_version;
 
     #[ORM\Column(type: 'bigint', nullable: true)]
     //#[Ignore]
-    private $form_parent_id;
+    private $id_form_parent;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     //#[Ignore]
@@ -84,13 +85,13 @@ class PublicationForm
     private $flag_required;
 
     #[ORM\Column(options: ['default' => false])]
-    private ?bool $flag_field_publication_type = null;
+    private ?bool $flag_field_form_type = null;
 
     #[ORM\Column(options: ['default' => false])]
     private ?bool $flag_field_title = null;
 
     #[ORM\Column(options: ['default' => false])]
-    private ?bool $flag_field_publication_date = null;
+    private ?bool $flag_field_publish_date = null;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
     #[Ignore]
@@ -98,7 +99,7 @@ class PublicationForm
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
     #[Ignore]
-    private $created_user;
+    private $create_user;
 
     #[ORM\Column(type: 'datetime', nullable: false)]
     #[Ignore]
@@ -106,7 +107,7 @@ class PublicationForm
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
     #[Ignore]
-    private $updated_user;
+    private $update_user;
 
     #[ORM\Column(type: 'datetime', nullable: false)]
     #[Ignore]
@@ -115,20 +116,26 @@ class PublicationForm
     #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
-    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'form')]
+    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'EAGER')]
+    #[ORM\JoinColumn(name: 'id_form_version', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
-    private $publicationFormVersion;
+    private $form_version;
 
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {
-        $this->created_at = new \DateTime("now");
+        $this->flag_active = true;
+        $this->created_at = new \DateTimeImmutable();
+        $this->create_user = 'system';
+        $this->updated_at = new \DateTimeImmutable();
+        $this->update_user = 'system';
     }
 
     #[ORM\PreUpdate]
     public function onPreUpdate(): void
     {
-        $this->updated_at = new \DateTime("now");
+        $this->updated_at = new \DateTimeImmutable();
+        $this->update_user = 'system';
     }
 
     public function getId(): ?string
@@ -136,26 +143,27 @@ class PublicationForm
         return $this->id;
     }
 
-    public function getFormVersionId(): ?string
+    #[Ignore]
+    public function getIdFormVersion(): ?string
     {
-        return $this->form_version_id;
+        return $this->id_form_version;
     }
 
-    public function setFormVersionId(string $form_version_id): self
+    public function setIdFormVersion(string $id_form_version): self
     {
-        $this->form_version_id = $form_version_id;
+        $this->id_form_version = $id_form_version;
 
         return $this;
     }
 
-    public function getFormParentId(): ?string
+    public function getIdFormParent(): ?string
     {
-        return $this->form_parent_id;
+        return $this->id_form_parent;
     }
 
-    public function setFormParentId(?string $form_parent_id): self
+    public function setIdFormParent(?string $id_form_parent): self
     {
-        $this->form_parent_id = $form_parent_id;
+        $this->id_form_parent = $id_form_parent;
 
         return $this;
     }
@@ -251,7 +259,7 @@ class PublicationForm
 
     public function setFieldConfigs(?array $field_configs): self
     {
-        $this->field_configss = $field_configs;
+        $this->field_configs = $field_configs;
 
         return $this;
     }
@@ -340,16 +348,26 @@ class PublicationForm
         return $this;
     }
 
-    public function isFlagFieldPublicationType(): ?bool
+    public function getFlagFieldFormType(): ?bool
     {
-        return $this->flag_field_publication_type;
+        return $this->flag_field_form_type;
     }
 
-    public function setFlagFieldPublicationType(bool $flag_field_publication_type): self
+    public function isFlagFieldFormType(): ?bool
     {
-        $this->flag_field_publication_type = $flag_field_publication_type;
+        return $this->flag_field_form_type;
+    }
+
+    public function setFlagFieldFormType(bool $flag_field_form_type): self
+    {
+        $this->flag_field_form_type = $flag_field_form_type;
 
         return $this;
+    }
+
+    public function getFlagFieldTitle(): ?bool
+    {
+        return $this->flag_field_title;
     }
 
     public function isFlagFieldTitle(): ?bool
@@ -364,14 +382,19 @@ class PublicationForm
         return $this;
     }
 
-    public function isFlagFieldPublicationDate(): ?bool
+    public function getFlagFieldPublishDate(): ?bool
     {
-        return $this->flag_field_publication_date;
+        return $this->flag_field_publish_date;
     }
 
-    public function setFlagFieldPublicationDate(bool $flag_field_publication_date): self
+    public function isFlagFieldPublishDate(): ?bool
     {
-        $this->flag_field_publication_date = $flag_field_publication_date;
+        return $this->flag_field_publish_date;
+    }
+
+    public function setFlagFieldPublishDate(bool $flag_field_publish_date): self
+    {
+        $this->flag_field_publish_date = $flag_field_publish_date;
 
         return $this;
     }
@@ -390,14 +413,14 @@ class PublicationForm
     }
 
     #[Ignore]
-    public function getCreatedUser(): ?string
+    public function getCreateUser(): ?string
     {
-        return $this->created_user;
+        return $this->create_user;
     }
 
-    public function setCreatedUser(?string $created_user): self
+    public function setCreateUser(?string $create_user): self
     {
-        $this->created_user = $created_user;
+        $this->create_user = $create_user;
 
         return $this;
     }
@@ -416,14 +439,14 @@ class PublicationForm
     }
 
     #[Ignore]
-    public function getUpdatedUser(): ?string
+    public function getUpdateUser(): ?string
     {
-        return $this->updated_user;
+        return $this->update_user;
     }
 
-    public function setUpdatedUser(?string $updated_user): self
+    public function setUpdateUser(?string $update_user): self
     {
-        $this->updated_user = $updated_user;
+        $this->update_user = $update_user;
 
         return $this;
     }
@@ -453,14 +476,15 @@ class PublicationForm
         return $this;
     }
 
-    public function getPublicationFormVersion(): ?PublicationFormVersion
+    #[Ignore]
+    public function getFormVersion(): ?PublicationFormVersion
     {
-        return $this->publicationFormVersion;
+        return $this->form_version;
     }
 
-    public function setPublicationFormVersion(?PublicationFormVersion $publicationFormVersion): self
+    public function setFormVersion(?PublicationFormVersion $form_version): self
     {
-        $this->publicationFormVersion = $publicationFormVersion;
+        $this->form_version = $form_version;
 
         return $this;
     }

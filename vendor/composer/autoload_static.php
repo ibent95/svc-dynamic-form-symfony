@@ -512,6 +512,7 @@ class ComposerStaticInit9d30e14add22c29681fea677ff4ed27a
         'App\\Entity\\PublicationFormVersion' => __DIR__ . '/../..' . '/src/Entity/PublicationFormVersion.php',
         'App\\Entity\\PublicationGeneralType' => __DIR__ . '/../..' . '/src/Entity/PublicationGeneralType.php',
         'App\\Entity\\PublicationMeta' => __DIR__ . '/../..' . '/src/Entity/PublicationMeta.php',
+        'App\\Entity\\PublicationMetaV2' => __DIR__ . '/../..' . '/src/Entity/PublicationMetaV2.php',
         'App\\Entity\\PublicationStatus' => __DIR__ . '/../..' . '/src/Entity/PublicationStatus.php',
         'App\\Entity\\PublicationType' => __DIR__ . '/../..' . '/src/Entity/PublicationType.php',
         'App\\Kernel' => __DIR__ . '/../..' . '/src/Kernel.php',

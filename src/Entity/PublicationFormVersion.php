@@ -3,13 +3,14 @@
 namespace App\Entity;
 
 use App\Repository\PublicationFormVersionRepository;
+
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
-#[ORM\Entity(repositoryClass: PublicationFormVersionRepository::class), ORM\HasLifecycleCallbacks]
+#[ORM\Entity(repositoryClass: PublicationFormVersionRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 #[ORM\Table(name: "publication_form_version")]
 class PublicationFormVersion
 {
@@ -17,9 +18,9 @@ class PublicationFormVersion
     #[Ignore]
     protected $id;
 
-    #[ORM\Column(type: 'bigint')]
-    //#[Ignore]
-    private $publication_type_id;
+    #[ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[Ignore]
+    private $id_publication_type;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Ignore]
@@ -38,7 +39,7 @@ class PublicationFormVersion
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
     #[Ignore]
-    protected $created_user;
+    protected $create_user;
 
     #[ORM\Column(type: 'datetime')]
     #[Ignore]
@@ -46,7 +47,7 @@ class PublicationFormVersion
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
     #[Ignore]
-    protected $updated_user;
+    protected $update_user;
 
     #[ORM\Column(type: 'datetime')]
     #[Ignore]
@@ -55,34 +56,45 @@ class PublicationFormVersion
     #[ORM\Column(type: 'guid')]
     protected $uuid;
 
-    #[ORM\ManyToOne(targetEntity: PublicationType::class, inversedBy: 'form_version')]
+    #[ORM\ManyToOne(targetEntity: PublicationType::class, inversedBy: 'form_versions', fetch: 'EAGER')]
+    #[ORM\JoinColumn(name: 'id_publication_type', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
-    protected $publicationType;
+    protected $publication_type;
 
-    #[ORM\OneToMany(mappedBy: 'publicationFormVersion', targetEntity: PublicationForm::class)]
+    #[ORM\OneToMany(mappedBy: 'form_version', targetEntity: PublicationMeta::class, fetch: 'EAGER', cascade: ["ALL"])]
     #[Ignore]
-    protected $publicationForms;
+    protected $publication_metas;
 
-    #[ORM\OneToMany(mappedBy: 'publicationFormVersion', targetEntity: Publication::class)]
+    #[ORM\OneToMany(mappedBy: 'form_version', targetEntity: PublicationForm::class, fetch: 'EAGER', cascade: ["ALL"])]
+    #[Ignore]
+    protected $forms;
+
+    #[ORM\OneToMany(mappedBy: 'publication_form_version', targetEntity: Publication::class, fetch: 'EAGER', cascade: ["ALL"])]
     #[Ignore]
     private $publications;
 
     public function __construct()
     {
-        $this->publicationForms = new ArrayCollection();
+        $this->publication_metas = new ArrayCollection();
+        $this->forms = new ArrayCollection();
         $this->publications = new ArrayCollection();
     }
 
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {
-        $this->created_at = new \DateTime("now");
+        $this->flag_active = true;
+        $this->created_at = new \DateTimeImmutable();
+        $this->create_user = 'system';
+        $this->updated_at = new \DateTimeImmutable();
+        $this->update_user = 'system';
     }
 
     #[ORM\PreUpdate]
     public function onPreUpdate(): void
     {
-        $this->updated_at = new \DateTime("now");
+        $this->updated_at = new \DateTimeImmutable();
+        $this->update_user = 'system';
     }
 
     public function getId(): ?string
@@ -90,14 +102,14 @@ class PublicationFormVersion
         return $this->id;
     }
 
-    public function getPublicationTypeId(): ?string
+    public function getIdPublicationType(): ?string
     {
-        return $this->publication_type_id;
+        return $this->id_publication_type;
     }
 
-    public function setPublicationTypeId(string $publication_type_id): self
+    public function setIdPublicationType(string $id_publication_type): self
     {
-        $this->publication_type_id = $publication_type_id;
+        $this->id_publication_type = $id_publication_type;
 
         return $this;
     }
@@ -151,14 +163,14 @@ class PublicationFormVersion
     }
 
     #[Ignore]
-    public function getCreatedUser(): ?string
+    public function getCreateUser(): ?string
     {
-        return $this->created_user;
+        return $this->create_user;
     }
 
-    public function setCreatedUser(?string $created_user): self
+    public function setCreateUser(?string $create_user): self
     {
-        $this->created_user = $created_user;
+        $this->create_user = $create_user;
 
         return $this;
     }
@@ -177,14 +189,14 @@ class PublicationFormVersion
     }
 
     #[Ignore]
-    public function getUpdatedUser(): ?string
+    public function getUpdateUser(): ?string
     {
-        return $this->updated_user;
+        return $this->update_user;
     }
 
-    public function setUpdatedUser(?string $updated_user): self
+    public function setUpdateUser(?string $update_user): self
     {
-        $this->updated_user = $updated_user;
+        $this->update_user = $update_user;
 
         return $this;
     }
@@ -214,14 +226,15 @@ class PublicationFormVersion
         return $this;
     }
 
+    #[Ignore]
     public function getPublicationType(): ?PublicationType
     {
-        return $this->publicationType;
+        return $this->publication_type;
     }
 
-    public function setPublicationType(?PublicationType $publicationType): self
+    public function setPublicationType(?PublicationType $publication_type): self
     {
-        $this->publicationType = $publicationType;
+        $this->publication_type = $publication_type;
 
         return $this;
     }
@@ -229,27 +242,28 @@ class PublicationFormVersion
     /**
      * @return Collection<int, PublicationForm>
      */
-    public function getPublicationForms(): Collection
+    #[Ignore]
+    public function getForms(): Collection
     {
-        return $this->publicationForms;
+        return $this->forms;
     }
 
-    public function addPublicationForm(PublicationForm $publicationForm): self
+    public function addForm(PublicationForm $publicationForm): self
     {
-        if (!$this->publicationForms->contains($publicationForm)) {
-            $this->publicationForms->add($publicationForm);
-            $publicationForm->setPublicationFormVersion($this);
+        if (!$this->forms->contains($publicationForm)) {
+            $this->forms->add($publicationForm);
+            $publicationForm->setFormVersion($this);
         }
 
         return $this;
     }
 
-    public function removePublicationForm(PublicationForm $publicationForm): self
+    public function removeForm(PublicationForm $publicationForm): self
     {
-        if ($this->publicationForms->removeElement($publicationForm)) {
+        if ($this->forms->removeElement($publicationForm)) {
             // set the owning side to null (unless already changed)
-            if ($publicationForm->getPublicationFormVersion() === $this) {
-                $publicationForm->setPublicationFormVersion(null);
+            if ($publicationForm->getFormVersion() === $this) {
+                $publicationForm->setFormVersion(null);
             }
         }
 
@@ -259,6 +273,7 @@ class PublicationFormVersion
     /**
      * @return Collection<int, Publication>
      */
+    #[Ignore]
     public function getPublications(): Collection
     {
         return $this->publications;
@@ -284,6 +299,15 @@ class PublicationFormVersion
         }
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, Publication>
+     */
+    #[Ignore]
+    public function getPublicationMetas(): Collection
+    {
+        return $this->publication_metas;
     }
 
 }
