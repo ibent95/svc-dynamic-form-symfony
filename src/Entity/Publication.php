@@ -22,15 +22,19 @@ class Publication
     private $title;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
+    #[Ignore]
     private $id_publication_general_type;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
+    #[Ignore]
     private $id_publication_type;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
+    #[Ignore]
     private $id_publication_form_version;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
+    #[Ignore]
     private $id_publication_status;
 
     #[ORM\Column(type: 'datetime', nullable: true)]
@@ -63,11 +67,10 @@ class Publication
         mappedBy: 'publication',
         targetEntity: PublicationMeta::class,
         cascade: ["ALL"],
-        fetch: 'EAGER',
         orphanRemoval: true,
     )]
     #[Ignore]
-    private $publication_metas;
+    private Collection $publication_metas;
 
     #[ORM\ManyToOne(
         targetEntity: PublicationGeneralType::class,
@@ -77,7 +80,7 @@ class Publication
     )]
     #[ORM\JoinColumn(name: 'id_publication_general_type', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
-    private $publication_general_type;
+    private PublicationGeneralType $publication_general_type;
 
     #[ORM\ManyToOne(
         targetEntity: PublicationType::class,
@@ -87,7 +90,7 @@ class Publication
     )]
     #[ORM\JoinColumn(name: 'id_publication_type', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
-    private $publication_type;
+    private PublicationType $publication_type;
 
     #[ORM\ManyToOne(
         targetEntity: PublicationFormVersion::class,
@@ -97,7 +100,7 @@ class Publication
     )]
     #[ORM\JoinColumn(name: 'id_publication_form_version', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
-    private $publication_form_version;
+    private PublicationFormVersion $publication_form_version;
 
     #[ORM\ManyToOne(
         targetEntity: PublicationStatus::class,
@@ -107,7 +110,7 @@ class Publication
     )]
     #[ORM\JoinColumn(name: 'id_publication_status', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
-    private $publication_status;
+    private PublicationStatus $publication_status;
 
     public function __construct()
     {

@@ -47,9 +47,14 @@ class PublicationStatus
     #[ORM\Column(type: 'guid')]
     private $uuid;
 
-    #[ORM\OneToMany(mappedBy: 'publication_status', targetEntity: Publication::class, fetch: 'EAGER', cascade: ["ALL"])]
+    #[ORM\OneToMany(
+        mappedBy: 'publication_status',
+        targetEntity: Publication::class,
+        fetch: 'EAGER',
+        cascade: ["ALL"]
+    )]
     #[Ignore]
-    private $publications;
+    private Collection $publications;
 
     public function __construct()
     {
@@ -71,37 +76,6 @@ class PublicationStatus
     {
         $this->updated_at = new \DateTimeImmutable();
         $this->update_user = 'system';
-    }
-
-    /**
-     * @return Collection<int, Publication>
-     */
-     #[Ignore]
-     public function getPublications(): Collection
-    {
-        return $this->publications;
-    }
-
-    public function addPublication(Publication $publication): self
-    {
-        if (!$this->publications->contains($publication)) {
-            $this->publications[] = $publication;
-            $publication->setPublicationStatus($this);
-        }
-
-        return $this;
-    }
-
-    public function removePublication(Publication $publication): self
-    {
-        if (
-            $this->publications->removeElement($publication) &&
-            $publication->getPublicationStatus() === $this
-        ) {
-            $publication->setPublicationStatus(null);
-        }
-
-        return $this;
     }
 
     public function getId(): ?string
@@ -206,6 +180,37 @@ class PublicationStatus
     public function setUuid(string $uuid): self
     {
         $this->uuid = $uuid;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Publication>
+     */
+    #[Ignore]
+    public function getPublications(): Collection
+    {
+        return $this->publications;
+    }
+
+    public function addPublication(Publication $publication): self
+    {
+        if (!$this->publications->contains($publication)) {
+            $this->publications[] = $publication;
+            $publication->setPublicationStatus($this);
+        }
+
+        return $this;
+    }
+
+    public function removePublication(Publication $publication): self
+    {
+        if (
+            $this->publications->removeElement($publication) &&
+            $publication->getPublicationStatus() === $this
+        ) {
+            $publication->setPublicationStatus(null);
+        }
 
         return $this;
     }

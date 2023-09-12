@@ -183,37 +183,30 @@ class PublicationQueryController extends AbstractController
 
             $index = 0;
             $publications               = ($publicationsRaw) ? $publicationsRaw->map(function ($item) use (&$index) {
-                $resultItem                             = $this->commonSvc->normalizeObject($item);
+                $resultItem                             = [];
                 
                 $resultItem['no']                       = $index + 1;
-                $resultItem['metadata']                 = $this->commonSvc->normalizeObject(
-                    $item->getPublicationMetas()
-                );
-                $resultItem['publication_general_type'] = $this->commonSvc->normalizeObject(
-                    $item->getPublicationGeneralType()
-                );
-                $resultItem['publication_type']         = $this->commonSvc->normalizeObject(
-                    $item->getPublicationType()
-                );
-                // $resultItem['publication_form_version'] = $this->commonSvc->normalizeObject(
-                //     $item->getPublicationFormVersion()
-                // );
-                // $resultItem['publication_status']       = $this->commonSvc->normalizeObject(
-                //     $item->getPublicationStatus()
-                // );
+                $resultItem['uuid']                     = $item->getUuid();
+                $resultItem['title']                    = $item->getTitle();
+                $resultItem['publication_date']         = $item->getPublicationDate();
+                $resultItem['meta_data']                = $item->getPublicationMetas();
+                $resultItem['publication_general_type'] = $item->getPublicationGeneralType();
+                $resultItem['publication_type']         = $item->getPublicationType();
+                $resultItem['publication_form_version'] = $item->getPublicationFormVersion();
+                $resultItem['publication_status']       = $item->getPublicationStatus();
                 
                 $index++;
 
                 return $resultItem;
-            })->toArray() : NULL;
-
+            }) : null ;
+            // dd($publicationsRaw, $publications);
             // Response data
             $this->responseData['data']     = $publications;
             $this->responseData['info']     = 'success';
             $this->responseData['message']  = 'Success to get publication form metadata!';
             $this->responseStatusCode       = 200;
 
-            $this->logger->info('Get publication form: ' . json_encode($this->responseData['data']));
+            $this->logger->info('Get publication form: ');
         } catch (\Exception $e) {
             $this->responseData['message']  = 'Error on get publication data!';
             $this->responseStatusCode       = 400;

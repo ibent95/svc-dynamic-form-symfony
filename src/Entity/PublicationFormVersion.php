@@ -23,11 +23,9 @@ class PublicationFormVersion
     private $id_publication_type;
 
     #[ORM\Column(type: 'string', length: 255)]
-    #[Ignore]
     protected $publication_form_version_name;
 
     #[ORM\Column(type: 'string', length: 50)]
-    #[Ignore]
     protected $publication_form_version_code;
 
     #[ORM\Column(
@@ -69,19 +67,29 @@ class PublicationFormVersion
     #[Ignore]
     protected $publication_type;
 
-    #[ORM\OneToMany(mappedBy: 'form_version', targetEntity: PublicationMeta::class, cascade: ['ALL'], fetch: 'EAGER')]
+    #[ORM\OneToMany(
+        mappedBy: 'form_version',
+        targetEntity: PublicationMeta::class,
+        fetch: 'EAGER',
+        cascade: ['ALL']
+    )]
     #[Ignore]
     protected $publication_metas;
 
-    #[ORM\OneToMany(mappedBy: 'form_version', targetEntity: PublicationForm::class, cascade: ['ALL'], fetch: 'EAGER')]
+    #[ORM\OneToMany(
+        mappedBy: 'form_version',
+        targetEntity: PublicationForm::class,
+        fetch: 'EAGER',
+        cascade: ['ALL']
+    )]
     #[Ignore]
     protected $forms;
 
     #[ORM\OneToMany(
         mappedBy: 'publication_form_version',
         targetEntity: Publication::class,
-        cascade: ["ALL"],
-        fetch: 'EAGER'
+        fetch: 'LAZY',
+        cascade: ["ALL"]
     )]
     #[Ignore]
     private $publications;
@@ -115,6 +123,7 @@ class PublicationFormVersion
         return $this->id;
     }
 
+    #[Ignore]
     public function getIdPublicationType(): ?string
     {
         return $this->id_publication_type;
@@ -163,7 +172,7 @@ class PublicationFormVersion
         return $this;
     }
 
-    public function isFlagActive(): ?bool
+    public function getFlagActive(): ?bool
     {
         return $this->flag_active;
     }
