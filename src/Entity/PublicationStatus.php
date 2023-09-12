@@ -76,7 +76,8 @@ class PublicationStatus
     /**
      * @return Collection<int, Publication>
      */
-    public function getPublications(): Collection
+     #[Ignore]
+     public function getPublications(): Collection
     {
         return $this->publications;
     }
@@ -93,11 +94,11 @@ class PublicationStatus
 
     public function removePublication(Publication $publication): self
     {
-        if ($this->publications->removeElement($publication)) {
-            // set the owning side to null (unless already changed)
-            if ($publication->getPublicationStatus() === $this) {
-                $publication->setPublicationStatus(null);
-            }
+        if (
+            $this->publications->removeElement($publication) &&
+            $publication->getPublicationStatus() === $this
+        ) {
+            $publication->setPublicationStatus(null);
         }
 
         return $this;
@@ -207,11 +208,6 @@ class PublicationStatus
         $this->uuid = $uuid;
 
         return $this;
-    }
-
-    public function isFlagActive(): ?bool
-    {
-        return $this->flag_active;
     }
 
 }

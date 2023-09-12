@@ -58,7 +58,12 @@ class PublicationType
     #[Ignore]
     private $publication_general_type;
 
-    #[ORM\OneToMany(mappedBy: 'publication_type', targetEntity: PublicationFormVersion::class, fetch: 'EAGER', cascade: ["ALL"])]
+    #[ORM\OneToMany(
+        mappedBy: 'publication_type',
+        targetEntity: PublicationFormVersion::class,
+        fetch: 'EAGER',
+        cascade: ["ALL"]
+    )]
     #[Ignore]
     private $form_versions;
 
@@ -92,6 +97,7 @@ class PublicationType
     /**
      * @return Collection<int, Publication>
      */
+    #[Ignore]
     public function getPublications(): Collection
     {
         return $this->publications;
@@ -279,11 +285,6 @@ class PublicationType
         }
 
         return $this;
-    }
-
-    public function isFlagActive(): ?bool
-    {
-        return $this->flag_active;
     }
 
 }

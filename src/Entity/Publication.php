@@ -59,26 +59,52 @@ class Publication
     #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
-    #[ORM\OneToMany(mappedBy: 'publication', targetEntity: PublicationMeta::class, fetch: 'EAGER', cascade: ["ALL"], orphanRemoval: true)]
+    #[ORM\OneToMany(
+        mappedBy: 'publication',
+        targetEntity: PublicationMeta::class,
+        cascade: ["ALL"],
+        fetch: 'EAGER',
+        orphanRemoval: true,
+    )]
     #[Ignore]
     private $publication_metas;
 
-    #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class, inversedBy: 'publications', fetch: 'EAGER')]
+    #[ORM\ManyToOne(
+        targetEntity: PublicationGeneralType::class,
+        cascade: ["ALL"],
+        fetch: 'EAGER',
+        inversedBy: 'publications'
+    )]
     #[ORM\JoinColumn(name: 'id_publication_general_type', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
     private $publication_general_type;
 
-    #[ORM\ManyToOne(targetEntity: PublicationType::class, inversedBy: 'publications', fetch: 'EAGER')]
+    #[ORM\ManyToOne(
+        targetEntity: PublicationType::class,
+        cascade: ["ALL"],
+        fetch: 'EAGER',
+        inversedBy: 'publications'
+    )]
     #[ORM\JoinColumn(name: 'id_publication_type', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
     private $publication_type;
 
-    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'publications', fetch: 'EAGER')]
+    #[ORM\ManyToOne(
+        targetEntity: PublicationFormVersion::class,
+        cascade: ["ALL"],
+        fetch: 'EAGER',
+        inversedBy: 'publications'
+    )]
     #[ORM\JoinColumn(name: 'id_publication_form_version', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
     private $publication_form_version;
 
-    #[ORM\ManyToOne(targetEntity: PublicationStatus::class, inversedBy: 'publications', fetch: 'EAGER')]
+    #[ORM\ManyToOne(
+        targetEntity: PublicationStatus::class,
+        cascade: ["ALL"],
+        fetch: 'EAGER',
+        inversedBy: 'publications'
+    )]
     #[ORM\JoinColumn(name: 'id_publication_status', referencedColumnName: 'id', onDelete:"CASCADE")]
     #[Ignore]
     private $publication_status;
@@ -295,11 +321,11 @@ class Publication
 
     public function removePublicationMetas(PublicationMeta $publicationMetas): self
     {
-        if ($this->publication_metas->removeElement($publicationMetas)) {
-            // set the owning side to null (unless already changed)
-            if ($publicationMetas->getPublication() === $this) {
-                $publicationMetas->setPublication(null);
-            }
+        if (
+            $this->publication_metas->removeElement($publicationMetas) &&
+            $publicationMetas->getPublication() === $this
+        ) {
+            $publicationMetas->setPublication(null);
         }
 
         return $this;
@@ -355,11 +381,6 @@ class Publication
         $this->publication_status = $publication_status;
 
         return $this;
-    }
-
-    public function isFlagActive(): ?bool
-    {
-        return $this->flag_active;
     }
 
 }

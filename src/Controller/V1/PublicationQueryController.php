@@ -32,7 +32,12 @@ class PublicationQueryController extends AbstractController
     private $dynamicFormSvc;
     private $publicationSvc;
 
-    public function __construct(LoggerInterface $logger, CommonService $commonSvc, DynamicFormService $dynamicFormSvc, PublicationService $publicationSvc)
+    public function __construct(
+        LoggerInterface $logger,
+        CommonService $commonSvc,
+        DynamicFormService $dynamicFormSvc,
+        PublicationService $publicationSvc
+    )
     {
         $this->logger               = $logger;
 
@@ -172,21 +177,33 @@ class PublicationQueryController extends AbstractController
         try {
             // PublicationType
             $publicationsParams         = []; // 'publication_type_code' => $publicationTypeCode
-            $publicationsRaw            = new ArrayCollection($entityManager->getRepository(Publication::class)->findBy($publicationsParams));
+            $publicationsRaw            = new ArrayCollection(
+                $entityManager->getRepository(Publication::class)->findBy($publicationsParams)
+            );
 
             $index = 0;
             $publications               = ($publicationsRaw) ? $publicationsRaw->map(function ($item) use (&$index) {
                 $resultItem                             = $this->commonSvc->normalizeObject($item);
                 
                 $resultItem['no']                       = $index + 1;
-                $resultItem['metadata']                 = $this->commonSvc->normalizeObject($item->getPublicationMetas());
-                $resultItem['publication_general_type'] = $this->commonSvc->normalizeObject($item->getPublicationGeneralType());
-                $resultItem['publication_type']         = $this->commonSvc->normalizeObject($item->getPublicationType());
-                $resultItem['publication_status']       = $this->commonSvc->normalizeObject($item->getPublicationStatus());
-                $resultItem['publication_form_version'] = $this->commonSvc->normalizeObject($item->getPublicationFormVersion());
+                $resultItem['metadata']                 = $this->commonSvc->normalizeObject(
+                    $item->getPublicationMetas()
+                );
+                $resultItem['publication_general_type'] = $this->commonSvc->normalizeObject(
+                    $item->getPublicationGeneralType()
+                );
+                $resultItem['publication_type']         = $this->commonSvc->normalizeObject(
+                    $item->getPublicationType()
+                );
+                // $resultItem['publication_form_version'] = $this->commonSvc->normalizeObject(
+                //     $item->getPublicationFormVersion()
+                // );
+                // $resultItem['publication_status']       = $this->commonSvc->normalizeObject(
+                //     $item->getPublicationStatus()
+                // );
                 
                 $index++;
-                // dump($resultItem);
+
                 return $resultItem;
             })->toArray() : NULL;
 
@@ -198,10 +215,12 @@ class PublicationQueryController extends AbstractController
 
             $this->logger->info('Get publication form: ' . json_encode($this->responseData['data']));
         } catch (\Exception $e) {
-            //$this->responseData['data']     = $e;
             $this->responseData['message']  = 'Error on get publication data!';
             $this->responseStatusCode       = 400;
-            $this->logger->error('Get form metadata exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(), [$e->getFile(), 'trace => ', $e->getTrace()]);
+            $this->logger->error(
+                'Get form metadata exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(),
+                [$e->getFile(), 'trace => ', $e->getTrace()]
+            );
         }
 
         return $this->json($this->responseData, $this->responseStatusCode);
@@ -209,7 +228,11 @@ class PublicationQueryController extends AbstractController
 
     /** =============================== Form metadata (Forms of Publication) =============================== */
 
-    #[Route('/api/v1/publication/form-metadata/{publicationTypeCode}', methods: ['GET'], name: 'app_v1_publication_form_metadata')]
+    #[Route(
+        '/api/v1/publication/form-metadata/{publicationTypeCode}',
+        methods: ['GET'],
+        name: 'app_v1_publication_form_metadata'
+    )]
     public function getFormMetadata(ManagerRegistry $doctrine, String $publicationTypeCode): JsonResponse
     {
         $entityManager                  = $doctrine->getManager();
@@ -223,12 +246,13 @@ class PublicationQueryController extends AbstractController
         try {
             // PublicationType
             $publicationTypeParams 			= ['publication_type_code' => $publicationTypeCode];
-            $publicationType 				= $entityManager->getRepository(PublicationType::class)->findActiveOneByCode($publicationTypeCode);
+            $publicationType 				= $entityManager->getRepository(PublicationType::class)->
+                findActiveOneByCode($publicationTypeCode);
 
             // FormVersion
             $formVersionsRaw                 = $publicationType->getFormVersions();
-            $formVersion                    = $this->publicationSvc->getOneFormVersionData($formVersionsRaw);
-            $formVersionNormalize           = ($formVersion) ? $this->commonSvc->normalizeObject($formVersion) : NULL;
+            $formVersion                    = $this->publicationSvc->getActiveFormVersionData($formVersionsRaw);
+            $formVersionNormalize           = ($formVersion) ? $this->commonSvc->normalizeObject($formVersion) : null;
 
             // Get Forms raw data
             $formsRaw						= $this->publicationSvc->getAllFormMetaData($formVersion->getForms());
@@ -241,14 +265,20 @@ class PublicationQueryController extends AbstractController
                     $fieldOptions			= explode('-', $field['field_options']);
 
                     // Get options of select from database (Master data or terms of taxonomy)
-                    $field['options']		= ($fieldOptions[0] === 'master') ? $entityManager->getRepository(PublicationForm::class)->getMasterData($fieldOptions[1]) : $entityManager->getRepository(PublicationForm::class)->getTaxonomyTerms($fieldOptions[1]) ;
+                    $field['options']		= ($fieldOptions[0] === 'master') ? 
+                        $entityManager->getRepository(PublicationForm::class)->getMasterData($fieldOptions[1]) : 
+                        $entityManager->getRepository(PublicationForm::class)->getTaxonomyTerms($fieldOptions[1]) ;
                 }
 
                 if ($field['field_type'] === 'autoselect') {
                     $fieldOptions			= explode('-', $field['field_options']);
 
                     // Get options of autoselect from database (Master data or terms of taxonomy)
-                    $field['options']		= ($fieldOptions[0] === 'master') ? $entityManager->getRepository(PublicationForm::class)->getMasterData($fieldOptions[1], 'ASC', 25) : $entityManager->getRepository(PublicationForm::class)->getTaxonomyTerms($fieldOptions[1], 'ASC', 25) ;
+                    $field['options']		= ($fieldOptions[0] === 'master') ? 
+                        $entityManager->getRepository(PublicationForm::class)->
+                            getMasterData($fieldOptions[1], 'ASC', 25) : 
+                        $entityManager->getRepository(PublicationForm::class)->
+                            getTaxonomyTerms($fieldOptions[1], 'ASC', 25) ;
                 }
 
                 return $field;
