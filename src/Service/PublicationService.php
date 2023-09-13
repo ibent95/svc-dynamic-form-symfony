@@ -329,14 +329,15 @@ class PublicationService {
                     $metaDataConfig->setValue(
                         $metaData['value']
                     );
-                    $metaDataConfig->setOtherValue([
-                        'text' => $metaData['value'],
-                        'uuid' => $metaData['value'],
-                    ]);
+                    $metaDataConfig->setOtherValue(
+                        $metaData['other_value']
+                    );
                     break;
 
                 default:
-                    $metaDataConfig->setValue($metaData['value']);
+                    $metaDataConfig->setValue(
+                        $metaData['value']
+                    );
                     break;
 			}
 
@@ -418,10 +419,9 @@ class PublicationService {
                 $results->setValue(
                     $metaData['value']
                 );
-                $results->setOtherValue([
-                    'text' => $metaData['value'],
-                    'uuid' => $metaData['value'],
-                ]);
+                $results->setOtherValue(
+                    $metaData['other_value']
+                );
                 break;
 
             default:
