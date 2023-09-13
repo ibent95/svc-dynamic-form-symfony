@@ -502,6 +502,8 @@ class ComposerStaticInit9d30e14add22c29681fea677ff4ed27a
 
     public static $classMap = array (
         'App\\Controller\\V1\\MainQueryController' => __DIR__ . '/../..' . '/src/Controller/V1/MainQueryController.php',
+        'App\\Controller\\V1\\Master\\PublicationStatusQueryController' => __DIR__ . '/../..' . '/src/Controller/V1/Master/PublicationStatusQueryController.php',
+        'App\\Controller\\V1\\Master\\PublicationTypeQueryController' => __DIR__ . '/../..' . '/src/Controller/V1/Master/PublicationTypeQueryController.php',
         'App\\Controller\\V1\\PublicationCommandController' => __DIR__ . '/../..' . '/src/Controller/V1/PublicationCommandController.php',
         'App\\Controller\\V1\\PublicationQueryController' => __DIR__ . '/../..' . '/src/Controller/V1/PublicationQueryController.php',
         'App\\Controller\\V1\\PublicationTypeQueryController' => __DIR__ . '/../..' . '/src/Controller/V1/PublicationTypeQueryController.php',
@@ -512,7 +514,6 @@ class ComposerStaticInit9d30e14add22c29681fea677ff4ed27a
         'App\\Entity\\PublicationFormVersion' => __DIR__ . '/../..' . '/src/Entity/PublicationFormVersion.php',
         'App\\Entity\\PublicationGeneralType' => __DIR__ . '/../..' . '/src/Entity/PublicationGeneralType.php',
         'App\\Entity\\PublicationMeta' => __DIR__ . '/../..' . '/src/Entity/PublicationMeta.php',
-        'App\\Entity\\PublicationMetaV2' => __DIR__ . '/../..' . '/src/Entity/PublicationMetaV2.php',
         'App\\Entity\\PublicationStatus' => __DIR__ . '/../..' . '/src/Entity/PublicationStatus.php',
         'App\\Entity\\PublicationType' => __DIR__ . '/../..' . '/src/Entity/PublicationType.php',
         'App\\Kernel' => __DIR__ . '/../..' . '/src/Kernel.php',

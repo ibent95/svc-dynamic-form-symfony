@@ -45,27 +45,27 @@ class PublicationRepository extends ServiceEntityRepository
         }
     }
 
-    ///**
-    // * @return Publication[] Returns an array of Publication objects
-    //*/
-    public function findAll(): ?Array
-    {
-        $result = $this->createQueryBuilder('p')
-            ->orderBy('p.id', 'ASC')
-            ->getQuery()
-            ->getArrayResult();
-        return $result;
-    }
-
-    /*
-    public function findOneBySomeField($value): ?Publication
+    /**
+    * @return Publication[] Returns an array of Publication objects
+    */
+    public function findAll(): ?array
     {
         return $this->createQueryBuilder('p')
-            ->andWhere('p.exampleField = :val')
-            ->setParameter('val', $value)
+        ->where('p.flag_active = :val')
+        ->orderBy('p.updated_at', 'DESC')
+        ->setParameter('val', true)
+        ->getQuery()
+        ->getResult();
+    }
+
+    public function findOneById($id): ?Publication
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.id = :val')
+            ->setParameter('val', $id)
             ->getQuery()
             ->getOneOrNullResult()
         ;
     }
-    */
+
 }

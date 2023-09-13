@@ -88,7 +88,7 @@ class PublicationFormVersion
     #[ORM\OneToMany(
         mappedBy: 'publication_form_version',
         targetEntity: Publication::class,
-        fetch: 'LAZY',
+        fetch: 'EAGER',
         cascade: ["ALL"]
     )]
     #[Ignore]

@@ -9,43 +9,48 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
-#[ORM\Entity(repositoryClass: PublicationStatusRepository::class)]
-#[ORM\HasLifecycleCallbacks]
-#[ORM\Table(name: "publication_status")]
+#[
+    ORM\Entity(repositoryClass: PublicationStatusRepository::class),ORM\HasLifecycleCallbacks,
+    ORM\Table(name: "publication_status")
+]
 class PublicationStatus
 {
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[
+        ORM\Id,
+        ORM\GeneratedValue,
+        ORM\Column(type: 'bigint', options: ["unsigned" => true])
+    ]
     #[Ignore]
-    private $id;
+    protected string $id;
 
     #[ORM\Column(type: 'string', length: 255)]
-    private $publication_status_name;
+    protected string $publication_status_name;
 
     #[ORM\Column(type: 'string', length: 50)]
-    private $publication_status_code;
+    protected string $publication_status_code;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
     #[Ignore]
-    private $flag_active;
+    protected $flag_active;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
     #[Ignore]
-    private $create_user;
+    protected string $create_user;
 
     #[ORM\Column(type: 'datetime')]
     #[Ignore]
-    private $created_at;
+    protected $created_at;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
     #[Ignore]
-    private $update_user;
+    protected string $update_user;
 
     #[ORM\Column(type: 'datetime')]
     #[Ignore]
-    private $updated_at;
+    protected $updated_at;
 
     #[ORM\Column(type: 'guid')]
-    private $uuid;
+    protected string $uuid;
 
     #[ORM\OneToMany(
         mappedBy: 'publication_status',
@@ -54,7 +59,7 @@ class PublicationStatus
         cascade: ["ALL"]
     )]
     #[Ignore]
-    private Collection $publications;
+    protected Collection $publications;
 
     public function __construct()
     {

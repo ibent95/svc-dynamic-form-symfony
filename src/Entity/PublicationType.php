@@ -9,12 +9,18 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
-#[ORM\Entity(repositoryClass: PublicationTypeRepository::class)]
-#[ORM\HasLifecycleCallbacks]
-#[ORM\Table(name: "publication_type")]
+#[
+    ORM\Entity(repositoryClass: PublicationTypeRepository::class),
+    ORM\HasLifecycleCallbacks,
+    ORM\Table(name: "publication_type")
+]
 class PublicationType
 {
-    #[ORM\Id, ORM\GeneratedValue(strategy: "IDENTITY"), ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[
+        ORM\Id,
+        ORM\GeneratedValue(strategy: "IDENTITY"),
+        ORM\Column(type: 'bigint', options: ["unsigned" => true])
+    ]
     #[Ignore]
     private $id;
 
@@ -53,8 +59,18 @@ class PublicationType
     #[ORM\Column(type: 'guid')]
     private $uuid;
 
-    #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class, inversedBy: 'publication_types', fetch: 'EAGER')]
-    #[ORM\JoinColumn(name: 'id_publication_general_type', referencedColumnName: 'id', onDelete:"CASCADE")]
+    #[
+        ORM\ManyToOne(
+            targetEntity: PublicationGeneralType::class,
+            inversedBy: 'publication_types',
+            fetch: 'EAGER'
+        ),
+        ORM\JoinColumn(
+            name: 'id_publication_general_type',
+            referencedColumnName: 'id',
+            onDelete:"CASCADE"
+        )
+    ]
     #[Ignore]
     private $publication_general_type;
 
@@ -67,7 +83,7 @@ class PublicationType
     #[Ignore]
     private $form_versions;
 
-    #[ORM\OneToMany(mappedBy: 'publication_type', targetEntity: Publication::class, fetch: 'EAGER', cascade: ["ALL"])]
+    #[ORM\OneToMany(mappedBy: 'publication_type', targetEntity: Publication::class, fetch: 'LAZY', cascade: ["ALL"])]
     #[Ignore]
     private $publications;
 

@@ -53,7 +53,7 @@ class PublicationGeneralType
         mappedBy: 'publication_general_type',
         targetEntity: PublicationType::class,
         fetch: 'EAGER',
-        cascade: ["ALL"]
+        cascade: ['ALL']
     )]
     #[Ignore]
     private $publication_types;
@@ -62,7 +62,7 @@ class PublicationGeneralType
         mappedBy: 'publication_general_type',
         targetEntity: Publication::class,
         fetch: 'EAGER',
-        cascade: ["ALL"]
+        cascade: ['ALL']
     )]
     #[Ignore]
     private $publications;

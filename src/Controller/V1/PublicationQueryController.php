@@ -176,42 +176,40 @@ class PublicationQueryController extends AbstractController
 
         try {
             // PublicationType
-            $publicationsParams         = []; // 'publication_type_code' => $publicationTypeCode
-            $publicationsRaw            = new ArrayCollection(
-                $entityManager->getRepository(Publication::class)->findBy($publicationsParams)
-            );
+            $publicationsParams         = [];
+            $publicationsRaw            = $entityManager->getRepository(Publication::class)->findAll();
 
-            $index = 0;
-            $publications               = ($publicationsRaw) ? $publicationsRaw->map(function ($item) use (&$index) {
-                $resultItem                             = [];
-                
-                $resultItem['no']                       = $index + 1;
-                $resultItem['uuid']                     = $item->getUuid();
-                $resultItem['title']                    = $item->getTitle();
-                $resultItem['publication_date']         = $item->getPublicationDate();
-                $resultItem['meta_data']                = $item->getPublicationMetas();
-                $resultItem['publication_general_type'] = $item->getPublicationGeneralType();
-                $resultItem['publication_type']         = $item->getPublicationType();
-                $resultItem['publication_form_version'] = $item->getPublicationFormVersion();
-                $resultItem['publication_status']       = $item->getPublicationStatus();
-                
-                $index++;
+            $publications               = $publicationsRaw;
+            // foreach ($publicationsRaw as $itemIndex => $item) {
+            //     $resultItem                             = $this->commonSvc->normalizeObject($item, 'json');
 
-                return $resultItem;
-            }) : null ;
-            // dd($publicationsRaw, $publications);
+            //     $resultItem['no']                       = $itemIndex + 1;
+            //     $resultItem['uuid']                     = $item->getUuid();
+            //     $resultItem['title']                    = $item->getTitle();
+            //     $resultItem['publication_date']         = $item->getPublicationDate();
+            //     $resultItem['meta_data']                = $item->getPublicationMetas();
+            //     $resultItem['publication_general_type'] = $item->getPublicationGeneralType();
+            //     $resultItem['publication_type']         = $item->getPublicationType();
+            //     $resultItem['publication_form_version'] = $item->getPublicationFormVersion();
+            //     $resultItem['publication_status']       = $item->getPublicationStatus();
+
+            //     $publications[] = $resultItem;
+            // }
+
+            // dd($publications);
+
             // Response data
             $this->responseData['data']     = $publications;
             $this->responseData['info']     = 'success';
-            $this->responseData['message']  = 'Success to get publication form metadata!';
+            $this->responseData['message']  = 'Success to get publications data!';
             $this->responseStatusCode       = 200;
 
-            $this->logger->info('Get publication form: ');
+            $this->logger->info('Get publications data: ');
         } catch (\Exception $e) {
-            $this->responseData['message']  = 'Error on get publication data!';
+            $this->responseData['message']  = 'Error on get publications data!';
             $this->responseStatusCode       = 400;
             $this->logger->error(
-                'Get form metadata exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(),
+                'Get publications data exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(),
                 [$e->getFile(), 'trace => ', $e->getTrace()]
             );
         }
@@ -281,7 +279,9 @@ class PublicationQueryController extends AbstractController
             $formsNormilizeRecursive		= $this->dynamicFormSvc->setFields($forms, $formVersion->getGridSystem());
 
             // Set value of recursive data of Forms to `forms` property in FormVersion data
-            if ($formVersion) $formVersionNormalize['forms'] = $formsNormilizeRecursive;
+            if ($formVersion) {
+                $formVersionNormalize['forms'] = $formsNormilizeRecursive;
+            }
 
             // Response data
             $this->responseData['data']     = $formVersionNormalize ?: [];
@@ -289,14 +289,17 @@ class PublicationQueryController extends AbstractController
             $this->responseData['message']  = 'Success to get publication form metadata!';
             $this->responseStatusCode       = 200;
 
-            $this->logger->info('Get publication form: ' . $publicationType->getPublicationTypeName()); // . json_encode($this->responseData['data'])
+            $this->logger->info('Get publication form: ' . $publicationType->getPublicationTypeName());
         } catch (\Exception $e) {
             $this->responseData['message']  = 'Error on get publication form metadata!';
             $this->responseStatusCode       = 400;
-            $this->logger->error('Get form metadata exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(), [$e->getFile(), $e->getTraceAsString()]);
+            $this->logger->error(
+                'Get form metadata exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(),
+                [$e->getFile(), $e->getTraceAsString()]
+            );
         }
 
-        return $this->json($this->responseData, $this->responseStatusCode); // new JsonResponse($this->responseData, $this->responseStatusCode, ["Content-Type" => "application/json"])
+        return $this->json($this->responseData, $this->responseStatusCode);
     }
 
     /** ======================================== Template functions ======================================== */
@@ -305,10 +308,14 @@ class PublicationQueryController extends AbstractController
     {
         $entityManager              = $doctrine->getManager();
 
-        $publications               = $entityManager->getRepository(Publication::class)->findAll();
-        $publicationGeneralType     = $entityManager->getRepository(PublicationGeneralType::class)->findOneBy(['id' => 1]);
-        $publicationType            = $entityManager->getRepository(PublicationType::class)->findOneBy(['id' => 1]);
-        $publicationStatus          = $entityManager->getRepository(PublicationStatus::class)->findOneBy(['id' => 1]);
+        $publications               = $entityManager->getRepository(Publication::class)->
+            findAll();
+        $publicationGeneralType     = $entityManager->getRepository(PublicationGeneralType::class)->
+            findOneBy(['id' => 1]);
+        $publicationType            = $entityManager->getRepository(PublicationType::class)->
+            findOneBy(['id' => 1]);
+        $publicationStatus          = $entityManager->getRepository(PublicationStatus::class)->
+            findOneBy(['id' => 1]);
 
         $this->responseData['data'] = $publications;
     }
