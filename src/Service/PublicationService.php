@@ -273,11 +273,13 @@ class PublicationService {
          * Remove the old Meta Data if there is Meta Data.
          * There are two options:
          * 1. Set active flag to false (0)
-         * 2. Remove existing data from PersistenceCollection (array)
+         * 2. Remove existing data from PersistenceCollection 
+         *    array ($results->removePublicationMetas($metaDataConfig);) 
          */
-        if (count($metaDataConfigs->toArray()) > 0) foreach ($metaDataConfigs as $metaDataConfigIndex => $metaDataConfig) {
-            $metaDataConfig->setFlagActive(false);
-            // $results->removePublicationMetas($metaDataConfig);
+        if (count($metaDataConfigs->toArray()) > 0) {
+            foreach ($metaDataConfigs as $metaDataConfigIndex => $metaDataConfig) {
+                $metaDataConfig->setFlagActive(false);
+            }
         }
 
         // Organize data

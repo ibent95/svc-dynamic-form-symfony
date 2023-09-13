@@ -200,7 +200,7 @@ class PublicationQueryController extends AbstractController
     /** =============================== Form metadata (Forms of Publication) =============================== */
 
     #[Route(
-        '/api/v1/publication/form-metadata/{publicationTypeCode}',
+        '/api/v1/publications/form-metadata/{publicationTypeCode}',
         methods: ['GET'],
         name: 'app_v1_publication_form_metadata'
     )]

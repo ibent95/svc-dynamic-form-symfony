@@ -30,7 +30,12 @@ class PublicationCommandController extends AbstractController
     private $dynamicFormSvc;
     private $publicationSvc;
 
-    public function __construct(LoggerInterface $logger, CommonService $commonSvc, DynamicFormService $dynamicFormSvc, PublicationService $publicationSvc)
+    public function __construct(
+        LoggerInterface $logger,
+        CommonService $commonSvc,
+        DynamicFormService $dynamicFormSvc,
+        PublicationService $publicationSvc
+    )
     {
         $this->logger               = $logger;
         $this->loggerMessage        = 'No process is running.';
@@ -55,7 +60,7 @@ class PublicationCommandController extends AbstractController
 
     #[Route('/api/v1/publications', methods: ['POST'], name: 'app_v1_publication_command_post')]
     #[Route('/api/v1/publications/{uuid}', methods: ['PUT'], name: 'app_v1_publication_command_put')]
-    public function save(ManagerRegistry $doctrine, Request $request, String $uuid = NULL): JsonResponse
+    public function save(ManagerRegistry $doctrine, Request $request, String $uuid = null): JsonResponse
     {
         /** @var $entityManager EntityManager */
         $entityManager = $doctrine->getManager();
@@ -76,11 +81,12 @@ class PublicationCommandController extends AbstractController
             ]);
             $publicationFormVersion     = $entityManager->getRepository(PublicationFormVersion::class)->findOneBy([
                 'id_publication_type' => $publicationType->getId(),
-                'flag_active' => TRUE
+                'flag_active' => true
             ]);
 
             // Get organized data
-            $publicationData                = $this->publicationSvc->setDataByDynamicForm($request, $publicationFormVersion, $publication);
+            $publicationData                = $this->publicationSvc
+                ->setDataByDynamicForm($request, $publicationFormVersion, $publication);
 
             // Create command
             if (!$uuid) {
@@ -90,7 +96,6 @@ class PublicationCommandController extends AbstractController
             
             // Update command
             if ($uuid) {
-                // $entityManager->persist($publicationData);
                 $this->loggerMessage = 'Update publication data: ';
             }
             $entityManager->flush();
@@ -104,38 +109,13 @@ class PublicationCommandController extends AbstractController
 
             $this->responseData['message']  = 'Error on save publication data!';
             $this->responseStatusCode       = 400;
-            $this->logger->error('Insert publication data exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(), [$e->getFile(), $e->getTraceAsString()]);
+            $this->logger->error(
+                'Insert publication data exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(),
+                [$e->getFile(), $e->getTraceAsString()]
+            );
         }
 
         return $this->json($this->responseData, $this->responseStatusCode);
     }
-
-    //#[Route('/api/v1/publication-test', methods: ['POST'], name: 'app_v1_publication_insert')]
-    //public function insert(ManagerRegistry $doctrine): JsonResponse
-    //{
-    //    $entityManager = $doctrine->getManager();
-
-    //    $this->responseData['info']     = 'error';
-    //    $this->responseData['message']  = '';
-    //    $this->responseStatusCode       = 500;
-
-    //    $publication = $entityManager->getRepository(Publication::class);
-
-    //    try {
-    //        $doctrine->connection->beginTransaction();
-
-    //        $this->responseData['data'] = $publication->findAll();
-
-    //        $doctrine->connection->commit();
-    //    } catch (\Exception $e) {
-    //        $doctrine->connection->rollBack();
-
-    //        $this->responseData['message']  = 'Error on get publication form metadata!';
-    //        $this->responseStatusCode       = 400;
-    //        $this->logger->error('Insert publication data exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(), [$e->getFile(), $e->getTraceAsString()]);
-    //    }
-
-    //    return $this->json($this->responseData, $this->responseStatusCode);
-    //}
 
 }
