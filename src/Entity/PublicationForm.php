@@ -7,45 +7,42 @@ use App\Repository\PublicationFormRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
-#[ORM\Entity(repositoryClass: PublicationFormRepository::class)]
-#[ORM\HasLifecycleCallbacks]
-#[ORM\Table(name: 'publication_form')]
+#[
+    ORM\Entity(repositoryClass: PublicationFormRepository::class),
+    ORM\HasLifecycleCallbacks,
+    ORM\Table(name: 'publication_form')
+]
 class PublicationForm
 {
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
-    //#[Ignore]
+    #[
+        ORM\Id,
+        ORM\GeneratedValue,
+        ORM\Column(type: 'bigint', options: ["unsigned" => true])
+    ]
     private $id;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
-    //#[Ignore]
     private $id_form_version;
 
     #[ORM\Column(type: 'bigint', nullable: true)]
-    //#[Ignore]
     private $id_form_parent;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    //#[Ignore]
     private $field_label;
 
     #[ORM\Column(type: 'string', length: 100)]
-    //#[Ignore]
     private $field_type;
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
-    //#[Ignore]
     private $field_name;
 
     #[ORM\Column(type: 'string', length: 100)]
-    //#[Ignore]
     private $field_id;
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
-    //#[Ignore]
     private $field_class;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    //#[Ignore]
     private $field_placeholder;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
@@ -53,35 +50,27 @@ class PublicationForm
     private $field_options;
 
     #[ORM\Column(type: 'json', nullable: true)]
-    //#[Ignore]
     private $field_configs = [];
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    //#[Ignore]
     private $description;
 
     #[ORM\Column(type: 'integer', nullable: true)]
-    //#[Ignore]
     private $order_position;
 
     #[ORM\Column(type: 'json', nullable: true)]
-    //#[Ignore]
     private $validation_configs = [];
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    //#[Ignore]
     private $error_message;
 
     #[ORM\Column(type: 'json', nullable: true)]
-    //#[Ignore]
     private $dependency_child = [];
 
     #[ORM\Column(type: 'json', nullable: true)]
-    //#[Ignore]
     private $dependency_parent = [];
 
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
-    //#[Ignore]
     private $flag_required;
 
     #[ORM\Column(options: ['default' => false])]
@@ -353,11 +342,6 @@ class PublicationForm
         return $this->flag_field_form_type;
     }
 
-    public function isFlagFieldFormType(): ?bool
-    {
-        return $this->flag_field_form_type;
-    }
-
     public function setFlagFieldFormType(bool $flag_field_form_type): self
     {
         $this->flag_field_form_type = $flag_field_form_type;
@@ -370,11 +354,6 @@ class PublicationForm
         return $this->flag_field_title;
     }
 
-    public function isFlagFieldTitle(): ?bool
-    {
-        return $this->flag_field_title;
-    }
-
     public function setFlagFieldTitle(bool $flag_field_title): self
     {
         $this->flag_field_title = $flag_field_title;
@@ -383,11 +362,6 @@ class PublicationForm
     }
 
     public function getFlagFieldPublishDate(): ?bool
-    {
-        return $this->flag_field_publish_date;
-    }
-
-    public function isFlagFieldPublishDate(): ?bool
     {
         return $this->flag_field_publish_date;
     }

@@ -7,6 +7,8 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'App\\Controller\\V1\\MainQueryController' => $baseDir . '/src/Controller/V1/MainQueryController.php',
+    'App\\Controller\\V1\\Master\\PublicationStatusQueryController' => $baseDir . '/src/Controller/V1/Master/PublicationStatusQueryController.php',
+    'App\\Controller\\V1\\Master\\PublicationTypeQueryController' => $baseDir . '/src/Controller/V1/Master/PublicationTypeQueryController.php',
     'App\\Controller\\V1\\PublicationCommandController' => $baseDir . '/src/Controller/V1/PublicationCommandController.php',
     'App\\Controller\\V1\\PublicationQueryController' => $baseDir . '/src/Controller/V1/PublicationQueryController.php',
     'App\\Controller\\V1\\PublicationTypeQueryController' => $baseDir . '/src/Controller/V1/PublicationTypeQueryController.php',
@@ -17,7 +19,6 @@ return array(
     'App\\Entity\\PublicationFormVersion' => $baseDir . '/src/Entity/PublicationFormVersion.php',
     'App\\Entity\\PublicationGeneralType' => $baseDir . '/src/Entity/PublicationGeneralType.php',
     'App\\Entity\\PublicationMeta' => $baseDir . '/src/Entity/PublicationMeta.php',
-    'App\\Entity\\PublicationMetaV2' => $baseDir . '/src/Entity/PublicationMetaV2.php',
     'App\\Entity\\PublicationStatus' => $baseDir . '/src/Entity/PublicationStatus.php',
     'App\\Entity\\PublicationType' => $baseDir . '/src/Entity/PublicationType.php',
     'App\\Kernel' => $baseDir . '/src/Kernel.php',

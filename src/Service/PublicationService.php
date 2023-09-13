@@ -27,7 +27,12 @@ class PublicationService {
     private $commonSvc;
     private $result;
 
-    public function __construct(ManagerRegistry $doctrine, LoggerInterface $logger, SerializerInterface $serializer, CommonService $commonSvc)
+    public function __construct(
+        ManagerRegistry $doctrine,
+        LoggerInterface $logger,
+        SerializerInterface $serializer,
+        CommonService $commonSvc
+    )
     {
 		$this->doctrine 		= $doctrine;
 		$this->doctrineManager 	= $doctrine->getManager();
@@ -39,25 +44,30 @@ class PublicationService {
 
         // Other service`s
         $this->commonSvc 		= $commonSvc;
+        $this->result           = null;
     }
 
-    public function getActiveFormVersionData(PersistentCollection $sourceData, $otherData = null): PublicationFormVersion
+    public function getActiveFormVersionData(
+        PersistentCollection $sourceData,
+        $otherData = null
+    ): PublicationFormVersion
     {
-        $data = [];
         // Criteria or Query
         $this->criteria->where(
             $this->exprBuilder->eq('flag_active', true)
         );
         
-        if ($otherData) $this->criteria->orWhere($this->exprBuilder->eq('id', $otherData->getId()));
-        
-        // FormVersion data
-        $data = $sourceData->matching($this->criteria)->first();
+        if ($otherData) {
+            $this->criteria->orWhere($this->exprBuilder->eq('id', $otherData->getId()));
+        }
 
-        return $data;
+        return $sourceData->matching($this->criteria)->first();
     }
 
-    public function getPublicationFormDataById(PersistentCollection | ArrayCollection $sourceData, String $id): PublicationForm | FALSE
+    public function getPublicationFormDataById(
+        PersistentCollection | ArrayCollection $sourceData,
+        String $id
+    ): PublicationForm | FALSE
     {
         $data = [];
 
@@ -72,7 +82,10 @@ class PublicationService {
         return $data;
     }
 
-    public function getPublicationFormDataByUuid(PersistentCollection | ArrayCollection $sourceData, String $uuid): PublicationForm | FALSE
+    public function getPublicationFormDataByUuid(
+        PersistentCollection | ArrayCollection $sourceData,
+        String $uuid
+    ): PublicationForm | FALSE
     {
         $data = [];
 
@@ -87,7 +100,10 @@ class PublicationService {
         return $data;
     }
 
-    public function getPublicationMetaDataById(PersistentCollection | ArrayCollection $sourceData, String $id): PublicationMeta | FALSE
+    public function getPublicationMetaDataById(
+        PersistentCollection | ArrayCollection $sourceData,
+        String $id
+    ): PublicationMeta | FALSE
     {
         $data = [];
 
@@ -102,7 +118,10 @@ class PublicationService {
         return $data;
     }
 
-    public function getPublicationMetaDataByUuid(PersistentCollection | ArrayCollection $sourceData, String $uuid): PublicationMeta | FALSE
+    public function getPublicationMetaDataByUuid(
+        PersistentCollection | ArrayCollection $sourceData,
+        String $uuid
+    ): PublicationMeta | FALSE
     {
         $data = [];
 
@@ -117,23 +136,23 @@ class PublicationService {
         return $data;
     }
 
-    public function getAllFormMetaData(PersistentCollection $sourceData, $otherData = null): Collection
+    public function getAllFormMetaData(PersistentCollection $sourceData): Collection
     {
-        $data = [];
-
         $this->criteria = $this->criteria->where(
             $this->exprBuilder->eq('flag_active', true)
         );
 
-        $data = $sourceData->matching($this->criteria);
-
-        return $data;
+        return $sourceData->matching($this->criteria);
     }
 
 	/**
 	 * This function response to get Main and Meta Data of input from Dynamic Form
 	 */
-	public function setDataByDynamicForm(Request $request, PublicationFormVersion $formVersion, Publication $publication = null): Publication | Array
+	public function setDataByDynamicForm(
+        Request $request,
+        PublicationFormVersion $formVersion,
+        Publication $publication = null
+    ): Publication | array
 	{
 		$results    = [];
 
@@ -146,7 +165,11 @@ class PublicationService {
 	/**
 	 * This function response to organize Main Data of input from Dynamic Form
 	 */
-	private function setMainData(Request | Array $request, PublicationFormVersion $formVersion, ?Publication $publication = null): Publication | Array
+	private function setMainData(
+        Request | array $request,
+        PublicationFormVersion $formVersion,
+        ?Publication $publication = null
+    ): Publication | array
 	{
         /**
          *  Initial value
@@ -158,9 +181,12 @@ class PublicationService {
 
 		// Get Form Configs of Main Data (if exists)
 		$formConfigs 			= $formVersion->getForms();
-		$formTypeFieldConfig 	= $this->setFieldConfigFromFormConfigs($formConfigs, 'flag_field_form_type', true) ?: 'form_type';
-		$titleFieldConfig 		= $this->setFieldConfigFromFormConfigs($formConfigs, 'flag_field_title', true) ?: 'title';
-		$publishDateFieldConfig = $this->setFieldConfigFromFormConfigs($formConfigs, 'flag_field_publish_date', true) ?: 'publication_date';
+		$formTypeFieldConfig 	= $this->setFieldConfigFromFormConfigs($formConfigs, 'flag_field_form_type', true)
+            ?: 'form_type';
+		$titleFieldConfig 		= $this->setFieldConfigFromFormConfigs($formConfigs, 'flag_field_title', true)
+            ?: 'title';
+		$publishDateFieldConfig = $this->setFieldConfigFromFormConfigs($formConfigs, 'flag_field_publish_date', true)
+            ?: 'publication_date';
 
 		// Organize the Main Data
         $generalFormType 		= $formVersion->getPublicationType()->getPublicationGeneralType() ?: null;
@@ -174,12 +200,21 @@ class PublicationService {
 
         foreach ($requestData['meta_data'] as $metaDataIndex => $metaData) {
             switch ($metaData['field_name']) {
-                case (is_string($titleFieldConfig)) ? $titleFieldConfig : $titleFieldConfig->getFieldName():
+                case (is_string($titleFieldConfig)) ?
+                    $titleFieldConfig :
+                    $titleFieldConfig->getFieldName():
+
                     $title          = $metaData['value'];
                     break;
-                case (is_string($publishDateFieldConfig)) ? $publishDateFieldConfig : $publishDateFieldConfig->getFieldName():
+
+                case (is_string($publishDateFieldConfig)) ? 
+                    $publishDateFieldConfig :
+                    $publishDateFieldConfig->getFieldName():
+
                     $publishDate    = $metaData['value'];
                     break;
+
+                default: break;
             }
         }
 
@@ -202,7 +237,11 @@ class PublicationService {
 	/**
 	 * This function response to organize Meta Data of input from Dynamic Form
 	 */
-	private function setMetaData(Request $request, PublicationFormVersion $formVersion, Publication $publication): Publication | Array
+	private function setMetaData(
+        Request $request,
+        PublicationFormVersion $formVersion,
+        Publication $publication
+    ): Publication | array
 	{
         // Initial value
 		$results        = $publication;
@@ -220,7 +259,11 @@ class PublicationService {
 		return $results;
 	}
 
-    private function updateMetaData(Array $requestData, PublicationFormVersion $formVersion, Publication $publication) : Publication | Array
+    private function updateMetaData(
+        array $requestData,
+        PublicationFormVersion $formVersion,
+        Publication $publication
+    ) : Publication | array
     {
         $results = $publication;
         $metaDataConfigs = $publication->getPublicationMetas();
@@ -302,7 +345,13 @@ class PublicationService {
         return $results;
     }
 
-    private function setPublicationMetaDataByPublicationFormConfig(PublicationMeta $publicationMeta, Publication $publication, PublicationFormVersion $formVersion, PublicationForm $fieldConfig, Array $metaData) : PublicationMeta
+    private function setPublicationMetaDataByPublicationFormConfig(
+        PublicationMeta $publicationMeta,
+        Publication $publication,
+        PublicationFormVersion $formVersion,
+        PublicationForm $fieldConfig,
+        array $metaData
+    ) : PublicationMeta
     {
         $results = $publicationMeta;
 
@@ -383,7 +432,11 @@ class PublicationService {
         return $results;
     }
 
-	private function setFieldConfigFromFormConfigs(PersistentCollection $formConfigs, string $key, mixed $value): object | false
+	private function setFieldConfigFromFormConfigs(
+        PersistentCollection $formConfigs,
+        string $key,
+        mixed $value
+    ): object | false
 	{
         $this->criteria->where(
 			$this->exprBuilder->eq($key, $value)
@@ -397,7 +450,7 @@ class PublicationService {
 	/**
 	 * [Experimental] This function response to organize all type of Data input from Dynamic Form
 	 */
-	public function dynamicDataAdjustment(Request | Array $request, Array $formConfigs): ArrayCollection
+	public function dynamicDataAdjustment(Request | array $request, array $formConfigs): ArrayCollection
 	{
 		$results = new ArrayCollection([]);
 
