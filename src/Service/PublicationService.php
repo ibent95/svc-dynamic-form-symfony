@@ -464,7 +464,10 @@ class PublicationService {
 				case 'step':
 				case 'multiple':
 					$results->add([
-						$fieldConfig->getFieldName() => $this->dynamicDataAdjustment($requestData[$fieldConfig->getFieldName()], $fieldConfig->getChildren())
+						$fieldConfig->getFieldName() => $this->dynamicDataAdjustment(
+                            $requestData[$fieldConfig->getFieldName()],
+                            $fieldConfig->getChildren()
+                        )
 					]);
 					break;
 
