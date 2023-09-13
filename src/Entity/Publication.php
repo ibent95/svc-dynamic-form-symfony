@@ -16,7 +16,10 @@ use Symfony\Component\Serializer\Annotation\Ignore;
 ]
 class Publication
 {
-    #[ORM\Id, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[
+        ORM\Id,
+        ORM\Column(type: 'bigint', options: ["unsigned" => true])
+    ]
     #[Ignore]
     private $id;
 
@@ -75,13 +78,15 @@ class Publication
     #[Ignore]
     private Collection $publication_metas;
 
-    #[ORM\ManyToOne(
-        targetEntity: PublicationGeneralType::class,
-        cascade: ["ALL"],
-        fetch: 'EAGER',
-        inversedBy: 'publications'
-    )]
-    #[ORM\JoinColumn(name: 'id_publication_general_type', referencedColumnName: 'id', onDelete:"CASCADE")]
+    #[
+        ORM\ManyToOne(
+            targetEntity: PublicationGeneralType::class,
+            cascade: ["ALL"],
+            fetch: 'EAGER',
+            inversedBy: 'publications'
+        ),
+        ORM\JoinColumn(name: 'id_publication_general_type', referencedColumnName: 'id', onDelete:"CASCADE")
+    ]
     private PublicationGeneralType $publication_general_type;
 
     #[

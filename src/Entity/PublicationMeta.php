@@ -7,12 +7,17 @@ use App\Repository\PublicationFormRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
-#[ORM\Entity(repositoryClass: PublicationFormRepository::class)]
-#[ORM\HasLifecycleCallbacks]
-#[ORM\Table(name: 'publication_meta')]
+#[
+    ORM\Entity(repositoryClass: PublicationFormRepository::class),
+    ORM\HasLifecycleCallbacks,
+    ORM\Table(name: 'publication_meta')
+]
 class PublicationMeta
 {
-    #[ORM\Id, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[
+        ORM\Id,
+        ORM\Column(type: 'bigint', options: ["unsigned" => true])
+    ]
     #[Ignore]
     private $id;
 
@@ -112,13 +117,17 @@ class PublicationMeta
     #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
-    #[ORM\ManyToOne(targetEntity: Publication::class, inversedBy: 'publication_metas', fetch: 'EAGER')]
-    #[ORM\JoinColumn(name: 'id_publication', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[
+        ORM\ManyToOne(targetEntity: Publication::class, inversedBy: 'publication_metas', fetch: 'EAGER'),
+        ORM\JoinColumn(name: 'id_publication', referencedColumnName: 'id', onDelete: 'CASCADE')
+    ]
     #[Ignore]
     private $publication;
 
-    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'EAGER')]
-    #[ORM\JoinColumn(name: 'id_form_version', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[
+        ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'EAGER'),
+        ORM\JoinColumn(name: 'id_form_version', referencedColumnName: 'id', onDelete: 'CASCADE')
+    ]
     #[Ignore]
     private $form_version;
 

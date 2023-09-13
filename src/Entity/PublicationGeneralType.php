@@ -9,12 +9,18 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
-#[ORM\Entity(repositoryClass: PublicationGeneralTypeRepository::class)]
-#[ORM\HasLifecycleCallbacks]
-#[ORM\Table(name: "publication_general_type")]
+#[
+    ORM\Entity(repositoryClass: PublicationGeneralTypeRepository::class),
+    ORM\HasLifecycleCallbacks,
+    ORM\Table(name: "publication_general_type")
+]
 class PublicationGeneralType
 {
-    #[ORM\Id, ORM\GeneratedValue(strategy: "IDENTITY"), ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[
+        ORM\Id,
+        ORM\GeneratedValue(strategy: "IDENTITY"),
+        ORM\Column(type: 'bigint', options: ["unsigned" => true])
+    ]
     #[Ignore]
     private $id;
 

@@ -9,12 +9,17 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
-#[ORM\Entity(repositoryClass: PublicationFormVersionRepository::class)]
-#[ORM\HasLifecycleCallbacks]
-#[ORM\Table(name: "publication_form_version")]
+#[
+    ORM\Entity(repositoryClass: PublicationFormVersionRepository::class),
+    ORM\HasLifecycleCallbacks,
+    ORM\Table(name: "publication_form_version")
+]
 class PublicationFormVersion
 {
-    #[ORM\Id, ORM\GeneratedValue(strategy: "IDENTITY"), ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[
+        ORM\Id, ORM\GeneratedValue(strategy: "IDENTITY"),
+        ORM\Column(type: 'bigint', options: ["unsigned" => true])
+    ]
     #[Ignore]
     protected $id;
 

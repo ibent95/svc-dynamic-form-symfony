@@ -102,7 +102,7 @@ class CommonService {
 
 		$this->serializer = new Serializer($normalizers);
 
-		$this->results = $this->serializer->normalize($object, $resultFormat, );
+		$this->results = $this->serializer->normalize($object, $resultFormat);
 
 		return $this->results;
 	}
@@ -187,7 +187,7 @@ class CommonService {
 
 		$this->serializer = new Serializer($normalizers, $encoders);
 
-		$this->results = $this->serializer->deserialize($object, $entityClassName, $resultFormat);
+		$this->results = $this->serializer->	deserialize($object, $entityClassName, $resultFormat);
 
 		return $this->results;
 	}

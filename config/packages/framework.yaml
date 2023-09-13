@@ -11,7 +11,7 @@ framework:
         circular_reference_handler: 'App\Service\CustomCircularReferenceHandler'
         default_context:
             allow_extra_attributes: false
-            ignored_attributes: ['lazyObjectState', 'lazyObjectInitialized', 'lazyObjectAsInitialized']
+            ignored_attributes: ["lazyObjectState", "lazyObjectInitialized", 'lazyObjectAsInitialized']
             enable_max_depth: false
             datetime_format: Y-m-d H:i:s
 
