@@ -10,7 +10,10 @@ framework:
         name_converter: 'serializer.name_converter.camel_case_to_snake_case'
         circular_reference_handler: 'App\Service\CustomCircularReferenceHandler'
         default_context:
+            allow_extra_attributes: false
+            ignored_attributes: ["lazyObjectState", "lazyObjectInitialized", 'lazyObjectAsInitialized']
             enable_max_depth: false
+            datetime_format: Y-m-d H:i:s
 
     # Enables session support. Note that the session will ONLY be started if you read or write from it.
     # Remove or comment this section to explicitly disable session support.

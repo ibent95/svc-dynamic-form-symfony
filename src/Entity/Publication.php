@@ -9,12 +9,17 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
-#[ORM\Entity(repositoryClass: PublicationRepository::class)]
-#[ORM\HasLifecycleCallbacks]
-#[ORM\Table(name: "publication")]
+#[
+    ORM\Entity(repositoryClass: PublicationRepository::class),
+    ORM\HasLifecycleCallbacks,
+    ORM\Table(name: "publication")
+]
 class Publication
 {
-    #[ORM\Id, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[
+        ORM\Id,
+        ORM\Column(type: 'bigint', options: ["unsigned" => true])
+    ]
     #[Ignore]
     private $id;
 
@@ -22,15 +27,19 @@ class Publication
     private $title;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
+    #[Ignore]
     private $id_publication_general_type;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
+    #[Ignore]
     private $id_publication_type;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
+    #[Ignore]
     private $id_publication_form_version;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
+    #[Ignore]
     private $id_publication_status;
 
     #[ORM\Column(type: 'datetime', nullable: true)]
@@ -59,29 +68,59 @@ class Publication
     #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
-    #[ORM\OneToMany(mappedBy: 'publication', targetEntity: PublicationMeta::class, fetch: 'EAGER', cascade: ["ALL"], orphanRemoval: true)]
+    #[ORM\OneToMany(
+        mappedBy: 'publication',
+        targetEntity: PublicationMeta::class,
+        cascade: ["ALL"],
+        orphanRemoval: true,
+        fetch: 'EAGER',
+    )]
     #[Ignore]
-    private $publication_metas;
+    private Collection $publication_metas;
 
-    #[ORM\ManyToOne(targetEntity: PublicationGeneralType::class, inversedBy: 'publications', fetch: 'EAGER')]
-    #[ORM\JoinColumn(name: 'id_publication_general_type', referencedColumnName: 'id', onDelete:"CASCADE")]
-    #[Ignore]
-    private $publication_general_type;
+    #[
+        ORM\ManyToOne(
+            targetEntity: PublicationGeneralType::class,
+            cascade: ["ALL"],
+            fetch: 'EAGER',
+            inversedBy: 'publications'
+        ),
+        ORM\JoinColumn(name: 'id_publication_general_type', referencedColumnName: 'id', onDelete:"CASCADE")
+    ]
+    private PublicationGeneralType $publication_general_type;
 
-    #[ORM\ManyToOne(targetEntity: PublicationType::class, inversedBy: 'publications', fetch: 'EAGER')]
-    #[ORM\JoinColumn(name: 'id_publication_type', referencedColumnName: 'id', onDelete:"CASCADE")]
-    #[Ignore]
-    private $publication_type;
+    #[
+        ORM\ManyToOne(
+            targetEntity: PublicationType::class,
+            cascade: ["ALL"],
+            fetch: 'EAGER',
+            inversedBy: 'publications'
+        ),
+        ORM\JoinColumn(name: 'id_publication_type', referencedColumnName: 'id', onDelete:"CASCADE")
+    ]
+    private PublicationType $publication_type;
 
-    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'publications', fetch: 'EAGER')]
-    #[ORM\JoinColumn(name: 'id_publication_form_version', referencedColumnName: 'id', onDelete:"CASCADE")]
-    #[Ignore]
-    private $publication_form_version;
+    #[
+        ORM\ManyToOne(
+            targetEntity: PublicationFormVersion::class,
+            cascade: ['ALL'],
+            fetch: 'EAGER',
+            inversedBy: 'publications'
+        ),
+        ORM\JoinColumn(name: 'id_publication_form_version', referencedColumnName: 'id', onDelete:'CASCADE')
+    ]
+    private PublicationFormVersion $publication_form_version;
 
-    #[ORM\ManyToOne(targetEntity: PublicationStatus::class, inversedBy: 'publications', fetch: 'EAGER')]
-    #[ORM\JoinColumn(name: 'id_publication_status', referencedColumnName: 'id', onDelete:"CASCADE")]
-    #[Ignore]
-    private $publication_status;
+    #[
+        ORM\ManyToOne(
+            targetEntity: PublicationStatus::class,
+            cascade: ['ALL'],
+            fetch: 'EAGER',
+            inversedBy: 'publications'
+        ),
+        ORM\JoinColumn(name: 'id_publication_status', referencedColumnName: 'id', onDelete:'CASCADE')
+    ]
+    private PublicationStatus $publication_status;
 
     public function __construct()
     {
@@ -283,29 +322,28 @@ class Publication
         return $this->publication_metas;
     }
 
-    public function addPublicationMetas(PublicationMeta $publicationMetas): self
+    public function addPublicationMetas(PublicationMeta $publication_metas): self
     {
-        if (!$this->publication_metas->contains($publicationMetas)) {
-            $this->publication_metas[] = $publicationMetas;
-            $publicationMetas->setPublication($this);
+        if (!$this->publication_metas->contains($publication_metas)) {
+            $this->publication_metas[] = $publication_metas;
+            $publication_metas->setPublication($this);
         }
 
         return $this;
     }
 
-    public function removePublicationMetas(PublicationMeta $publicationMetas): self
+    public function removePublicationMetas(PublicationMeta $publication_metas): self
     {
-        if ($this->publication_metas->removeElement($publicationMetas)) {
-            // set the owning side to null (unless already changed)
-            if ($publicationMetas->getPublication() === $this) {
-                $publicationMetas->setPublication(null);
-            }
+        if (
+            $this->publication_metas->removeElement($publication_metas) &&
+            $publication_metas->getPublication() === $this
+        ) {
+            $publication_metas->setPublication(null);
         }
 
         return $this;
     }
 
-    #[Ignore]
     public function getPublicationGeneralType(): ?PublicationGeneralType
     {
         return $this->publication_general_type;
@@ -318,7 +356,6 @@ class Publication
         return $this;
     }
 
-    #[Ignore]
     public function getPublicationType(): ?PublicationType
     {
         return $this->publication_type;
@@ -331,7 +368,6 @@ class Publication
         return $this;
     }
 
-    #[Ignore]
     public function getPublicationFormVersion(): ?PublicationFormVersion
     {
         return $this->publication_form_version;
@@ -344,7 +380,6 @@ class Publication
         return $this;
     }
 
-    #[Ignore]
     public function getPublicationStatus(): ?PublicationStatus
     {
         return $this->publication_status;
@@ -355,11 +390,6 @@ class Publication
         $this->publication_status = $publication_status;
 
         return $this;
-    }
-
-    public function isFlagActive(): ?bool
-    {
-        return $this->flag_active;
     }
 
 }

@@ -5,50 +5,50 @@ namespace App\Entity;
 use App\Repository\PublicationFormRepository;
 
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\ORM\Mapping\Table;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
-#[ORM\Entity(repositoryClass: PublicationFormRepository::class)]
-#[ORM\HasLifecycleCallbacks]
-#[ORM\Table(name: 'publication_meta')]
+#[
+    ORM\Entity(repositoryClass: PublicationFormRepository::class),
+    ORM\HasLifecycleCallbacks,
+    ORM\Table(name: 'publication_meta')
+]
 class PublicationMeta
 {
-    #[ORM\Id, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
-    //#[Ignore]
+    #[
+        ORM\Id,
+        ORM\Column(type: 'bigint', options: ["unsigned" => true])
+    ]
+    #[Ignore]
     private $id;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[Ignore]
     private $id_publication;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[Ignore]
     private $id_form_version;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
-    //#[Ignore]
+    #[Ignore]
     private $id_form_parent;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    //#[Ignore]
     private $field_label;
 
     #[ORM\Column(type: 'string', length: 100)]
-    //#[Ignore]
     private $field_type;
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
-    //#[Ignore]
     private $field_name;
 
     #[ORM\Column(type: 'string', length: 100)]
-    //#[Ignore]
     private $field_id;
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
-    //#[Ignore]
     private $field_class;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    //#[Ignore]
     private $field_placeholder;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
@@ -56,35 +56,27 @@ class PublicationMeta
     private $field_options;
 
     #[ORM\Column(type: 'json', nullable: true)]
-    //#[Ignore]
     private $field_configs = [];
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    //#[Ignore]
     private $description;
 
     #[ORM\Column(type: 'integer', nullable: true)]
-    //#[Ignore]
     private $order_position;
 
     #[ORM\Column(type: 'json', nullable: true)]
-    //#[Ignore]
     private $validation_configs = [];
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    //#[Ignore]
     private $error_message;
 
     #[ORM\Column(type: 'json', nullable: true)]
-    //#[Ignore]
     private $dependency_child = [];
 
     #[ORM\Column(type: 'json', nullable: true)]
-    //#[Ignore]
     private $dependency_parent = [];
 
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
-    //#[Ignore]
     private $flag_required;
 
     #[ORM\Column(options: ['default' => false])]
@@ -100,7 +92,6 @@ class PublicationMeta
     private $value;
 
     #[ORM\Column(type: 'json', nullable: true)]
-    //#[Ignore]
     private $other_value = null;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
@@ -126,13 +117,17 @@ class PublicationMeta
     #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
-    #[ORM\ManyToOne(targetEntity: Publication::class, inversedBy: 'publication_metas', fetch: 'EAGER')]
-    #[ORM\JoinColumn(name: 'id_publication', referencedColumnName: 'id', onDelete:"CASCADE")]
+    #[
+        ORM\ManyToOne(targetEntity: Publication::class, inversedBy: 'publication_metas', fetch: 'EAGER'),
+        ORM\JoinColumn(name: 'id_publication', referencedColumnName: 'id', onDelete: 'CASCADE')
+    ]
     #[Ignore]
     private $publication;
 
-    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'EAGER')]
-    #[ORM\JoinColumn(name: 'id_form_version', referencedColumnName: 'id', onDelete:"CASCADE")]
+    #[
+        ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'EAGER'),
+        ORM\JoinColumn(name: 'id_form_version', referencedColumnName: 'id', onDelete: 'CASCADE')
+    ]
     #[Ignore]
     private $form_version;
 
@@ -525,6 +520,7 @@ class PublicationMeta
         return $this;
     }
 
+    #[Ignore]
     public function getPublication(): ?Publication
     {
         return $this->publication;
@@ -536,7 +532,8 @@ class PublicationMeta
 
         return $this;
     }
-
+    
+    #[Ignore]
     public function getFormVersion(): ?PublicationFormVersion
     {
         return $this->form_version;

@@ -30,32 +30,34 @@ class CommonService {
 	private $entityManager;
 	private $exprBuilder;
 	private $criteria;
+	private $dateTimeFormat;
 
-	public function __construct(SerializerInterface $serializer, ManagerRegistry $doctrine, EntityManagerInterface $entityManager)
+	public function __construct(
+		SerializerInterface $serializer,
+		ManagerRegistry $doctrine,
+		EntityManagerInterface $entityManager
+	)
 	{
+		$this->results			= [];
 		/** @var $serializer SerializeInterface */
 		$this->serializer 		= $serializer;
 		$this->doctrine 		= $doctrine;
+		/** @var $doctrineManager ObjectManager */
 		$this->doctrineManager 	= $doctrine->getManager();
 		$this->entityManager 	= $entityManager;
 
 		$this->exprBuilder 		= Criteria::expr();
 		$this->criteria 		= new Criteria();
-
-		$this->results			= [];
+		$this->dateTimeFormat	= 'Y-m-d H:i:s';
 	}
 
-	public function getEntityIdentifierFromUnit($object): Mixed
+	public function getEntityIdentifierFromUnit(object $object): Mixed
 	{
-		/** @var $results EntityManager */
-		$this->results = $this->doctrineManager->getUnitOfWork()->getEntityIdentifier($object);
-
-		return $this->results;
+		return $this->doctrineManager->getUnitOfWork()->getEntityIdentifier($object);
 	}
 
 	public function createUUIDShort() : string
 	{
-		/** @var $this->doctrineManager EntityManager */
 		return $this->doctrineManager->getConnection()->executeQuery('SELECT UUID_SHORT() AS uuid_short')->fetchOne();
 	}
 
@@ -64,48 +66,71 @@ class CommonService {
 		return Uuid::v4();
 	}
 
-	public function normalizeObject($object, String $resultFormat = null, Bool $enableMaxDepth = false): ?Array
+	public function normalizeObject($object, string $resultFormat = null, bool $enableMaxDepth = false): ?array
 	{
-		$this->results = [];
+		$this->results = null;
 
-		$classMetadataFactory = new ClassMetadataFactory(new AnnotationLoader(new AnnotationReader()));
+		$classMetadataFactory = new ClassMetadataFactory(
+			new AnnotationLoader(
+				new AnnotationReader()
+			)
+		);
 
 		$dateTimeNormalizerDefaultContext = [
 			AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false,
-			DateTimeNormalizer::FORMAT_KEY => 'Y-m-d H:i:s'
+			DateTimeNormalizer::FORMAT_KEY => $this->dateTimeFormat
 		];
 
 		$objectNormalizerDefaultContext = [
 			AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false,
-			AbstractObjectNormalizer::ENABLE_MAX_DEPTH => $enableMaxDepth
+			AbstractNormalizer::IGNORED_ATTRIBUTES => [
+				'lazyObjectState',
+				'lazyObjectInitialized',
+				'lazyObjectAsInitialized'
+			],
+			AbstractObjectNormalizer::ENABLE_MAX_DEPTH => $enableMaxDepth,
+			AbstractObjectNormalizer::SKIP_UNINITIALIZED_VALUES => false,
 		];
 
 		$normalizers = [
 			new DateTimeNormalizer($dateTimeNormalizerDefaultContext),
-			new ObjectNormalizer($classMetadataFactory, new CamelCaseToSnakeCaseNameConverter(), null, null, null, null)
+			new ObjectNormalizer(
+				$classMetadataFactory,
+				new CamelCaseToSnakeCaseNameConverter(),
+				null, null, null, null,
+				$objectNormalizerDefaultContext
+			)
 		];
 
-		// $serializer = new Serializer();
+		$this->serializer = new Serializer($normalizers);
 
 		$this->results = $this->serializer->normalize($object, $resultFormat);
 
 		return $this->results;
 	}
 
-	public function serializeObject($object, String $resultFormat = null, Bool $enableMaxDepth = FALSE): ?String
+	public function serializeObject(
+		$object,
+		string $resultFormat = null,
+		bool $enableMaxDepth = false
+	): ?string
 	{
-		$result = NULL;
+		$this->results = null;
 
-		$classMetadataFactory = new ClassMetadataFactory(new AnnotationLoader(new AnnotationReader()));
+		$classMetadataFactory = new ClassMetadataFactory(
+			new AnnotationLoader(
+				new AnnotationReader()
+			)
+		);
 
 		$dateTimeNormalizerDefaultContext = [
 			AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false,
-			DateTimeNormalizer::FORMAT_KEY => 'Y-m-d H:i:s'
+			DateTimeNormalizer::FORMAT_KEY => $this->dateTimeFormat
 		];
 
 		$objectNormalizerDefaultContext = [
-			AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($object, $format, $context) {
-				return $object->getName();
+			AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($object) {
+				return $object->getId();
 			},
 			AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false,
 			AbstractObjectNormalizer::ENABLE_MAX_DEPTH => $enableMaxDepth
@@ -113,31 +138,45 @@ class CommonService {
 
 		$normalizers = [
 			new DateTimeNormalizer($dateTimeNormalizerDefaultContext),
-			new ObjectNormalizer($classMetadataFactory, new CamelCaseToSnakeCaseNameConverter(), null, null, null, null, $objectNormalizerDefaultContext)
+			new ObjectNormalizer(
+				$classMetadataFactory,
+				new CamelCaseToSnakeCaseNameConverter(),
+				null, null, null, null,
+				$objectNormalizerDefaultContext
+			)
 		];
 		$encoders = [new XmlEncoder(), new JsonEncoder()];
 
-		$serializer = new Serializer($normalizers, $encoders);
+		$this->serializer = new Serializer($normalizers, $encoders);
 
-		$result = $serializer->serialize($object, $resultFormat);
+		$this->results = $this->serializer->serialize($object, $resultFormat);
 
-		return $result;
+		return $this->results;
 	}
 
-	public function deserializeObject($object, String $entityClassName, String $resultFormat = null, Bool $enableMaxDepth = FALSE): ?String
+	public function deserializeObject(
+		$object,
+		string $entityClassName,
+		string $resultFormat = null,
+		bool $enableMaxDepth = false
+	): ?string
 	{
-		$result = NULL;
+		$this->results = null;
 
-		$classMetadataFactory = new ClassMetadataFactory(new AnnotationLoader(new AnnotationReader()));
+		$classMetadataFactory = new ClassMetadataFactory(
+			new AnnotationLoader(
+				new AnnotationReader()
+			)
+		);
 
 		$dateTimeNormalizerDefaultContext = [
 			AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false,
-			DateTimeNormalizer::FORMAT_KEY => 'Y-m-d H:i:s'
+			DateTimeNormalizer::FORMAT_KEY => $this->dateTimeFormat
 		];
 
 		$objectNormalizerDefaultContext = [
-			AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($object, $format, $context) {
-				return $object->getName();
+			AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($object) {
+				return $object->getId();
 			},
 			AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false,
 			AbstractObjectNormalizer::ENABLE_MAX_DEPTH => $enableMaxDepth
@@ -145,18 +184,23 @@ class CommonService {
 
 		$normalizers = [
 			new DateTimeNormalizer($dateTimeNormalizerDefaultContext),
-			new ObjectNormalizer($classMetadataFactory, new CamelCaseToSnakeCaseNameConverter(), null, null, null, null, $objectNormalizerDefaultContext)
+			new ObjectNormalizer(
+				$classMetadataFactory,
+				new CamelCaseToSnakeCaseNameConverter(),
+				null, null, null, null,
+				$objectNormalizerDefaultContext
+			)
 		];
 		$encoders = [new XmlEncoder(), new JsonEncoder()];
 
-		$serializer = new Serializer($normalizers, $encoders);
+		$this->serializer = new Serializer($normalizers, $encoders);
 
-		$result = $serializer->deserialize($object, $entityClassName, $resultFormat);
+		$this->results = $this->serializer->	deserialize($object, $entityClassName, $resultFormat);
 
-		return $result;
+		return $this->results;
 	}
 
-	public function removeRequestProperties(Request $request, Array $properties): Request
+	public function removeRequestProperties(Request $request, array $properties): Request
 	{
 		$results = $request;
 		foreach ($properties as $property) {
@@ -166,7 +210,7 @@ class CommonService {
 		return $results;
 	}
 
-	public function filterRequestProperties(Request $request, Array $properties): Request
+	public function filterRequestProperties(Request $request, array $properties): Request
 	{
 		$data = [];
 		foreach ($properties as $propertyIndex => $property) {
@@ -178,9 +222,8 @@ class CommonService {
 
 	public function stringReplace(String $baseString, String $fromString, String $toString): String
 	{
-		$results = new UnicodeString($baseString);
-		$results = $results->replace($fromString, $toString);
-		return $results;
+		$unicode = new UnicodeString($baseString);
+		return $unicode->replace($fromString, $toString);
 	}
 
 }

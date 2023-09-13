@@ -9,47 +9,58 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
-#[ORM\Entity(repositoryClass: PublicationStatusRepository::class)]
-#[ORM\HasLifecycleCallbacks]
-#[ORM\Table(name: "publication_status")]
+#[
+    ORM\Entity(repositoryClass: PublicationStatusRepository::class),
+    ORM\HasLifecycleCallbacks,
+    ORM\Table(name: "publication_status")
+]
 class PublicationStatus
 {
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[
+        ORM\Id,
+        ORM\GeneratedValue,
+        ORM\Column(type: 'bigint', options: ["unsigned" => true])
+    ]
     #[Ignore]
-    private $id;
+    protected string $id;
 
     #[ORM\Column(type: 'string', length: 255)]
-    private $publication_status_name;
+    protected string $publication_status_name;
 
     #[ORM\Column(type: 'string', length: 50)]
-    private $publication_status_code;
+    protected string $publication_status_code;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
     #[Ignore]
-    private $flag_active;
+    protected $flag_active;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
     #[Ignore]
-    private $create_user;
+    protected string $create_user;
 
     #[ORM\Column(type: 'datetime')]
     #[Ignore]
-    private $created_at;
+    protected $created_at;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
     #[Ignore]
-    private $update_user;
+    protected string $update_user;
 
     #[ORM\Column(type: 'datetime')]
     #[Ignore]
-    private $updated_at;
+    protected $updated_at;
 
     #[ORM\Column(type: 'guid')]
-    private $uuid;
+    protected string $uuid;
 
-    #[ORM\OneToMany(mappedBy: 'publication_status', targetEntity: Publication::class, fetch: 'EAGER', cascade: ["ALL"])]
+    #[ORM\OneToMany(
+        mappedBy: 'publication_status',
+        targetEntity: Publication::class,
+        fetch: 'EAGER',
+        cascade: ["ALL"]
+    )]
     #[Ignore]
-    private $publications;
+    protected Collection $publications;
 
     public function __construct()
     {
@@ -71,36 +82,6 @@ class PublicationStatus
     {
         $this->updated_at = new \DateTimeImmutable();
         $this->update_user = 'system';
-    }
-
-    /**
-     * @return Collection<int, Publication>
-     */
-    public function getPublications(): Collection
-    {
-        return $this->publications;
-    }
-
-    public function addPublication(Publication $publication): self
-    {
-        if (!$this->publications->contains($publication)) {
-            $this->publications[] = $publication;
-            $publication->setPublicationStatus($this);
-        }
-
-        return $this;
-    }
-
-    public function removePublication(Publication $publication): self
-    {
-        if ($this->publications->removeElement($publication)) {
-            // set the owning side to null (unless already changed)
-            if ($publication->getPublicationStatus() === $this) {
-                $publication->setPublicationStatus(null);
-            }
-        }
-
-        return $this;
     }
 
     public function getId(): ?string
@@ -209,9 +190,35 @@ class PublicationStatus
         return $this;
     }
 
-    public function isFlagActive(): ?bool
+    /**
+     * @return Collection<int, Publication>
+     */
+    #[Ignore]
+    public function getPublications(): Collection
     {
-        return $this->flag_active;
+        return $this->publications;
+    }
+
+    public function addPublication(Publication $publication): self
+    {
+        if (!$this->publications->contains($publication)) {
+            $this->publications[] = $publication;
+            $publication->setPublicationStatus($this);
+        }
+
+        return $this;
+    }
+
+    public function removePublication(Publication $publication): self
+    {
+        if (
+            $this->publications->removeElement($publication) &&
+            $publication->getPublicationStatus() === $this
+        ) {
+            $publication->setPublicationStatus(null);
+        }
+
+        return $this;
     }
 
 }

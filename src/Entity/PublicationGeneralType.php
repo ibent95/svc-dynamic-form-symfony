@@ -9,12 +9,18 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
-#[ORM\Entity(repositoryClass: PublicationGeneralTypeRepository::class)]
-#[ORM\HasLifecycleCallbacks]
-#[ORM\Table(name: "publication_general_type")]
+#[
+    ORM\Entity(repositoryClass: PublicationGeneralTypeRepository::class),
+    ORM\HasLifecycleCallbacks,
+    ORM\Table(name: "publication_general_type")
+]
 class PublicationGeneralType
 {
-    #[ORM\Id, ORM\GeneratedValue(strategy: "IDENTITY"), ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[
+        ORM\Id,
+        ORM\GeneratedValue(strategy: "IDENTITY"),
+        ORM\Column(type: 'bigint', options: ["unsigned" => true])
+    ]
     #[Ignore]
     private $id;
 
@@ -49,10 +55,22 @@ class PublicationGeneralType
     #[ORM\Column(type: 'guid')]
     private $uuid;
 
-    #[ORM\OneToMany(mappedBy: 'publication_general_type', targetEntity: PublicationType::class, fetch: 'EAGER', cascade: ["ALL"])]
+    #[ORM\OneToMany(
+        mappedBy: 'publication_general_type',
+        targetEntity: PublicationType::class,
+        fetch: 'EAGER',
+        cascade: ['ALL']
+    )]
+    #[Ignore]
     private $publication_types;
 
-    #[ORM\OneToMany(mappedBy: 'publication_general_type', targetEntity: Publication::class, fetch: 'EAGER', cascade: ["ALL"])]
+    #[ORM\OneToMany(
+        mappedBy: 'publication_general_type',
+        targetEntity: Publication::class,
+        fetch: 'EAGER',
+        cascade: ['ALL']
+    )]
+    #[Ignore]
     private $publications;
 
     public function __construct()
@@ -76,36 +94,6 @@ class PublicationGeneralType
     {
         $this->updated_at = new \DateTimeImmutable();
         $this->update_user = 'system';
-    }
-
-    /**
-     * @return Collection<int, Publication>
-     */
-    public function getPublications(): Collection
-    {
-        return $this->publications;
-    }
-
-    public function addPublication(Publication $publication): self
-    {
-        if (!$this->publications->contains($publication)) {
-            $this->publications[] = $publication;
-            $publication->setPublicationGeneralType($this);
-        }
-
-        return $this;
-    }
-
-    public function removePublication(Publication $publication): self
-    {
-        if ($this->publications->removeElement($publication)) {
-            // set the owning side to null (unless already changed)
-            if ($publication->getPublicationGeneralType() === $this) {
-                $publication->setPublicationGeneralType(null);
-            }
-        }
-
-        return $this;
     }
 
     public function getId(): ?string
@@ -148,11 +136,6 @@ class PublicationGeneralType
         $this->flag_active = $flag_active;
 
         return $this;
-    }
-
-    public function isFlagActive(): ?bool
-    {
-        return $this->flag_active;
     }
 
     #[Ignore]
@@ -223,7 +206,7 @@ class PublicationGeneralType
      * @return Collection<int, PublicationType>
      */
     #[Ignore]
-    public function getPublicationType(): Collection
+    public function getPublicationTypes(): Collection
     {
         return $this->publication_types;
     }
@@ -240,11 +223,42 @@ class PublicationGeneralType
 
     public function removePublicationType(PublicationType $publicationType): self
     {
-        if ($this->publication_types->removeElement($publicationType)) {
-            // set the owning side to null (unless already changed)
-            if ($publicationType->getPublicationGeneralType() === $this) {
-                $publicationType->setPublicationGeneralType(null);
-            }
+        if (
+            $this->publication_types->removeElement($publicationType) &&
+            $publicationType->getPublicationGeneralType() === $this
+        ) {
+            $publicationType->setPublicationGeneralType(null);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Publication>
+     */
+    #[Ignore]
+    public function getPublications(): Collection
+    {
+        return $this->publications;
+    }
+
+    public function addPublication(Publication $publication): self
+    {
+        if (!$this->publications->contains($publication)) {
+            $this->publications[] = $publication;
+            $publication->setPublicationGeneralType($this);
+        }
+
+        return $this;
+    }
+
+    public function removePublication(Publication $publication): self
+    {
+        if (
+            $this->publications->removeElement($publication) &&
+            $publication->getPublicationGeneralType() === $this
+        ) {
+            $publication->setPublicationGeneralType(null);
         }
 
         return $this;

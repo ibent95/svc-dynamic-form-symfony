@@ -9,12 +9,17 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
-#[ORM\Entity(repositoryClass: PublicationFormVersionRepository::class)]
-#[ORM\HasLifecycleCallbacks]
-#[ORM\Table(name: "publication_form_version")]
+#[
+    ORM\Entity(repositoryClass: PublicationFormVersionRepository::class),
+    ORM\HasLifecycleCallbacks,
+    ORM\Table(name: "publication_form_version")
+]
 class PublicationFormVersion
 {
-    #[ORM\Id, ORM\GeneratedValue(strategy: "IDENTITY"), ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[
+        ORM\Id, ORM\GeneratedValue(strategy: "IDENTITY"),
+        ORM\Column(type: 'bigint', options: ["unsigned" => true])
+    ]
     #[Ignore]
     protected $id;
 
@@ -23,14 +28,15 @@ class PublicationFormVersion
     private $id_publication_type;
 
     #[ORM\Column(type: 'string', length: 255)]
-    #[Ignore]
     protected $publication_form_version_name;
 
     #[ORM\Column(type: 'string', length: 50)]
-    #[Ignore]
     protected $publication_form_version_code;
 
-    #[ORM\Column(type: 'json', nullable: true, options: ['default' => '{"type":"no_grid_system","cols":12,"config":{}}'])] // '{"type":"no_grid_system","cols":12,"config":{}}'
+    #[ORM\Column(
+        type: 'json', nullable: true,
+        options: ['default' => '{"type":"no_grid_system","cols":12,"config":{}}']
+    )]
     private $grid_system = [];
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
@@ -56,20 +62,40 @@ class PublicationFormVersion
     #[ORM\Column(type: 'guid')]
     protected $uuid;
 
-    #[ORM\ManyToOne(targetEntity: PublicationType::class, inversedBy: 'form_versions', fetch: 'EAGER')]
-    #[ORM\JoinColumn(name: 'id_publication_type', referencedColumnName: 'id', onDelete:"CASCADE")]
+    #[ORM\ManyToOne(
+        targetEntity: PublicationType::class,
+        cascade: ['ALL'],
+        fetch: 'EAGER',
+        inversedBy: 'form_versions'
+    )]
+    #[ORM\JoinColumn(name: 'id_publication_type', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[Ignore]
     protected $publication_type;
 
-    #[ORM\OneToMany(mappedBy: 'form_version', targetEntity: PublicationMeta::class, fetch: 'EAGER', cascade: ["ALL"])]
+    #[ORM\OneToMany(
+        mappedBy: 'form_version',
+        targetEntity: PublicationMeta::class,
+        fetch: 'EAGER',
+        cascade: ['ALL']
+    )]
     #[Ignore]
     protected $publication_metas;
 
-    #[ORM\OneToMany(mappedBy: 'form_version', targetEntity: PublicationForm::class, fetch: 'EAGER', cascade: ["ALL"])]
+    #[ORM\OneToMany(
+        mappedBy: 'form_version',
+        targetEntity: PublicationForm::class,
+        fetch: 'EAGER',
+        cascade: ['ALL']
+    )]
     #[Ignore]
     protected $forms;
 
-    #[ORM\OneToMany(mappedBy: 'publication_form_version', targetEntity: Publication::class, fetch: 'EAGER', cascade: ["ALL"])]
+    #[ORM\OneToMany(
+        mappedBy: 'publication_form_version',
+        targetEntity: Publication::class,
+        fetch: 'EAGER',
+        cascade: ["ALL"]
+    )]
     #[Ignore]
     private $publications;
 
@@ -102,6 +128,7 @@ class PublicationFormVersion
         return $this->id;
     }
 
+    #[Ignore]
     public function getIdPublicationType(): ?string
     {
         return $this->id_publication_type;
@@ -150,7 +177,7 @@ class PublicationFormVersion
         return $this;
     }
 
-    public function isFlagActive(): ?bool
+    public function getFlagActive(): ?bool
     {
         return $this->flag_active;
     }
@@ -260,11 +287,11 @@ class PublicationFormVersion
 
     public function removeForm(PublicationForm $publicationForm): self
     {
-        if ($this->forms->removeElement($publicationForm)) {
-            // set the owning side to null (unless already changed)
-            if ($publicationForm->getFormVersion() === $this) {
-                $publicationForm->setFormVersion(null);
-            }
+        if (
+            $this->forms->removeElement($publicationForm) && 
+            $publicationForm->getFormVersion() === $this
+        ) {
+            $publicationForm->setFormVersion(null);
         }
 
         return $this;
@@ -291,11 +318,11 @@ class PublicationFormVersion
 
     public function removePublication(Publication $publication): self
     {
-        if ($this->publications->removeElement($publication)) {
-            // set the owning side to null (unless already changed)
-            if ($publication->getPublicationFormVersion() === $this) {
-                $publication->setPublicationFormVersion(null);
-            }
+        if (
+            $this->publications->removeElement($publication) &&
+            $publication->getPublicationFormVersion() === $this
+        ) {
+            $publication->setPublicationFormVersion(null);
         }
 
         return $this;
