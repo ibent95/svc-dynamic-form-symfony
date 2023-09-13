@@ -7,11 +7,11 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'App\\Controller\\V1\\MainQueryController' => $baseDir . '/src/Controller/V1/MainQueryController.php',
+    'App\\Controller\\V1\\Master\\PublicationGeneralTypeQueryController' => $baseDir . '/src/Controller/V1/Master/PublicationGeneralTypeQueryController.php',
     'App\\Controller\\V1\\Master\\PublicationStatusQueryController' => $baseDir . '/src/Controller/V1/Master/PublicationStatusQueryController.php',
     'App\\Controller\\V1\\Master\\PublicationTypeQueryController' => $baseDir . '/src/Controller/V1/Master/PublicationTypeQueryController.php',
     'App\\Controller\\V1\\PublicationCommandController' => $baseDir . '/src/Controller/V1/PublicationCommandController.php',
     'App\\Controller\\V1\\PublicationQueryController' => $baseDir . '/src/Controller/V1/PublicationQueryController.php',
-    'App\\Controller\\V1\\PublicationTypeQueryController' => $baseDir . '/src/Controller/V1/PublicationTypeQueryController.php',
     'App\\Controller\\V1\\ResearchQueryController' => $baseDir . '/src/Controller/V1/ResearchQueryController.php',
     'App\\Controller\\V1\\TestController' => $baseDir . '/src/Controller/V1/TestController.php',
     'App\\Entity\\Publication' => $baseDir . '/src/Entity/Publication.php',
