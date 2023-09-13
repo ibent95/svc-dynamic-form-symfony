@@ -172,31 +172,11 @@ class PublicationQueryController extends AbstractController
         $this->responseData['message']  = '';
         $this->responseStatusCode       = 500;
 
-        $result                         = NULL;
-
         try {
-            // PublicationType
-            $publicationsParams         = [];
-            $publicationsRaw            = $entityManager->getRepository(Publication::class)->findAll();
-
-            $publications               = $publicationsRaw;
-            // foreach ($publicationsRaw as $itemIndex => $item) {
-            //     $resultItem                             = $this->commonSvc->normalizeObject($item, 'json');
-
-            //     $resultItem['no']                       = $itemIndex + 1;
-            //     $resultItem['uuid']                     = $item->getUuid();
-            //     $resultItem['title']                    = $item->getTitle();
-            //     $resultItem['publication_date']         = $item->getPublicationDate();
-            //     $resultItem['meta_data']                = $item->getPublicationMetas();
-            //     $resultItem['publication_general_type'] = $item->getPublicationGeneralType();
-            //     $resultItem['publication_type']         = $item->getPublicationType();
-            //     $resultItem['publication_form_version'] = $item->getPublicationFormVersion();
-            //     $resultItem['publication_status']       = $item->getPublicationStatus();
-
-            //     $publications[] = $resultItem;
-            // }
-
-            // dd($publications);
+            $params                     = ['flag_active' => true];
+            $publications               = $entityManager->getRepository(Publication::class)->findBy(
+                $params
+            );
 
             // Response data
             $this->responseData['data']     = $publications;

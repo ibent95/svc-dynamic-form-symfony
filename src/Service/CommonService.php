@@ -30,6 +30,7 @@ class CommonService {
 	private $entityManager;
 	private $exprBuilder;
 	private $criteria;
+	private $dateTimeFormat;
 
 	public function __construct(
 		SerializerInterface $serializer,
@@ -37,29 +38,26 @@ class CommonService {
 		EntityManagerInterface $entityManager
 	)
 	{
+		$this->results			= [];
 		/** @var $serializer SerializeInterface */
 		$this->serializer 		= $serializer;
 		$this->doctrine 		= $doctrine;
+		/** @var $doctrineManager ObjectManager */
 		$this->doctrineManager 	= $doctrine->getManager();
 		$this->entityManager 	= $entityManager;
 
 		$this->exprBuilder 		= Criteria::expr();
 		$this->criteria 		= new Criteria();
-
-		$this->results			= [];
+		$this->dateTimeFormat	= 'Y-m-d H:i:s';
 	}
 
-	public function getEntityIdentifierFromUnit($object): Mixed
+	public function getEntityIdentifierFromUnit(object $object): Mixed
 	{
-		/** @var $results EntityManager */
-		$this->results = $this->doctrineManager->getUnitOfWork()->getEntityIdentifier($object);
-
-		return $this->results;
+		return $this->doctrineManager->getUnitOfWork()->getEntityIdentifier($object);
 	}
 
 	public function createUUIDShort() : string
 	{
-		/** @var $this->doctrineManager EntityManager */
 		return $this->doctrineManager->getConnection()->executeQuery('SELECT UUID_SHORT() AS uuid_short')->fetchOne();
 	}
 
@@ -70,7 +68,7 @@ class CommonService {
 
 	public function normalizeObject($object, string $resultFormat = null, bool $enableMaxDepth = false): ?array
 	{
-		$this->results = [];
+		$this->results = null;
 
 		$classMetadataFactory = new ClassMetadataFactory(
 			new AnnotationLoader(
@@ -80,12 +78,16 @@ class CommonService {
 
 		$dateTimeNormalizerDefaultContext = [
 			AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false,
-			DateTimeNormalizer::FORMAT_KEY => 'Y-m-d H:i:s'
+			DateTimeNormalizer::FORMAT_KEY => $this->dateTimeFormat
 		];
 
 		$objectNormalizerDefaultContext = [
 			AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false,
-			AbstractNormalizer::IGNORED_ATTRIBUTES => ['lazyObjectState', 'lazyObjectInitialized', 'lazyObjectAsInitialized'],
+			AbstractNormalizer::IGNORED_ATTRIBUTES => [
+				'lazyObjectState',
+				'lazyObjectInitialized',
+				'lazyObjectAsInitialized'
+			],
 			AbstractObjectNormalizer::ENABLE_MAX_DEPTH => $enableMaxDepth,
 			AbstractObjectNormalizer::SKIP_UNINITIALIZED_VALUES => false,
 		];
@@ -113,7 +115,7 @@ class CommonService {
 		bool $enableMaxDepth = false
 	): ?string
 	{
-		$result = NULL;
+		$this->results = null;
 
 		$classMetadataFactory = new ClassMetadataFactory(
 			new AnnotationLoader(
@@ -123,11 +125,11 @@ class CommonService {
 
 		$dateTimeNormalizerDefaultContext = [
 			AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false,
-			DateTimeNormalizer::FORMAT_KEY => 'Y-m-d H:i:s'
+			DateTimeNormalizer::FORMAT_KEY => $this->dateTimeFormat
 		];
 
 		$objectNormalizerDefaultContext = [
-			AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($object, $format, $context) {
+			AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($object) {
 				return $object->getId();
 			},
 			AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false,
@@ -159,15 +161,21 @@ class CommonService {
 		bool $enableMaxDepth = false
 	): ?string
 	{
-		$classMetadataFactory = new ClassMetadataFactory(new AnnotationLoader(new AnnotationReader()));
+		$this->results = null;
+
+		$classMetadataFactory = new ClassMetadataFactory(
+			new AnnotationLoader(
+				new AnnotationReader()
+			)
+		);
 
 		$dateTimeNormalizerDefaultContext = [
 			AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false,
-			DateTimeNormalizer::FORMAT_KEY => 'Y-m-d H:i:s'
+			DateTimeNormalizer::FORMAT_KEY => $this->dateTimeFormat
 		];
 
 		$objectNormalizerDefaultContext = [
-			AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($object, $format, $context) {
+			AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($object) {
 				return $object->getId();
 			},
 			AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false,
@@ -192,7 +200,7 @@ class CommonService {
 		return $this->results;
 	}
 
-	public function removeRequestProperties(Request $request, Array $properties): Request
+	public function removeRequestProperties(Request $request, array $properties): Request
 	{
 		$results = $request;
 		foreach ($properties as $property) {
@@ -202,7 +210,7 @@ class CommonService {
 		return $results;
 	}
 
-	public function filterRequestProperties(Request $request, Array $properties): Request
+	public function filterRequestProperties(Request $request, array $properties): Request
 	{
 		$data = [];
 		foreach ($properties as $propertyIndex => $property) {
@@ -214,9 +222,8 @@ class CommonService {
 
 	public function stringReplace(String $baseString, String $fromString, String $toString): String
 	{
-		$results = new UnicodeString($baseString);
-		$results = $results->replace($fromString, $toString);
-		return $results;
+		$unicode = new UnicodeString($baseString);
+		return $unicode->replace($fromString, $toString);
 	}
 
 }
