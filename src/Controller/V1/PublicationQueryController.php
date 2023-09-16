@@ -197,6 +197,42 @@ class PublicationQueryController extends AbstractController
         return $this->json($this->responseData, $this->responseStatusCode);
     }
 
+    #[Route('/api/v1/publications/{uuid}', methods: ['GET'], name: 'app_v1_publication_by_uuid')]
+    public function getByUuid(ManagerRegistry $doctrine, string $uuid): JsonResponse
+    {
+        $entityManager                  = $doctrine->getManager();
+
+        $this->responseData['info']     = 'error';
+        $this->responseData['message']  = '';
+        $this->responseStatusCode       = 500;
+
+        try {
+            $params                     = ['uuid' => $uuid];
+            $publication                = $entityManager->getRepository(Publication::class)->findOneBy(
+                $params
+            );
+
+            // Response data
+            $this->responseData['data']     = $publication;
+            $this->responseData['info']     = 'success';
+            $this->responseData['message']  = 'Success to get publication data!';
+            $this->responseStatusCode       = 200;
+
+            $this->logger->info('Get publication data by UUID `' . $uuid . '`.');
+        } catch (\Exception $e) {
+            $this->responseData['message']  = 'Error on get publication data!';
+            $this->responseStatusCode       = 400;
+            $this->logger->error(
+                'Get publication data by UUID `' . $uuid
+                    . '` exception log: ' . $e->getMessage()
+                    . ', line: ' . $e->getLine(),
+                [$e->getFile(), 'trace => ', $e->getTrace()]
+            );
+        }
+
+        return $this->json($this->responseData, $this->responseStatusCode);
+    }
+
     /** =============================== Form metadata (Forms of Publication) =============================== */
 
     #[Route(

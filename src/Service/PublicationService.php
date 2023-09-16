@@ -323,6 +323,10 @@ class PublicationService {
                      */
                     break;
 
+                case 'multiple_select':
+                case 'multiple_autoselect':
+                case 'multiple_autocomplete': break;
+
                 case 'select':
                 case 'autoselect':
                 case 'autocomplete':
@@ -334,6 +338,49 @@ class PublicationService {
                     );
                     break;
 
+                case 'file':
+                case 'image':
+                    $metaDataConfig->setValue(
+                        $metaData['value']
+                    );
+                    $metaDataConfig->setOtherValue([
+                        'file_name' => null,
+                        'path' => null,
+                        'url' => null
+                    ]);
+                    break;
+
+                case 'date':
+                case 'month':
+                case 'year':
+                case 'time':
+                case 'datetime':
+                case 'owl-date':
+                case 'owl-month':
+                case 'owl-year':
+                case 'owl-time':
+                case 'owl-datetime':
+                    $metaDataConfig->setValue(
+                        $metaData['value']
+                    );
+                    $metaDataConfig->setOtherValue([
+                        'value' => null,
+                        'text' => null
+                    ]);
+                    break;
+
+                case 'daterange':
+                case 'timerange':
+                case 'datetimerange':
+                case 'owl-daterange':
+                case 'owl-timerange':
+                case 'owl-datetimerange': break;
+
+                case 'radio':
+                case 'checkbox':
+                case 'mask':
+                case 'mask_full_time':
+                case 'url':
                 default:
                     $metaDataConfig->setValue(
                         $metaData['value']
@@ -413,6 +460,10 @@ class PublicationService {
                  */
                 break;
 
+            case 'multiple_select':
+            case 'multiple_autoselect':
+            case 'multiple_autocomplete': break;
+
             case 'select':
             case 'autoselect':
             case 'autocomplete':
@@ -424,6 +475,49 @@ class PublicationService {
                 );
                 break;
 
+            case 'file':
+            case 'image':
+                $results->setValue(
+                    $metaData['value']
+                );
+                $results->setOtherValue([
+                    'file_name' => null,
+                    'path' => null,
+                    'url' => null
+                ]);
+                break;
+
+            case 'date':
+            case 'month':
+            case 'year':
+            case 'time':
+            case 'datetime':
+            case 'owl-date':
+            case 'owl-month':
+            case 'owl-year':
+            case 'owl-time':
+            case 'owl-datetime':
+                $results->setValue(
+                    $metaData['value']
+                );
+                $results->setOtherValue([
+                    'value' => null,
+                    'text' => null
+                ]);
+                break;
+
+            case 'daterange':
+            case 'timerange':
+            case 'datetimerange':
+            case 'owl-daterange':
+            case 'owl-timerange':
+            case 'owl-datetimerange': break;
+
+            case 'radio':
+            case 'checkbox':
+            case 'mask':
+            case 'mask_full_time':
+            case 'url':
             default:
                 $results->setValue(
                     $metaData['value']
