@@ -208,9 +208,11 @@ class PublicationQueryController extends AbstractController
 
         try {
             $params                     = ['uuid' => $uuid];
-            $publication                = $entityManager->getRepository(Publication::class)->findOneBy(
+            $publicationRaw             = $entityManager->getRepository(Publication::class)->findOneBy(
                 $params
             );
+            $publication                = $this->commonSvc->normalizeObject($publicationRaw);
+            $publication['meta_data']   = $publicationRaw->getPublicationMetas();
 
             // Response data
             $this->responseData['data']     = $publication;
