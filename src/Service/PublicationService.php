@@ -193,7 +193,7 @@ class PublicationService {
 		$formType    			= $formVersion->getPublicationType() ?: null;
 		$formVersion 			= $formVersion ?: null;
 		$formStatus 			= ($this->doctrineManager->getRepository(PublicationStatus::class))->findOneBy([
-			'publication_status_code' => 'DRF'
+			'publication_status_code' => $requestData['publication_status_code']
 		]) ?: null;
         $title 					=  null;
 		$publishDate 			= null;
