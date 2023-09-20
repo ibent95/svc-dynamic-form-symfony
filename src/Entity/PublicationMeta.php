@@ -2,13 +2,13 @@
 
 namespace App\Entity;
 
-use App\Repository\PublicationFormRepository;
+use App\Repository\PublicationMetaRepository;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[
-    ORM\Entity(repositoryClass: PublicationFormRepository::class),
+    ORM\Entity(repositoryClass: PublicationMetaRepository::class),
     ORM\HasLifecycleCallbacks,
     ORM\Table(name: 'publication_meta')
 ]
@@ -18,7 +18,6 @@ class PublicationMeta
         ORM\Id,
         ORM\Column(type: 'bigint', options: ["unsigned" => true])
     ]
-    #[Ignore]
     private $id;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true])]
@@ -30,7 +29,6 @@ class PublicationMeta
     private $id_form_version;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
-    #[Ignore]
     private $id_form_parent;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]

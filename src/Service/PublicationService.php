@@ -136,7 +136,7 @@ class PublicationService {
         return $data;
     }
 
-    public function getAllFormMetaData(PersistentCollection $sourceData): Collection
+    public function getAllFormMetaData(PersistentCollection | ArrayCollection $sourceData): Collection
     {
         $this->criteria = $this->criteria->where(
             $this->exprBuilder->eq('flag_active', true)
