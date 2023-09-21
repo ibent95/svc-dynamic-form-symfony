@@ -118,4 +118,47 @@ class PublicationCommandController extends AbstractController
         return $this->json($this->responseData, $this->responseStatusCode);
     }
 
+    #[Route('/api/v1/publications/{uuid}', methods: ['DELETE'], name: 'app_v1_publication_command_delete')]
+    public function delete(ManagerRegistry $doctrine, Request $request, String $uuid = null) : JsonResponse {
+        /** @var $entityManager EntityManager */
+        $entityManager = $doctrine->getManager();
+
+        $this->responseData['info']     = 'error';
+        $this->responseData['message']  = '';
+        $this->responseStatusCode       = 200;
+        $this->loggerMessage            = 'Delete Publication data is running.';
+
+        try {
+            $entityManager->getConnection()->beginTransaction();
+
+            $publication                = ($uuid) ? $entityManager->getRepository(Publication::class)->findOneBy([
+                'flag_active' => true,
+                'uuid' => $uuid
+            ]) : null;
+
+            // Code
+            if ($publication) {
+                $publication->setFlagActive(false);
+            }
+
+            $entityManager->flush();
+            $entityManager->getConnection()->commit();
+            
+            $this->responseData['info']     = 'success';
+            $this->responseData['message']  = 'Success on delete publication data!';
+            $this->logger->info($this->loggerMessage, $this->commonSvc->normalizeObject($publication));
+        } catch (\Exception $e) {
+            $entityManager->getConnection()->rollBack();
+
+            $this->responseData['message']  = 'Error on delete publication data!';
+            $this->responseStatusCode       = 400;
+            $this->logger->error(
+                'Delete publication data exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(),
+                [$e->getFile(), $e->getTraceAsString()]
+            );
+        }
+
+        return $this->json($this->responseData, $this->responseStatusCode);
+    }
+
 }
