@@ -71,7 +71,7 @@ class Publication
     #[ORM\OneToMany(
         mappedBy: 'publication',
         targetEntity: PublicationMeta::class,
-        // cascade: ["ALL"],
+        cascade: ["ALL"],
         orphanRemoval: true,
         fetch: 'EAGER',
     )]

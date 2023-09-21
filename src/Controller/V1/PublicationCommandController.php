@@ -136,14 +136,13 @@ class PublicationCommandController extends AbstractController
                 'uuid' => $uuid
             ]) : null;
 
-            // Code
             if ($publication) {
                 $publication->setFlagActive(false);
             }
 
             $entityManager->flush();
             $entityManager->getConnection()->commit();
-            
+
             $this->responseData['info']     = 'success';
             $this->responseData['message']  = 'Success on delete publication data!';
             $this->logger->info($this->loggerMessage, $this->commonSvc->normalizeObject($publication));
