@@ -502,11 +502,11 @@ class ComposerStaticInit9d30e14add22c29681fea677ff4ed27a
 
     public static $classMap = array (
         'App\\Controller\\V1\\MainQueryController' => __DIR__ . '/../..' . '/src/Controller/V1/MainQueryController.php',
+        'App\\Controller\\V1\\Master\\PublicationGeneralTypeQueryController' => __DIR__ . '/../..' . '/src/Controller/V1/Master/PublicationGeneralTypeQueryController.php',
         'App\\Controller\\V1\\Master\\PublicationStatusQueryController' => __DIR__ . '/../..' . '/src/Controller/V1/Master/PublicationStatusQueryController.php',
         'App\\Controller\\V1\\Master\\PublicationTypeQueryController' => __DIR__ . '/../..' . '/src/Controller/V1/Master/PublicationTypeQueryController.php',
         'App\\Controller\\V1\\PublicationCommandController' => __DIR__ . '/../..' . '/src/Controller/V1/PublicationCommandController.php',
         'App\\Controller\\V1\\PublicationQueryController' => __DIR__ . '/../..' . '/src/Controller/V1/PublicationQueryController.php',
-        'App\\Controller\\V1\\PublicationTypeQueryController' => __DIR__ . '/../..' . '/src/Controller/V1/PublicationTypeQueryController.php',
         'App\\Controller\\V1\\ResearchQueryController' => __DIR__ . '/../..' . '/src/Controller/V1/ResearchQueryController.php',
         'App\\Controller\\V1\\TestController' => __DIR__ . '/../..' . '/src/Controller/V1/TestController.php',
         'App\\Entity\\Publication' => __DIR__ . '/../..' . '/src/Entity/Publication.php',
