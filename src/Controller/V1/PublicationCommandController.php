@@ -30,7 +30,12 @@ class PublicationCommandController extends AbstractController
     private $dynamicFormSvc;
     private $publicationSvc;
 
-    public function __construct(LoggerInterface $logger, CommonService $commonSvc, DynamicFormService $dynamicFormSvc, PublicationService $publicationSvc)
+    public function __construct(
+        LoggerInterface $logger,
+        CommonService $commonSvc,
+        DynamicFormService $dynamicFormSvc,
+        PublicationService $publicationSvc
+    )
     {
         $this->logger               = $logger;
         $this->loggerMessage        = 'No process is running.';
@@ -55,7 +60,7 @@ class PublicationCommandController extends AbstractController
 
     #[Route('/api/v1/publications', methods: ['POST'], name: 'app_v1_publication_command_post')]
     #[Route('/api/v1/publications/{uuid}', methods: ['PUT'], name: 'app_v1_publication_command_put')]
-    public function save(ManagerRegistry $doctrine, Request $request, String $uuid = NULL): JsonResponse
+    public function save(ManagerRegistry $doctrine, Request $request, String $uuid = null): JsonResponse
     {
         /** @var $entityManager EntityManager */
         $entityManager = $doctrine->getManager();
@@ -76,11 +81,12 @@ class PublicationCommandController extends AbstractController
             ]);
             $publicationFormVersion     = $entityManager->getRepository(PublicationFormVersion::class)->findOneBy([
                 'id_publication_type' => $publicationType->getId(),
-                'flag_active' => TRUE
+                'flag_active' => true
             ]);
 
             // Get organized data
-            $publicationData                = $this->publicationSvc->setDataByDynamicForm($request, $publicationFormVersion, $publication);
+            $publicationData                = $this->publicationSvc
+                ->setDataByDynamicForm($request, $publicationFormVersion, $publication);
 
             // Create command
             if (!$uuid) {
@@ -90,7 +96,6 @@ class PublicationCommandController extends AbstractController
             
             // Update command
             if ($uuid) {
-                // $entityManager->persist($publicationData);
                 $this->loggerMessage = 'Update publication data: ';
             }
             $entityManager->flush();
@@ -104,38 +109,55 @@ class PublicationCommandController extends AbstractController
 
             $this->responseData['message']  = 'Error on save publication data!';
             $this->responseStatusCode       = 400;
-            $this->logger->error('Insert publication data exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(), [$e->getFile(), $e->getTraceAsString()]);
+            $this->logger->error(
+                'Save publication data exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(),
+                [$e->getFile(), $e->getTraceAsString()]
+            );
         }
 
         return $this->json($this->responseData, $this->responseStatusCode);
     }
 
-    //#[Route('/api/v1/publication-test', methods: ['POST'], name: 'app_v1_publication_insert')]
-    //public function insert(ManagerRegistry $doctrine): JsonResponse
-    //{
-    //    $entityManager = $doctrine->getManager();
+    #[Route('/api/v1/publications/{uuid}', methods: ['DELETE'], name: 'app_v1_publication_command_delete')]
+    public function delete(ManagerRegistry $doctrine, Request $request, String $uuid = null) : JsonResponse {
+        /** @var $entityManager EntityManager */
+        $entityManager = $doctrine->getManager();
 
-    //    $this->responseData['info']     = 'error';
-    //    $this->responseData['message']  = '';
-    //    $this->responseStatusCode       = 500;
+        $this->responseData['info']     = 'error';
+        $this->responseData['message']  = '';
+        $this->responseStatusCode       = 200;
+        $this->loggerMessage            = 'Delete Publication data is running.';
 
-    //    $publication = $entityManager->getRepository(Publication::class);
+        try {
+            $entityManager->getConnection()->beginTransaction();
 
-    //    try {
-    //        $doctrine->connection->beginTransaction();
+            $publication                = ($uuid) ? $entityManager->getRepository(Publication::class)->findOneBy([
+                'flag_active' => true,
+                'uuid' => $uuid
+            ]) : null;
 
-    //        $this->responseData['data'] = $publication->findAll();
+            if ($publication) {
+                $publication->setFlagActive(false);
+            }
 
-    //        $doctrine->connection->commit();
-    //    } catch (\Exception $e) {
-    //        $doctrine->connection->rollBack();
+            $entityManager->flush();
+            $entityManager->getConnection()->commit();
 
-    //        $this->responseData['message']  = 'Error on get publication form metadata!';
-    //        $this->responseStatusCode       = 400;
-    //        $this->logger->error('Insert publication data exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(), [$e->getFile(), $e->getTraceAsString()]);
-    //    }
+            $this->responseData['info']     = 'success';
+            $this->responseData['message']  = 'Success on delete publication data!';
+            $this->logger->info($this->loggerMessage, $this->commonSvc->normalizeObject($publication));
+        } catch (\Exception $e) {
+            $entityManager->getConnection()->rollBack();
 
-    //    return $this->json($this->responseData, $this->responseStatusCode);
-    //}
+            $this->responseData['message']  = 'Error on delete publication data!';
+            $this->responseStatusCode       = 400;
+            $this->logger->error(
+                'Delete publication data exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(),
+                [$e->getFile(), $e->getTraceAsString()]
+            );
+        }
+
+        return $this->json($this->responseData, $this->responseStatusCode);
+    }
 
 }
