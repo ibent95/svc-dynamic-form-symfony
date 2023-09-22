@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\PublicationMetaRepository;
 
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
@@ -19,6 +20,10 @@ class PublicationMeta
         ORM\Column(type: 'bigint', options: ["unsigned" => true])
     ]
     private $id;
+
+    #[ORM\Column(type: Types::BIGINT, options: ["unsigned" => true])]
+    #[Ignore]
+    private $id_form;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true])]
     #[Ignore]
@@ -116,6 +121,12 @@ class PublicationMeta
     private $uuid;
 
     #[
+        ORM\ManyToOne(targetEntity: PublicationForm::class, inversedBy: 'publicationMeta', fetch: 'EAGER'),
+        ORM\JoinColumn(name: 'id_form', referencedColumnName: 'id', onDelete: 'CASCADE')
+    ]
+    private $form;
+
+    #[
         ORM\ManyToOne(targetEntity: Publication::class, inversedBy: 'publication_metas', fetch: 'EAGER'),
         ORM\JoinColumn(name: 'id_publication', referencedColumnName: 'id', onDelete: 'CASCADE')
     ]
@@ -160,6 +171,18 @@ class PublicationMeta
 
     public function isId(string $id) : bool {
         return $this->id == $id;
+    }
+
+    public function getIdForm(): ?string
+    {
+        return $this->id_form;
+    }
+
+    public function setIdForm(?string $id_form): static
+    {
+        $this->id_form = $id_form;
+
+        return $this;
     }
 
     #[Ignore]
@@ -417,7 +440,7 @@ class PublicationMeta
         return $this;
     }
 
-    public function getValue(): string
+    public function getValue(): ?string
     {
         return $this->value;
     }
@@ -519,6 +542,19 @@ class PublicationMeta
     }
 
     #[Ignore]
+    public function getForm(): ?PublicationForm
+    {
+        return $this->form;
+    }
+
+    public function setForm(?PublicationForm $form): static
+    {
+        $this->form = $form;
+
+        return $this;
+    }
+
+    #[Ignore]
     public function getPublication(): ?Publication
     {
         return $this->publication;
@@ -530,7 +566,7 @@ class PublicationMeta
 
         return $this;
     }
-    
+
     #[Ignore]
     public function getFormVersion(): ?PublicationFormVersion
     {

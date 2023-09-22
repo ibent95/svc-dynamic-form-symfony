@@ -69,17 +69,13 @@ class PublicationService {
         String $id
     ): PublicationForm | FALSE
     {
-        $data = [];
-
         // Criteria or Query
         $this->criteria->where(
             $this->exprBuilder->eq('id', $id)
         );
         
         // FormVersion data
-        $data = $sourceData->matching($this->criteria)->first();
-
-        return $data;
+        return $sourceData->matching($this->criteria)->first();
     }
 
     public function getPublicationFormDataByUuid(
@@ -87,17 +83,13 @@ class PublicationService {
         String $uuid
     ): PublicationForm | FALSE
     {
-        $data = [];
-
         // Criteria or Query
         $this->criteria->where(
             $this->exprBuilder->eq('uuid', $uuid)
         );
         
         // FormVersion data
-        $data = $sourceData->matching($this->criteria)->first();
-
-        return $data;
+        return $sourceData->matching($this->criteria)->first();
     }
 
     public function getPublicationMetaDataById(
@@ -105,17 +97,13 @@ class PublicationService {
         String $id
     ): PublicationMeta | FALSE
     {
-        $data = [];
-
         // Criteria or Query
         $this->criteria->where(
             $this->exprBuilder->eq('id', $id)
         );
         
         // FormVersion data
-        $data = $sourceData->matching($this->criteria)->first();
-
-        return $data;
+        return $sourceData->matching($this->criteria)->first();
     }
 
     public function getPublicationMetaDataByUuid(
@@ -123,26 +111,70 @@ class PublicationService {
         String $uuid
     ): PublicationMeta | FALSE
     {
-        $data = [];
-
         // Criteria or Query
         $this->criteria->where(
             $this->exprBuilder->eq('uuid', $uuid)
         );
         
         // FormVersion data
-        $data = $sourceData->matching($this->criteria)->first();
-
-        return $data;
+        return $sourceData->matching($this->criteria)->first();
     }
 
-    public function getAllFormMetaData(PersistentCollection | ArrayCollection $sourceData): Collection
+    public function getPublicationMetaDataByFieldName(
+        PersistentCollection | ArrayCollection $sourceData,
+        String $fieldName
+    ): PublicationMeta | FALSE
+    {
+        // Criteria or Query
+        $this->criteria->where(
+            $this->exprBuilder->eq('field_name', $fieldName)
+        );
+        
+        // FormVersion data
+        return $sourceData->matching($this->criteria)->first();
+    }
+
+    public function getAllFormMetaData(
+        PersistentCollection | ArrayCollection $sourceData
+    ): Collection
     {
         $this->criteria = $this->criteria->where(
             $this->exprBuilder->eq('flag_active', true)
         );
 
         return $sourceData->matching($this->criteria);
+    }
+
+    private function getFormConfigsByParentId(
+        PersistentCollection | ArrayCollection $sourceData,
+        string $parentId = null
+    ): Collection
+    {
+        $this->criteria = new Criteria();
+
+        if ($parentId) {
+            $this->criteria->where(
+                $this->exprBuilder->eq('id_form_parent', $parentId)
+            );
+        } else {
+            $this->criteria->where(
+                $this->exprBuilder->isNull('id_form_parent')
+            );
+        }
+
+        return $sourceData->matching($this->criteria);
+    }
+
+    public function getRequestMetaDataByUuid(
+        PersistentCollection | ArrayCollection $sourceData,
+        string $uuid
+    ): array | false
+    {
+        $this->criteria = $this->criteria->where(
+            $this->exprBuilder->eq('uuid', $uuid)
+        );
+
+        return $sourceData->matching($this->criteria)->first();
     }
 
 	/**
@@ -262,12 +294,16 @@ class PublicationService {
     private function updateMetaData(
         array $requestData,
         PublicationFormVersion $formVersion,
-        Publication $publication
+        Publication $publication,
+        PublicationMeta $parentMetaDataConfig = null
     ) : Publication | array
     {
-        $results = $publication;
-        $metaDataConfigs = $publication->getPublicationMetas();
-        $formConfigs = $formVersion->getForms();
+        $results            = $publication;
+        $metaDataConfigs    = $publication->getPublicationMetas();
+        $formConfigs        = $this->getFormConfigsByParentId(
+            $formVersion->getForms(),
+            ($parentMetaDataConfig) ? $parentMetaDataConfig->getIdForm() : null
+        );
 
         /**
          * Remove the old Meta Data if there is Meta Data.
@@ -282,45 +318,59 @@ class PublicationService {
             }
         }
 
-        // Organize data
-        foreach ($requestData['meta_data'] as $metaDataIndex => $metaData) {
+        // Organize data $requestData['meta_data']
+        foreach ($formConfigs->toArray() as $fieldConfigIndex => $fieldConfig) {
+
             /**
              * Initial value:
              * If there is Meta Data in previous Publication Meta Data, then use it as initial value.
              * Other than that, set Meta Data by Form Configuration.
              */
-            $metaDataConfig     = ($this->getPublicationMetaDataByUuid($metaDataConfigs, $metaData['uuid'])) ?
+            $metaData           = $this->getRequestMetaDataByUuid(
+                new ArrayCollection($requestData['meta_data']),
+                $fieldConfig->getUuid()
+            );
+
+            $metaDataConfig     = (
+                $metaData &&
                 $this->getPublicationMetaDataByUuid(
                     $metaDataConfigs,
                     $metaData['uuid']
                 )
-            :
-                $this->setPublicationMetaDataByPublicationFormConfig(
-                    new PublicationMeta(),
-                    $publication,
-                    $formVersion,
-                    $this->getPublicationFormDataByUuid($formConfigs, $metaData['uuid']),
-                    $metaData
-                )
-            ;
-
+            ) ?
+            $this->getPublicationMetaDataByUuid(
+                $metaDataConfigs,
+                $metaData['uuid']
+            ) :
+            $this->setPublicationMetaDataByPublicationFormConfig(
+                new PublicationMeta(),
+                $publication,
+                $formVersion,
+                $fieldConfig,
+                $metaData
+            ); // 4: $this->getPublicationFormDataByUuid($formConfigs, $metaData['uuid'])
             $metaDataConfig->setFlagActive(true);
 
             // Specifict handling by type of field
 			switch ($metaDataConfig->getFieldType()) {
-				case 'panel':
-                case 'accordion':
-                case 'well':
-                case 'step':
                 case 'multiple':
-                    /** 
-                     * $metaDataConfig->setValue(
-                     *  $this->getMainDataByDynamicForm(
-                     *      $metaData['value'],
-                     *      $fieldConfig->getChildren()
-                     *  )
-                     * ); 
-                     */
+                    $metaDataConfig->setValue(
+                        $metaData['value'] ?? null
+                    );
+                    dd($metaDataConfig->getFieldType(), $requestData, $metaData);
+                    break;
+                    
+                case 'well':
+                case 'accordion':
+                case 'panel':
+                case 'stepper':
+                case 'step':
+                    $this->updateMetaData(
+                        $requestData,
+                        $formVersion,
+                        $results,
+                        $metaDataConfig
+                    );
                     break;
 
                 case 'multiple_select':
@@ -331,17 +381,17 @@ class PublicationService {
                 case 'autoselect':
                 case 'autocomplete':
                     $metaDataConfig->setValue(
-                        $metaData['value']
+                        $metaData['value'] ?? null
                     );
                     $metaDataConfig->setOtherValue(
-                        $metaData['other_value']
+                        $metaData['other_value'] ?? null
                     );
                     break;
 
                 case 'file':
                 case 'image':
                     $metaDataConfig->setValue(
-                        $metaData['value']
+                        $metaData['value'] ?? null
                     );
                     $metaDataConfig->setOtherValue([
                         'file_name' => null,
@@ -361,7 +411,7 @@ class PublicationService {
                 case 'owl-time':
                 case 'owl-datetime':
                     $metaDataConfig->setValue(
-                        $metaData['value']
+                        $metaData['value'] ?? null
                     );
                     $metaDataConfig->setOtherValue([
                         'value' => null,
@@ -383,10 +433,15 @@ class PublicationService {
                 case 'url':
                 default:
                     $metaDataConfig->setValue(
-                        $metaData['value']
+                        $metaData['value'] ?? null
                     );
                     break;
 			}
+
+            if ($parentMetaDataConfig) {
+                // $parent
+                $metaDataConfig->setIdFormParent($parentMetaDataConfig->getId());
+            }
 
             // Push the Meta Data to Main Data
             $results->addPublicationMetas($metaDataConfig);
@@ -400,7 +455,7 @@ class PublicationService {
         Publication $publication,
         PublicationFormVersion $formVersion,
         PublicationForm $fieldConfig,
-        array $metaData
+        array | false $metaData
     ) : PublicationMeta
     {
         $results = $publicationMeta;
@@ -414,8 +469,10 @@ class PublicationService {
         $results->setUuid($this->commonSvc->createUUID());
 
         // Master data
+        $results->setIdForm($fieldConfig->getId());
+        $results->setForm($fieldConfig);
         $results->setIdPublication($publication->getId());
-        $results->setPublication($publication);
+        // $results->setPublication($publication);
         $results->setIdFormVersion($formVersion->getId());
         $results->setFormVersion($formVersion);
         $results->setIdFormParent($fieldConfig->getIdFormParent());
@@ -468,17 +525,17 @@ class PublicationService {
             case 'autoselect':
             case 'autocomplete':
                 $results->setValue(
-                    $metaData['value']
+                    $metaData['value'] ?? null
                 );
                 $results->setOtherValue(
-                    $metaData['other_value']
+                    $metaData['other_value'] ?? null
                 );
                 break;
 
             case 'file':
             case 'image':
                 $results->setValue(
-                    $metaData['value']
+                    $metaData['value'] ?? null
                 );
                 $results->setOtherValue([
                     'file_name' => null,
@@ -498,7 +555,7 @@ class PublicationService {
             case 'owl-time':
             case 'owl-datetime':
                 $results->setValue(
-                    $metaData['value']
+                    $metaData['value'] ?? null
                 );
                 $results->setOtherValue([
                     'value' => null,
@@ -520,7 +577,7 @@ class PublicationService {
             case 'url':
             default:
                 $results->setValue(
-                    $metaData['value']
+                    $metaData['value'] ?? null
                 );
                 break;
         }

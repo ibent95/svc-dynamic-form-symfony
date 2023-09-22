@@ -367,7 +367,7 @@ class PublicationQueryController extends AbstractController
             // FormVersion
             $formVersion                    = $publication->getPublicationFormVersion();
             $formVersionNormalize           = ($formVersion) ? $this->commonSvc->normalizeObject($formVersion) : null;
-            
+
             /** Get Forms (Metadata) data.
              *  Note: There is a bug in $publication->getPublicationMetas(),
              *        that always get one extra row of last ArrayCollection.
