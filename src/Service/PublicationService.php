@@ -8,6 +8,7 @@ use App\Entity\PublicationFormVersion;
 use App\Entity\PublicationMeta;
 use App\Entity\PublicationStatus;
 
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
@@ -229,23 +230,23 @@ class PublicationService {
 		$formStatus 			= ($this->doctrineManager->getRepository(PublicationStatus::class))->findOneBy([
 			'publication_status_code' => $requestData['publication_status_code']
 		]) ?: null;
-        $title 					=  null;
+        $title 					= null;
 		$publishDate 			= null;
 
         foreach ($requestData['meta_data'] as $metaDataIndex => $metaData) {
             switch ($metaData['field_name']) {
-                case (is_string($titleFieldConfig)) ?
-                    $titleFieldConfig :
-                    $titleFieldConfig->getFieldName():
+                case (is_string($titleFieldConfig))
+                    ? $titleFieldConfig
+                    : $titleFieldConfig->getFieldName():
 
                     $title          = $metaData['value'];
                     break;
 
-                case (is_string($publishDateFieldConfig)) ? 
-                    $publishDateFieldConfig :
-                    $publishDateFieldConfig->getFieldName():
+                case (is_string($publishDateFieldConfig))
+                    ? $publishDateFieldConfig
+                    : $publishDateFieldConfig->getFieldName():
 
-                    $publishDate    = $metaData['value'];
+                    $publishDate    = new DateTime($metaData['value']);
                     break;
 
                 default: break;
