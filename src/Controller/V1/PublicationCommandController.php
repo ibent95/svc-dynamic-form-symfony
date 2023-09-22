@@ -110,7 +110,7 @@ class PublicationCommandController extends AbstractController
             $this->responseData['message']  = 'Error on save publication data!';
             $this->responseStatusCode       = 400;
             $this->logger->error(
-                'Insert publication data exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(),
+                'Save publication data exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(),
                 [$e->getFile(), $e->getTraceAsString()]
             );
         }

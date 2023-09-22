@@ -108,7 +108,14 @@ class DynamicFormService
 		$recursiveData = $this->setRecursiveFields('id', 'id_form_parent', $flatArray, NULL, $gridSystem);
 
 		// Clean property of recursive data
-		$data = $this->cleanFields(["id", "id_form_version", "id_form_parent", "order", "flag_judul_publikasi", "flag_tgl_publikasi", "flag_peran"], $recursiveData);
+		$data = $this->cleanFields(
+			[
+				"id", "id_form", "id_form_version", "id_form_parent", 
+				"order", "flag_judul_publikasi", "flag_tgl_publikasi", 
+				"flag_peran"
+			],
+			$recursiveData
+		);
 
 		// Return data
 		return $data;
@@ -117,7 +124,11 @@ class DynamicFormService
 	/**
 	 * Recursive function to set array recursive data from flat array data
 	 */
-	function setRecursiveFields(String $uniqueField, String $idParentField, Array &$elements = [], String $parentId = NULL, Array $gridSystem = NULL): Array
+	function setRecursiveFields(
+		String $uniqueField, String $idParentField,
+		Array &$elements = [], String $parentId = NULL,
+		Array $gridSystem = NULL
+	): Array
 	{
 		$branch = [];
 		foreach ($elements as $element) {
@@ -134,7 +145,10 @@ class DynamicFormService
 				$exprBuilder			= Criteria::expr();
 
 				// Run recursive search
-				$children				= $this->setRecursiveFields($uniqueField, $idParentField, $elements, $element[$uniqueField], $gridSystem);
+				$children				= $this->setRecursiveFields(
+					$uniqueField, $idParentField, $elements,
+					$element[$uniqueField], $gridSystem
+				);
 
 				//
 				if ($element['dependency_parent'] || $element['dependency_child']) {
@@ -147,17 +161,6 @@ class DynamicFormService
 
 				$element['children'] = ($children) ? $children : [];
 				if ($element['field_type'] == 'multiple') {
-					//if ($element['field_name'] === 'keanggotaan') $element['children'][] = [
-					//	"id" => NULL, "id_publikasi_form_versi" => NULL,
-					//	"id_publikasi_form_induk" => NULL, "field_label" => NULL,
-					//	"id_field" => NULL, "field_type" => "hidden",
-					//	"class_field" => NULL, "field_name" => "nik_keanggotaan",
-					//	"field_placeholder" => NULL, "field_options" => NULL,
-					//	"default_value" => NULL, "validation_config" => NULL,
-					//	"tabel" => "publikasi_meta", "flag_multiple_field" => 0,
-					//	"order" => 1, "uuid_form" => NULL,
-					//	"children" => []
-					//];
 
 					$element['children'][] = [
 						"field_label"			=> NULL,
@@ -189,7 +192,10 @@ class DynamicFormService
 				$childrenCount					= $childrenCollectionMatch->count();
 
 				// Define flag_multiple_field set it`s value to true if multiple field found in children data
-				$element['flag_multiple_field'] = (($element['field_type'] == 'wizard' || $element['field_type'] == 'stepper') && (count($children) > 0) && ($childrenCount > 0)) ? TRUE : FALSE;
+				$element['flag_multiple_field'] = (
+					($element['field_type'] == 'wizard' || $element['field_type'] == 'stepper') &&
+					(count($children) > 0) && ($childrenCount > 0)
+				) ? TRUE : FALSE;
 
 				// Handling or setting grid configuration
 
@@ -217,7 +223,9 @@ class DynamicFormService
 
 			// Procceed to filter element property
 			foreach ($element as $key => $value) {
-				if (!in_array($key, $acceptableFields)) $elementCollections[$key] = $value;
+				if (!in_array($key, $acceptableFields)) {
+					$elementCollections[$key] = $value;
+				}
 			}
 
 			// Search for children data to filter it recursively
@@ -243,7 +251,9 @@ class DynamicFormService
 		$elementGridConfig = $gridSystem['config'][$element['field_id']] ?? NULL;
 
 		// Merge current element`s or field`s config with grid system config
-		$result = ($element && $elementGridConfig) ? array_merge($element['field_configs'] ?: [], $elementGridConfig ?: []) : $element['field_configs'];
+		$result = ($element && $elementGridConfig)
+			? array_merge($element['field_configs'] ?: [], $elementGridConfig ?: [])
+			: $element['field_configs'];
 
 		return $result;
 	}
@@ -251,11 +261,23 @@ class DynamicFormService
 	/**
 	 * This function response to get Main and Meta Data of input from Dynamic Form
 	 */
-	public function getDataByDynamicForm(Request $request, $formVersion = null, string $titleFieldName = 'title', string $generalFormTypeIdFieldName = null, string $formTypeIdFieldName = null, string $formVersionIdFieldName = null, string $formStatusIdFieldName = null, string $publishDateFieldName = null): Array
+	public function getDataByDynamicForm(
+		Request $request, $formVersion = null,
+		string $titleFieldName = 'title',
+		string $generalFormTypeIdFieldName = null,
+		string $formTypeIdFieldName = null,
+		string $formVersionIdFieldName = null,
+		string $formStatusIdFieldName = null,
+		string $publishDateFieldName = null
+	): Array
 	{
 		$results = [];
 
-		$mainData = $this->getMainDataByDynamicForm($request, $formVersion, $titleFieldName, $generalFormTypeIdFieldName, $formTypeIdFieldName, $formVersionIdFieldName, $formStatusIdFieldName, $publishDateFieldName);
+		$mainData = $this->getMainDataByDynamicForm(
+			$request, $formVersion, $titleFieldName,
+			$generalFormTypeIdFieldName, $formTypeIdFieldName,
+			$formVersionIdFieldName, $formStatusIdFieldName, $publishDateFieldName
+		);
 		$metaData = $this->getMetaDataByDynamicForm($request, $formVersion, $mainData);
 
 		$results = [
@@ -269,7 +291,12 @@ class DynamicFormService
 	/**
 	 * This function response to organize Main Data of input from Dynamic Form
 	 */
-	public function getMainDataByDynamicForm(Request | Array $request, $formVersion, string $titleFieldName = 'title', string $generalFormTypeIdFieldName = null, string $formTypeIdFieldName = null, string $formVersionIdFieldName = null, string $formStatusIdFieldName = null, string $publishDateFieldName = null): Array
+	public function getMainDataByDynamicForm(
+		Request | Array $request, $formVersion, string $titleFieldName = 'title',
+		string $generalFormTypeIdFieldName = null, string $formTypeIdFieldName = null,
+		string $formVersionIdFieldName = null, string $formStatusIdFieldName = null,
+		string $publishDateFieldName = null
+	): Array
 	{
 		$results 				= [];
 
@@ -277,9 +304,13 @@ class DynamicFormService
 
 		// Get Form Configs of Main Data (if exists)
 		$formConfigs 			= $formVersion->getForms();
-		$formTypeFieldConfig 	= $this->getFieldConfigFromFormConfigs($formConfigs, 'flag_field_form_type', true) ?: 'form_type';
+		$formTypeFieldConfig 	= $this->getFieldConfigFromFormConfigs(
+			$formConfigs, 'flag_field_form_type', true
+		) ?: 'form_type';
 		$titleFieldConfig 		= $this->getFieldConfigFromFormConfigs($formConfigs, 'flag_field_title', true) ?: 'title';
-		$publishDateFieldConfig = $this->getFieldConfigFromFormConfigs($formConfigs, 'flag_field_publish_date', true) ?: 'publication_date';
+		$publishDateFieldConfig = $this->getFieldConfigFromFormConfigs(
+			$formConfigs, 'flag_field_publish_date', true
+		) ?: 'publication_date';
 
 		// Organize the Main Data
 		$formTypeId 			= $requestData[
@@ -344,7 +375,9 @@ class DynamicFormService
 					case 'well':
 					case 'step':
 					case 'multiple':
-						$item['value'] = $this->getMainDataByDynamicForm($requestData[$fieldConfig->getFieldName()], $fieldConfig->getChildren());
+						$item['value'] = $this->getMainDataByDynamicForm(
+							$requestData[$fieldConfig->getFieldName()], $fieldConfig->getChildren()
+						);
 						break;
 	
 					case 'select':
@@ -397,27 +430,26 @@ class DynamicFormService
 
 		foreach ($formConfigs as $fieldIndex => $fieldConfig) {
 
-			if ($fieldConfig->getFieldName()) switch ($fieldConfig->getFieldType()) {
-				case 'step':
-				case 'multiple':
-					$results->add([
-						$fieldConfig->getFieldName() => $this->dynamicDataAdjustment($requestData[$fieldConfig->getFieldName()], $fieldConfig->getChildren())
-					]);
-					break;
+			if ($fieldConfig->getFieldName()) {
+				switch ($fieldConfig->getFieldType()) {
+					case 'step':
+					case 'multiple':
+						$results->add([
+							$fieldConfig->getFieldName() => $this->dynamicDataAdjustment(
+								$requestData[$fieldConfig->getFieldName()], $fieldConfig->getChildren()
+							)
+						]);
+						break;
 
-				case 'select':
-				case 'autoselect':
-				case 'autocomplete':
-					$results->add([
-						$fieldConfig->getFieldName() => $requestData[$fieldConfig->getFieldName()]
-					]);
-					break;
-
-				default:
-					$results->add([
-						$fieldConfig->getFieldName() => $requestData[$fieldConfig->getFieldName()]
-					]);
-					break;
+					case 'select':
+					case 'autoselect':
+					case 'autocomplete':
+					default:
+						$results->add([
+							$fieldConfig->getFieldName() => $requestData[$fieldConfig->getFieldName()]
+						]);
+						break;
+				}
 			}
 		}
 
