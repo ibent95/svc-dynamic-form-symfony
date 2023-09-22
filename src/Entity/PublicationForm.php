@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\PublicationFormRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
@@ -105,10 +107,27 @@ class PublicationForm
     #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
-    #[ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'EAGER')]
-    #[ORM\JoinColumn(name: 'id_form_version', referencedColumnName: 'id', onDelete:"CASCADE")]
+    #[
+        ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'EAGER'),
+        ORM\JoinColumn(name: 'id_form_version', referencedColumnName: 'id', onDelete:"CASCADE")
+    ]
     #[Ignore]
-    private $form_version;
+    private ?PublicationFormVersion $form_version;
+
+    #[ORM\OneToMany(
+        mappedBy: 'form',
+        targetEntity: PublicationMeta::class,
+        cascade: ["ALL"],
+        orphanRemoval: true,
+        fetch: 'EAGER',
+    )]
+    #[Ignore]
+    private Collection $publicationMeta;
+
+    public function __construct()
+    {
+        $this->publicationMeta = new ArrayCollection();
+    }
 
     #[ORM\PrePersist]
     public function onPrePersist(): void
@@ -459,6 +478,37 @@ class PublicationForm
     public function setFormVersion(?PublicationFormVersion $form_version): self
     {
         $this->form_version = $form_version;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PublicationMeta>
+     */
+    #[Ignore]
+    public function getPublicationMeta(): Collection
+    {
+        return $this->publicationMeta;
+    }
+
+    public function addPublicationMeta(PublicationMeta $publicationMeta): static
+    {
+        if (!$this->publicationMeta->contains($publicationMeta)) {
+            $this->publicationMeta->add($publicationMeta);
+            $publicationMeta->setForm($this);
+        }
+
+        return $this;
+    }
+
+    public function removePublicationMeta(PublicationMeta $publicationMeta): static
+    {
+        if (
+            $this->publicationMeta->removeElement($publicationMeta) && 
+            $publicationMeta->getForm() === $this
+        ) {
+            $publicationMeta->setForm(null);
+        }
 
         return $this;
     }
