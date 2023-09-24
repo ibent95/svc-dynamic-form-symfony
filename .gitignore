@@ -10,6 +10,7 @@ htdocs
 /.env.*.local
 /config/secrets/prod/prod.decrypt.private.php
 /public/bundles/
+/public/files/
 /var/
 /vendor/
 ###< symfony/framework-bundle ###
