@@ -133,7 +133,10 @@ class PublicationService {
             );
         }
 
-        return $sourceData->matching($this->criteria)->first();
+        return ($sourceData->matching($this->criteria)->first()) ? [
+            'index' => $sourceData->matching($this->criteria)->key(),
+            'data' => $sourceData->matching($this->criteria)->first()
+        ] : false ;
     }
 
     private function getRequestMetaDataByUuid(
@@ -145,7 +148,10 @@ class PublicationService {
             $this->exprBuilder->eq('uuid', $uuid)
         );
 
-        return $sourceData->matching($this->criteria)->first();
+        return ($sourceData->matching($this->criteria)->first()) ? [
+            'index' => $sourceData->matching($this->criteria)->key(),
+            'data' => $sourceData->matching($this->criteria)->first()
+        ] : false ;
     }
 
     private function getRequestMetaDataByFieldName(
@@ -157,7 +163,10 @@ class PublicationService {
             $this->exprBuilder->eq('field_name', $fieldName)
         );
 
-        return $sourceData->matching($this->criteria)->first();
+        return ($sourceData->matching($this->criteria)->first()) ? [
+            'index' => $sourceData->matching($this->criteria)->key(),
+            'data' => $sourceData->matching($this->criteria)->first()
+        ] : false ;
     }
 
     private function getFormConfigsByParentId(
@@ -280,7 +289,6 @@ class PublicationService {
 	{
         // Initial value
 		$results        = $publication;
-		$requestData    = (is_array($request)) ? $request : $request->request->all();
 
         /**
          * Remove the old Meta Data if there is Meta Data.
@@ -298,23 +306,25 @@ class PublicationService {
 
         // Organize the new Meta Data (create or update)
         if ($request->getMethod() == 'POST') {
-            $results    = $this->updateMetaData($requestData, $formVersion, $publication);
+            $results    = $this->updateMetaData($request, $formVersion, $publication);
         }
 
         if ($request->getMethod() == 'PUT') {
-            $results    = $this->updateMetaData($requestData, $formVersion, $publication);
+            $results    = $this->updateMetaData($request, $formVersion, $publication);
         }
 
 		return $results;
 	}
 
     private function updateMetaData(
-        array $requestData,
+        Request $request,
         PublicationFormVersion $formVersion,
         Publication $publication,
         PublicationMeta $parentMetaDataConfig = null
     ) : Publication | array
     {
+        $requestData        = $request->request->all();
+        $requestFiles       = $request->files->get('meta_data');
         $results            = $publication;
         $metaDataConfigs    = $publication->getPublicationMetas();
         $formConfigs        = $this->getFormConfigsByParentId(
@@ -342,8 +352,10 @@ class PublicationService {
                     new ArrayCollection($requestData['meta_data']),
                     $fieldConfig->getFieldName()
                 );
-            
-            $metaDataConfigQueries = ($metaData) ? ['uuid' => $metaData['uuid']] : ['id_form' => $fieldConfig->getId()];
+
+            $metaDataConfigQueries = ($metaData)
+                ? ['uuid' => $metaData['data']['uuid']]
+                : ['id_form' => $fieldConfig->getId()];
 
             $metaDataConfig     = (
                 $this->getPublicationMetaDataBy($metaDataConfigs, $metaDataConfigQueries)
@@ -363,7 +375,7 @@ class PublicationService {
 			switch ($metaDataConfig->getFieldType()) {
                 case 'multiple':
                     $metaDataConfig->setValue(
-                        $metaData['value'] ?? null
+                        $metaData['data']['value'] ?? null
                     );
                     dd($metaDataConfig->getFieldType(), $requestData, $metaData);
                     break;
@@ -374,7 +386,7 @@ class PublicationService {
                 case 'stepper':
                 case 'step':
                     $this->updateMetaData(
-                        $requestData,
+                        $request,
                         $formVersion,
                         $results,
                         $metaDataConfig
@@ -389,23 +401,28 @@ class PublicationService {
                 case 'autoselect':
                 case 'autocomplete':
                     $metaDataConfig->setValue(
-                        $metaData['value'] ?? null
+                        $metaData['data']['value'] ?? null
                     );
                     $metaDataConfig->setOtherValue(
-                        $metaData['other_value'] ?? null
+                        $metaData['data']['other_value'] ?? null
                     );
                     break;
 
                 case 'file':
                 case 'image':
-                    $metaDataConfig->setValue(
-                        $metaData['value'] ?? null
-                    );
-                    $metaDataConfig->setOtherValue([
-                        'file_name' => null,
-                        'path' => null,
-                        'url' => null
-                    ]);
+                    /** Check if file exist.
+                     *  Another way is (isset($requestFiles) && isset($requestFiles[$metaData['index']])) */ 
+                    $file = $requestFiles[$metaData['index']]['value'] ?? null;
+                    $uploadedFile = ($file)
+                        ? $this->commonSvc->uploadFile($file, 'publications_directory')
+                        : null;
+
+                    if ($uploadedFile) {
+                        $metaDataConfig->setValue(
+                            $uploadedFile['path'] ?? null
+                        );
+                        $metaDataConfig->setOtherValue($uploadedFile);
+                    }
                     break;
 
                 case 'date':
@@ -419,7 +436,7 @@ class PublicationService {
                 case 'owl-time':
                 case 'owl-datetime':
                     $metaDataConfig->setValue(
-                        $metaData['value'] ?? null
+                        $metaData['data']['value'] ?? null
                     );
                     $metaDataConfig->setOtherValue([
                         'value' => null,
@@ -441,7 +458,7 @@ class PublicationService {
                 case 'url':
                 default:
                     $metaDataConfig->setValue(
-                        $metaData['value'] ?? null
+                        $metaData['data']['value'] ?? null
                     );
                     break;
 			}
@@ -525,17 +542,17 @@ class PublicationService {
             case 'autoselect':
             case 'autocomplete':
                 $results->setValue(
-                    $metaData['value'] ?? null
+                    $metaData['data']['value'] ?? null
                 );
                 $results->setOtherValue(
-                    $metaData['other_value'] ?? null
+                    $metaData['data']['other_value'] ?? null
                 );
                 break;
 
             case 'file':
             case 'image':
                 $results->setValue(
-                    $metaData['value'] ?? null
+                    $metaData['data']['value'] ?? null
                 );
                 $results->setOtherValue([
                     'file_name' => null,
@@ -555,7 +572,7 @@ class PublicationService {
             case 'owl-time':
             case 'owl-datetime':
                 $results->setValue(
-                    $metaData['value'] ?? null
+                    $metaData['data']['value'] ?? null
                 );
                 $results->setOtherValue([
                     'value' => null,
@@ -577,7 +594,7 @@ class PublicationService {
             case 'url':
             default:
                 $results->setValue(
-                    $metaData['value'] ?? null
+                    $metaData['data']['value'] ?? null
                 );
                 break;
         }
@@ -611,31 +628,28 @@ class PublicationService {
 
 		foreach ($formConfigs as $fieldIndex => $fieldConfig) {
 
-			if ($fieldConfig->getFieldName()) switch ($fieldConfig->getFieldType()) {
-				case 'step':
-				case 'multiple':
-					$results->add([
-						$fieldConfig->getFieldName() => $this->dynamicDataAdjustment(
-                            $requestData[$fieldConfig->getFieldName()],
-                            $fieldConfig->getChildren()
-                        )
-					]);
-					break;
+			if ($fieldConfig->getFieldName()) {
+                switch ($fieldConfig->getFieldType()) {
+                    case 'step':
+                    case 'multiple':
+                        $results->add([
+                            $fieldConfig->getFieldName() => $this->dynamicDataAdjustment(
+                                $requestData[$fieldConfig->getFieldName()],
+                                $fieldConfig->getChildren()
+                            )
+                        ]);
+                        break;
 
-				case 'select':
-				case 'autoselect':
-				case 'autocomplete':
-					$results->add([
-						$fieldConfig->getFieldName() => $requestData[$fieldConfig->getFieldName()]
-					]);
-					break;
-
-				default:
-					$results->add([
-						$fieldConfig->getFieldName() => $requestData[$fieldConfig->getFieldName()]
-					]);
-					break;
-			}
+                    case 'select':
+                    case 'autoselect':
+                    case 'autocomplete':
+                    default:
+                        $results->add([
+                            $fieldConfig->getFieldName() => $requestData[$fieldConfig->getFieldName()]
+                        ]);
+                        break;
+                }
+            }
 		}
 
 		return $results;

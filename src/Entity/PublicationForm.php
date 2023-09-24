@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\PublicationFormRepository;
+
+use ApiPlatform\Metadata\ApiResource;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 
@@ -12,7 +14,8 @@ use Symfony\Component\Serializer\Annotation\Ignore;
 #[
     ORM\Entity(repositoryClass: PublicationFormRepository::class),
     ORM\HasLifecycleCallbacks,
-    ORM\Table(name: 'publication_form')
+    ORM\Table(name: 'publication_form'),
+    ApiResource
 ]
 class PublicationForm
 {

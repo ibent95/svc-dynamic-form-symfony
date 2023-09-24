@@ -4,6 +4,7 @@ namespace App\Controller\V1;
 
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -24,6 +25,17 @@ class MainQueryController extends AbstractController
         $this->responseStatusCode = 400;
     }
 
+    #[Route('/public/files/{serviceName}/{fileNameExtension}', methods: ['GET'], name: 'app_get_uploaded_file')]
+    public function getUploadedFile(
+        string $serviceName,
+        string $fileNameExtension
+    ): BinaryFileResponse
+    {
+        $filePath = $this->getParameter('secret_' . $serviceName . '_directory') . '/' . $fileNameExtension;
+        $this->logger->info('The root route has been accessed!');
+        return new BinaryFileResponse($filePath);
+    }
+
     #[Route('/api/v1', name: 'app_v1_main')]
     public function index(): JsonResponse
     {
@@ -40,4 +52,5 @@ class MainQueryController extends AbstractController
 
         return $this->json($this->responseData, $this->responseStatusCode);
     }
+
 }

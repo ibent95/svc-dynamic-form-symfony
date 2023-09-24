@@ -4,6 +4,15 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    app.base_url: '%env(APP_BASE_URL)%'
+    app.secret_assets_directory: '%kernel.project_dir%/public/files/app_assets'
+    app.assets_directory: 'public/files/app_assets'
+    secret_users_directory: '%kernel.project_dir%/public/files/users'
+    users_directory: 'public/files/users'
+    secret_publications_directory: '%kernel.project_dir%/public/files/publications'
+    publications_directory: 'public/files/publications'
+    secret_research_directory: '%kernel.project_dir%/public/files/research'
+    research_directory: 'public/files/research'
 
 services:
     # default configuration for services in *this* file

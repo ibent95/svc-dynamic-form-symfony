@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\PublicationTypeRepository;
 
+use ApiPlatform\Metadata\ApiResource;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -12,7 +13,8 @@ use Symfony\Component\Serializer\Annotation\Ignore;
 #[
     ORM\Entity(repositoryClass: PublicationTypeRepository::class),
     ORM\HasLifecycleCallbacks,
-    ORM\Table(name: "publication_type")
+    ORM\Table(name: "publication_type"),
+    ApiResource
 ]
 class PublicationType
 {

@@ -6,6 +6,8 @@ use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -18,6 +20,7 @@ use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\String\UnicodeString;
 use Symfony\Component\Uid\Uuid;
 
@@ -31,11 +34,15 @@ class CommonService {
 	private $exprBuilder;
 	private $criteria;
 	private $dateTimeFormat;
+	private $slugger;
+    private $parameter;
 
 	public function __construct(
 		SerializerInterface $serializer,
 		ManagerRegistry $doctrine,
-		EntityManagerInterface $entityManager
+		EntityManagerInterface $entityManager,
+		SluggerInterface $slugger,
+        ParameterBagInterface $parameter
 	)
 	{
 		$this->results			= [];
@@ -49,6 +56,9 @@ class CommonService {
 		$this->exprBuilder 		= Criteria::expr();
 		$this->criteria 		= new Criteria();
 		$this->dateTimeFormat	= 'Y-m-d H:i:s';
+
+		$this->slugger 			= $slugger;
+        $this->parameter        = $parameter;
 	}
 
 	public function getEntityIdentifierFromUnit(object $object): Mixed
@@ -220,10 +230,30 @@ class CommonService {
 		return Request::create($request->getUri(), $request->getMethod(), $data);
 	}
 
-	public function stringReplace(String $baseString, String $fromString, String $toString): String
+	public function stringReplace(String $baseString, String $fromString, String $toString): string
 	{
 		$unicode = new UnicodeString($baseString);
 		return $unicode->replace($fromString, $toString);
+	}
+
+	public function uploadFile(UploadedFile $file, string $parameter, ?string $otherPath = null) : array
+	{
+		$originalName	= pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        $slugName		= $this->slugger->slug($originalName);
+		$extension		= '.' . $file->guessExtension();
+        $name			= $slugName . '-' . uniqid() . $extension;
+		$path			= $this->parameter->get($parameter) . '/' . $name;
+
+		$file->move($this->parameter->get('secret_' . $parameter), $name);
+
+		return [
+			'original_name' => $name,
+			'slug' => $slugName,
+			'name' => $name,
+			'path' => $path,
+			'url' => $this->parameter->get('app.base_url') . '/' . $path,
+			'extension' => $extension
+		];
 	}
 
 }
