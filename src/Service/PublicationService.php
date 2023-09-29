@@ -414,7 +414,11 @@ class PublicationService {
                      *  Another way is (isset($requestFiles) && isset($requestFiles[$metaData['index']])) */ 
                     $file = $requestFiles[$metaData['index']]['value'] ?? null;
                     $uploadedFile = ($file)
-                        ? $this->commonSvc->uploadFile($file, 'publications_directory')
+                        ? $this->commonSvc->uploadFile(
+                            $file,
+                            'publications_directory',
+                            '/public/api/v1/files/publications'
+                        )
                         : null;
 
                     if ($uploadedFile) {

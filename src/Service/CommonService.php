@@ -68,7 +68,10 @@ class CommonService {
 
 	public function createUUIDShort() : string
 	{
-		return $this->doctrineManager->getConnection()->executeQuery('SELECT UUID_SHORT() AS uuid_short')->fetchOne();
+		// return $this->doctrineManager->getConnection()->executeQuery('SELECT UUID_SHORT() AS uuid_short')->fetchOne();
+		$from = 0;
+		$to = '9223372036854775807';
+		return (string) gmp_random_range($from, $to);
 	}
 
 	public function createUUID() : string
@@ -236,7 +239,11 @@ class CommonService {
 		return $unicode->replace($fromString, $toString);
 	}
 
-	public function uploadFile(UploadedFile $file, string $parameter, ?string $otherPath = null) : array
+	public function uploadFile(
+		UploadedFile $file,
+		string $parameter,
+		string | NULL $secondaryUrlPart = 'public/api/v1/files'
+	) : array
 	{
 		$originalName	= pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $slugName		= $this->slugger->slug($originalName);
@@ -247,11 +254,11 @@ class CommonService {
 		$file->move($this->parameter->get('secret_' . $parameter), $name);
 
 		return [
-			'original_name' => $name,
+			'original_name' => $originalName . $extension,
 			'slug' => $slugName,
 			'name' => $name,
 			'path' => $path,
-			'url' => $this->parameter->get('app.base_url') . '/' . $path,
+			'url' => $this->parameter->get('app.base_url') . '/' . $secondaryUrlPart . '/' . $name,
 			'extension' => $extension
 		];
 	}

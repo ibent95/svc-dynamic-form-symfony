@@ -87,7 +87,7 @@ class PublicationCommandController extends AbstractController
             // Get organized data
             $publicationData                = $this->publicationSvc
                 ->setDataByDynamicForm($request, $publicationFormVersion, $publication);
-
+            dd($publicationData);
             // Create command
             if (!$uuid) {
                 $entityManager->persist($publicationData);
