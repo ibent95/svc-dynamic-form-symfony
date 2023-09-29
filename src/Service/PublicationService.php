@@ -7,7 +7,7 @@ use App\Entity\PublicationForm;
 use App\Entity\PublicationFormVersion;
 use App\Entity\PublicationMeta;
 use App\Entity\PublicationStatus;
-
+use App\Entity\TemporaryFileUpload;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -423,15 +423,34 @@ class PublicationService {
                         ? $this->commonSvc->uploadFile(
                             $file,
                             'publications_directory',
-                            '/public/api/v1/files/publications'
+                            'api/v1/files/publications'
                         )
                         : null;
 
                     if ($uploadedFile) {
                         $metaDataConfig->setValue(
-                            $uploadedFile['path'] ?? null
+                            $uploadedFile['original_name'] ?? null
                         );
                         $metaDataConfig->setOtherValue($uploadedFile);
+                    }
+                    break;
+
+                case 'file-upload':
+                case 'image-upload':
+                    /** Get temporary file meta data */ 
+                    $temporaryFileUpload = ($metaData['data']['value'])
+                        ? ($this->doctrineManager->getRepository(TemporaryFileUpload::class))->findOneBy([
+                            'uuid' => $metaData['data']['value']
+                        ])
+                        : null;
+
+                    if ($temporaryFileUpload) {
+                        $metaDataConfig->setValue(
+                            $temporaryFileUpload->getValue() ?? null
+                        );
+                        $metaDataConfig->setOtherValue(
+                            $temporaryFileUpload->getOtherValue()[0] ?? null
+                        );
                     }
                     break;
 
@@ -577,6 +596,8 @@ class PublicationService {
 
             case 'file':
             case 'image':
+            case 'file-upload':
+            case 'image-upload':
                 $results->setValue(
                     $metaData['data']['value'] ?? null
                 );

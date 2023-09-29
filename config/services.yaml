@@ -6,13 +6,13 @@
 parameters:
     app.base_url: '%env(APP_BASE_URL)%'
     app.secret_assets_directory: '%kernel.project_dir%/public/files/app_assets'
-    app.assets_directory: 'public/files/app_assets'
+    app.assets_directory: 'files/app_assets'
     secret_users_directory: '%kernel.project_dir%/public/files/users'
-    users_directory: 'public/files/users'
+    users_directory: 'files/users'
     secret_publications_directory: '%kernel.project_dir%/public/files/publications'
-    publications_directory: 'public/files/publications'
+    publications_directory: 'files/publications'
     secret_research_directory: '%kernel.project_dir%/public/files/research'
-    research_directory: 'public/files/research'
+    research_directory: 'files/research'
 
 services:
     # default configuration for services in *this* file

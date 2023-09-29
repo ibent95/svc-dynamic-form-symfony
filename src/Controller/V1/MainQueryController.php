@@ -98,7 +98,7 @@ class MainQueryController extends AbstractController
                         ? $this->commonSvc->uploadFile(
                             $file,
                             $serviceName . '_directory',
-                            'public/api/v1/files' . $serviceName
+                            'api/v1/files/' . $serviceName
                         )
                         : null;
 

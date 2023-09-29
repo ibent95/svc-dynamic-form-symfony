@@ -70,7 +70,7 @@ class CommonService {
 	{
 		// return $this->doctrineManager->getConnection()->executeQuery('SELECT UUID_SHORT() AS uuid_short')->fetchOne();
 		$from = 0;
-		$to = '9223372036854775807';
+		$to = '92233720368547758';
 		return (string) gmp_random_range($from, $to);
 	}
 
@@ -242,7 +242,7 @@ class CommonService {
 	public function uploadFile(
 		UploadedFile $file,
 		string $parameter,
-		string | NULL $secondaryUrlPart = 'public/api/v1/files'
+		string | NULL $secondaryUrlPart = 'api/v1/files'
 	) : array
 	{
 		$originalName	= pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
