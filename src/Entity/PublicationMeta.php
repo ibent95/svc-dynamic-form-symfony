@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\PublicationMetaRepository;
 
+use ApiPlatform\Metadata\ApiResource;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
@@ -11,7 +12,8 @@ use Symfony\Component\Serializer\Annotation\Ignore;
 #[
     ORM\Entity(repositoryClass: PublicationMetaRepository::class),
     ORM\HasLifecycleCallbacks,
-    ORM\Table(name: 'publication_meta')
+    ORM\Table(name: 'publication_meta'),
+    ApiResource
 ]
 class PublicationMeta
 {

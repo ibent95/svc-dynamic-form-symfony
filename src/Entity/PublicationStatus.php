@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\PublicationStatusRepository;
 
+use ApiPlatform\Metadata\ApiResource;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -12,7 +13,8 @@ use Symfony\Component\Serializer\Annotation\Ignore;
 #[
     ORM\Entity(repositoryClass: PublicationStatusRepository::class),
     ORM\HasLifecycleCallbacks,
-    ORM\Table(name: "publication_status")
+    ORM\Table(name: "publication_status"),
+    ApiResource
 ]
 class PublicationStatus
 {
