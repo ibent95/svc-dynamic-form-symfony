@@ -304,6 +304,8 @@ class PublicationService {
             }
         }
 
+        $this->logger->info('Publication ID - ' . $publication->getId());
+
         // Organize the new Meta Data (create or update)
         if ($request->getMethod() == 'POST') {
             $results    = $this->updateMetaData($request, $formVersion, $publication);
@@ -324,6 +326,7 @@ class PublicationService {
     ) : Publication | array
     {
         $requestData        = $request->request->all();
+        $requestMetadataCollection = new ArrayCollection($requestData['meta_data']);
         $requestFiles       = $request->files->get('meta_data');
         $results            = $publication;
         $metaDataConfigs    = $publication->getPublicationMetas();
@@ -334,22 +337,24 @@ class PublicationService {
 
         // Organize data $requestData['meta_data']
         foreach ($formConfigs->toArray() as $fieldConfigIndex => $fieldConfig) {
-
+            
             /**
              * Initial value:
              * If there is Meta Data in previous Publication Meta Data, then use it as initial value.
              * Other than that, set Meta Data by Form Configuration.
              */
-            $metaData           = ($this->getRequestMetaDataByUuid(
-                new ArrayCollection($requestData['meta_data']),
-                $fieldConfig->getUuid()
-            ))
+            $metaData           = (
+                    $this->getRequestMetaDataByUuid(
+                        $requestMetadataCollection,
+                        $fieldConfig->getUuid()
+                    )
+                )
                 ? $this->getRequestMetaDataByUuid(
-                    new ArrayCollection($requestData['meta_data']),
+                    $requestMetadataCollection,
                     $fieldConfig->getUuid()
                 )
                 : $this->getRequestMetaDataByFieldName(
-                    new ArrayCollection($requestData['meta_data']),
+                    $requestMetadataCollection,
                     $fieldConfig->getFieldName()
                 );
 
@@ -377,7 +382,7 @@ class PublicationService {
                     $metaDataConfig->setValue(
                         $metaData['data']['value'] ?? null
                     );
-                    dd($metaDataConfig->getFieldType(), $requestData, $metaData);
+                    // dd($metaDataConfig->getFieldType(), $requestData, $metaData);
                     break;
 
                 case 'well':
@@ -395,7 +400,8 @@ class PublicationService {
 
                 case 'multiple_select':
                 case 'multiple_autoselect':
-                case 'multiple_autocomplete': break;
+                case 'multiple_autocomplete':
+                    break;
 
                 case 'select':
                 case 'autoselect':
@@ -453,7 +459,8 @@ class PublicationService {
                 case 'datetimerange':
                 case 'owl-daterange':
                 case 'owl-timerange':
-                case 'owl-datetimerange': break;
+                case 'owl-datetimerange':
+                    break;
 
                 case 'radio':
                 case 'checkbox':
@@ -476,6 +483,13 @@ class PublicationService {
             if ($parentMetaDataConfig) {
                 $metaDataConfig->setIdFormParent($parentMetaDataConfig->getId());
             }
+
+            $this->logger->info(
+                'Metadatas (field_type -> ' . $fieldConfig->getFieldType()
+                . ', field_name -> ' . $fieldConfig->getFieldName()
+                . '); value : ',
+                $metaData['data'] ?? []
+            );
 
             // Push the Meta Data to Main Data
             $results->addPublicationMetas($metaDataConfig);
@@ -503,8 +517,11 @@ class PublicationService {
         $results->setUuid($this->commonSvc->createUUID());
 
         // Master data
+        $results->setIdForm($fieldConfig->getId());
         $results->setForm($fieldConfig);
+        $results->setIdPublication($publication->getId());
         $results->setPublication($publication);
+        $results->setIdFormVersion($formVersion->getId());
         $results->setFormVersion($formVersion);
 
         // Field configs
@@ -532,15 +549,20 @@ class PublicationService {
 
         // Specifict handling by type of field
         switch ($fieldConfig->getFieldType()) {
-            case 'panel':
-            case 'accordion':
+            case 'multiple':
+                break;
+
             case 'well':
+            case 'accordion':
+            case 'panel':
+            case 'stepper':
             case 'step':
-            case 'multiple': break;
+                break;
 
             case 'multiple_select':
             case 'multiple_autoselect':
-            case 'multiple_autocomplete': break;
+            case 'multiple_autocomplete':
+                break;
 
             case 'select':
             case 'autoselect':
@@ -559,7 +581,8 @@ class PublicationService {
                     $metaData['data']['value'] ?? null
                 );
                 $results->setOtherValue([
-                    'file_name' => null,
+                    'original_name' => null,
+                    'name' => null,
                     'path' => null,
                     'url' => null
                 ]);
@@ -589,7 +612,8 @@ class PublicationService {
             case 'datetimerange':
             case 'owl-daterange':
             case 'owl-timerange':
-            case 'owl-datetimerange': break;
+            case 'owl-datetimerange':
+                break;
 
             case 'radio':
             case 'checkbox':
