@@ -141,6 +141,10 @@ class ComposerStaticInit9d30e14add22c29681fea677ff4ed27a
             'Doctrine\\Bundle\\DoctrineBundle\\' => 31,
             'DeepCopy\\' => 9,
         ),
+        'B' => 
+        array (
+            'Brick\\Math\\' => 11,
+        ),
         'A' => 
         array (
             'App\\Tests\\' => 10,
@@ -516,6 +520,10 @@ class ComposerStaticInit9d30e14add22c29681fea677ff4ed27a
         'DeepCopy\\' => 
         array (
             0 => __DIR__ . '/..' . '/myclabs/deep-copy/src/DeepCopy',
+        ),
+        'Brick\\Math\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/brick/math/src',
         ),
         'App\\Tests\\' => 
         array (
@@ -1161,6 +1169,7 @@ class ComposerStaticInit9d30e14add22c29681fea677ff4ed27a
         'App\\Entity\\PublicationMeta' => __DIR__ . '/../..' . '/src/Entity/PublicationMeta.php',
         'App\\Entity\\PublicationStatus' => __DIR__ . '/../..' . '/src/Entity/PublicationStatus.php',
         'App\\Entity\\PublicationType' => __DIR__ . '/../..' . '/src/Entity/PublicationType.php',
+        'App\\Entity\\TemporaryFileUpload' => __DIR__ . '/../..' . '/src/Entity/TemporaryFileUpload.php',
         'App\\Entity\\Try01' => __DIR__ . '/../..' . '/src/Entity/Try01.php',
         'App\\Kernel' => __DIR__ . '/../..' . '/src/Kernel.php',
         'App\\Repository\\PublicationFormRepository' => __DIR__ . '/../..' . '/src/Repository/PublicationFormRepository.php',
@@ -1170,6 +1179,7 @@ class ComposerStaticInit9d30e14add22c29681fea677ff4ed27a
         'App\\Repository\\PublicationRepository' => __DIR__ . '/../..' . '/src/Repository/PublicationRepository.php',
         'App\\Repository\\PublicationStatusRepository' => __DIR__ . '/../..' . '/src/Repository/PublicationStatusRepository.php',
         'App\\Repository\\PublicationTypeRepository' => __DIR__ . '/../..' . '/src/Repository/PublicationTypeRepository.php',
+        'App\\Repository\\TemporaryFileUploadRepository' => __DIR__ . '/../..' . '/src/Repository/TemporaryFileUploadRepository.php',
         'App\\Repository\\Try01Repository' => __DIR__ . '/../..' . '/src/Repository/Try01Repository.php',
         'App\\Service\\CommonService' => __DIR__ . '/../..' . '/src/Service/CommonService.php',
         'App\\Service\\CustomCircularReferenceHandler' => __DIR__ . '/../..' . '/src/Service/CustomCircularReferenceHandler.php',
@@ -1180,6 +1190,21 @@ class ComposerStaticInit9d30e14add22c29681fea677ff4ed27a
         'App\\Tests\\TryCaseTest' => __DIR__ . '/../..' . '/tests/TryCaseTest.php',
         'App\\Validator\\Test' => __DIR__ . '/../..' . '/src/Validator/Test.php',
         'App\\Validator\\TestValidator' => __DIR__ . '/../..' . '/src/Validator/TestValidator.php',
+        'Brick\\Math\\BigDecimal' => __DIR__ . '/..' . '/brick/math/src/BigDecimal.php',
+        'Brick\\Math\\BigInteger' => __DIR__ . '/..' . '/brick/math/src/BigInteger.php',
+        'Brick\\Math\\BigNumber' => __DIR__ . '/..' . '/brick/math/src/BigNumber.php',
+        'Brick\\Math\\BigRational' => __DIR__ . '/..' . '/brick/math/src/BigRational.php',
+        'Brick\\Math\\Exception\\DivisionByZeroException' => __DIR__ . '/..' . '/brick/math/src/Exception/DivisionByZeroException.php',
+        'Brick\\Math\\Exception\\IntegerOverflowException' => __DIR__ . '/..' . '/brick/math/src/Exception/IntegerOverflowException.php',
+        'Brick\\Math\\Exception\\MathException' => __DIR__ . '/..' . '/brick/math/src/Exception/MathException.php',
+        'Brick\\Math\\Exception\\NegativeNumberException' => __DIR__ . '/..' . '/brick/math/src/Exception/NegativeNumberException.php',
+        'Brick\\Math\\Exception\\NumberFormatException' => __DIR__ . '/..' . '/brick/math/src/Exception/NumberFormatException.php',
+        'Brick\\Math\\Exception\\RoundingNecessaryException' => __DIR__ . '/..' . '/brick/math/src/Exception/RoundingNecessaryException.php',
+        'Brick\\Math\\Internal\\Calculator' => __DIR__ . '/..' . '/brick/math/src/Internal/Calculator.php',
+        'Brick\\Math\\Internal\\Calculator\\BcMathCalculator' => __DIR__ . '/..' . '/brick/math/src/Internal/Calculator/BcMathCalculator.php',
+        'Brick\\Math\\Internal\\Calculator\\GmpCalculator' => __DIR__ . '/..' . '/brick/math/src/Internal/Calculator/GmpCalculator.php',
+        'Brick\\Math\\Internal\\Calculator\\NativeCalculator' => __DIR__ . '/..' . '/brick/math/src/Internal/Calculator/NativeCalculator.php',
+        'Brick\\Math\\RoundingMode' => __DIR__ . '/..' . '/brick/math/src/RoundingMode.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'DateError' => __DIR__ . '/..' . '/symfony/polyfill-php83/Resources/stubs/DateError.php',
         'DateException' => __DIR__ . '/..' . '/symfony/polyfill-php83/Resources/stubs/DateException.php',

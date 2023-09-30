@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use Brick\Math\BigInteger;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
@@ -68,10 +69,17 @@ class CommonService {
 
 	public function createUUIDShort() : string
 	{
-		// return $this->doctrineManager->getConnection()->executeQuery('SELECT UUID_SHORT() AS uuid_short')->fetchOne();
-		$from = 0;
+		/** Changed from mysql UUID_SHORT() function,
+		 * to PHP arbitrary precision numbers library such as GMP BCMath based.
+		 * Alternativelly, I use Brick/Math library (https://github.com/brick/math).
+		 * 
+		 * MySQL func: $this->doctrineManager->getConnection()->executeQuery('SELECT UUID_SHORT() AS uuid_short')->fetchOne();
+		 * GMP func: (string) gmp_random_range($from, $to);
+		 * Brick/Math func: BigInteger::randomRange($from, $to);
+		 */ 
+		$from = '0';
 		$to = '92233720368547758';
-		return (string) gmp_random_range($from, $to);
+		return BigInteger::randomRange($from, $to);
 	}
 
 	public function createUUID() : string
