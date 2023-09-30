@@ -179,12 +179,15 @@ class PublicationQueryController extends AbstractController
             $limit                      = $request->get('limit');
             $offset                     = $request->get('offset');
             
-            $publications               = $entityManager->getRepository(Publication::class)->findBy(
+            $publicationsEntity         = $entityManager->getRepository(Publication::class);
+            $publicationTotalCount      = $publicationsEntity->count([]);
+            $publicationsData           = $publicationsEntity->findBy(
                 $params, $orderBy, $limit, $offset
             );
 
             // Response data
-            $this->responseData['data']     = $publications;
+            $this->responseData['data']     = $publicationsData;
+            $this->responseData['count']    = $publicationTotalCount;
             $this->responseData['info']     = 'success';
             $this->responseData['message']  = 'Success to get publications data!';
             $this->responseStatusCode       = 200;
