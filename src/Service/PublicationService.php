@@ -446,7 +446,7 @@ class PublicationService {
                 case 'file-upload':
                 case 'image-upload':
                     /** Get temporary file meta data */
-                    $temporaryFileUpload = ($metaData && $metaData['data']['value'])
+                    $temporaryFileUpload = ($metaData && isset($metaData['data']['value']))
                         ? ($this->doctrineManager->getRepository(TemporaryFileUpload::class))->findOneBy([
                             'uuid' => $metaData['data']['value']
                         ])
