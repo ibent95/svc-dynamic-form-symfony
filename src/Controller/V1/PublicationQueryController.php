@@ -165,7 +165,7 @@ class PublicationQueryController extends AbstractController
     }
 
     #[Route('/api/v1/publications', methods: ['GET'], name: 'app_v1_publications')]
-    public function getAll(ManagerRegistry $doctrine): JsonResponse
+    public function getAll(ManagerRegistry $doctrine, Request $request): JsonResponse
     {
         $entityManager                  = $doctrine->getManager();
 
@@ -175,8 +175,12 @@ class PublicationQueryController extends AbstractController
 
         try {
             $params                     = ['flag_active' => true];
+            $orderBy                    = ['updated_at' => 'DESC'];
+            $limit                      = $request->get('limit');
+            $offset                     = $request->get('offset');
+            
             $publications               = $entityManager->getRepository(Publication::class)->findBy(
-                $params
+                $params, $orderBy, $limit, $offset
             );
 
             // Response data
