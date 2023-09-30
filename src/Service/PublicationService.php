@@ -379,10 +379,18 @@ class PublicationService {
             // Specifict handling by type of field
 			switch ($metaDataConfig->getFieldType()) {
                 case 'multiple':
-                    $metaDataConfig->setValue(
-                        $metaData['data']['value'] ?? null
-                    );
-                    // dd($metaDataConfig->getFieldType(), $requestData, $metaData);
+                    /**
+                     * $this->updateMetaData(
+                     *   $request,
+                     *   $formVersion,
+                     *   $results,
+                     *   $metaDataConfig
+                     * );
+                     * $metaDataConfig->setValue(
+                     *   $metaData['data']['value'] ?? null
+                     * );
+                     * // dd($metaDataConfig->getFieldType(), $requestData, $metaData);
+                     */
                     break;
 
                 case 'well':
@@ -437,8 +445,8 @@ class PublicationService {
 
                 case 'file-upload':
                 case 'image-upload':
-                    /** Get temporary file meta data */ 
-                    $temporaryFileUpload = ($metaData['data']['value'])
+                    /** Get temporary file meta data */
+                    $temporaryFileUpload = ($metaData && $metaData['data']['value'])
                         ? ($this->doctrineManager->getRepository(TemporaryFileUpload::class))->findOneBy([
                             'uuid' => $metaData['data']['value']
                         ])
