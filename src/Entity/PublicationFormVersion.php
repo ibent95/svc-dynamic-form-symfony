@@ -83,12 +83,15 @@ class PublicationFormVersion
     #[Ignore]
     protected $publication_metas;
 
-    #[ORM\OneToMany(
-        mappedBy: 'form_version',
-        targetEntity: PublicationForm::class,
-        fetch: 'EAGER',
-        cascade: ['ALL']
-    )]
+    #[
+        ORM\OneToMany(
+            mappedBy: 'form_version',
+            targetEntity: PublicationForm::class,
+            fetch: 'EAGER',
+            cascade: ['ALL']
+        ),
+        ORM\OrderBy(['order_position' => 'ASC'])
+    ]
     #[Ignore]
     protected $forms;
 

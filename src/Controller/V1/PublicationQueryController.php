@@ -387,6 +387,8 @@ class PublicationQueryController extends AbstractController
                 ->findBy([
                     'flag_active'       => true,
                     'id_publication'    => $publication->getId()
+                ], [
+                    'order_position' => 'ASC'
                 ]);
 
             // FormVersion
