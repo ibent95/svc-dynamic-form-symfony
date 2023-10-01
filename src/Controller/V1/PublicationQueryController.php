@@ -13,6 +13,7 @@ use App\Service\DynamicFormService;
 use App\Service\PublicationService;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
@@ -24,14 +25,15 @@ use Symfony\Component\Routing\Annotation\Route;
 class PublicationQueryController extends AbstractController
 {
     private $logger;
-    private $responseData;
-    private $responseStatusCode;
     private $request;
     private $exprBuilder;
     private $criteria;
     private $commonSvc;
     private $dynamicFormSvc;
     private $publicationSvc;
+    private Collection $response;
+    private array $responseData;
+    private int $responseStatusCode;
 
     public function __construct(
         LoggerInterface $logger,
@@ -46,14 +48,6 @@ class PublicationQueryController extends AbstractController
 
         $this->exprBuilder          = Criteria::expr();
         $this->criteria             = new Criteria();
-
-        // Response initial value
-        $this->responseData         = [
-            'info'      => '',
-            'message'   => '',
-            'data'      => [],
-        ];
-        $this->responseStatusCode   = 400;
 
         $formVersion['grid_system']['bootstrap']    = [
             'type' => 'bootstrap',
@@ -143,6 +137,17 @@ class PublicationQueryController extends AbstractController
         $this->commonSvc            = $commonSvc;
         $this->dynamicFormSvc       = $dynamicFormSvc;
         $this->publicationSvc       = $publicationSvc;
+
+        
+        // Response initial value
+        $this->responseData         = [
+            'info'      => '',
+            'message'   => '',
+            'data'      => [],
+        ];
+        $this->responseStatusCode   = 400;
+        $this->response             = $this->commonSvc->setResponse($this->responseData, $this->responseStatusCode);
+
     }
 
     /** ================================ Required functions for publication ================================ */
@@ -152,16 +157,16 @@ class PublicationQueryController extends AbstractController
     {
         $this->logger->info('The publication menu has been accessed!');
 
-        $this->responseData['info'] 	= 'success';
-        $this->responseData['message'] 	= 'Success to access the publication menu!';
-        $this->responseData['data'] 	= [
-            'message' 	=> 'Welcome to publication!',
-            'date' 		=> date('Y-m-d'),
-        ];
+        $this->response = $this->commonSvc->setResponse([
+            'info' => 'success',
+            'message' => 'Success to access the publication`s API!',
+            'data' => [
+                'message' 	=> 'Welcome to publication`s API!',
+                'date' 		=> date('Y-m-d'),
+            ],
+        ], 200);
 
-        $this->responseStatusCode = 200;
-
-        return $this->json($this->responseData, $this->responseStatusCode);
+        return $this->json($this->response->get('data'), $this->response->get('status_code'));
     }
 
     #[Route('/api/v1/publications', methods: ['GET'], name: 'app_v1_publications')]
@@ -169,40 +174,44 @@ class PublicationQueryController extends AbstractController
     {
         $entityManager                  = $doctrine->getManager();
 
-        $this->responseData['info']     = 'error';
-        $this->responseData['message']  = '';
-        $this->responseStatusCode       = 500;
+        $this->response = $this->commonSvc->setResponse([
+            'info' => 'error',
+            'message' => 'No process is running in app_v1_publications.',
+        ], 500);
 
         try {
             $params                     = ['flag_active' => true];
             $orderBy                    = ['updated_at' => 'DESC'];
-            $limit                      = $request->get('limit');
-            $offset                     = $request->get('offset');
-            
+            $paginator                  = $this->commonSvc->setPaginator($request);
+
             $publicationsEntity         = $entityManager->getRepository(Publication::class);
             $publicationTotalCount      = $publicationsEntity->count([]);
             $publicationsData           = $publicationsEntity->findBy(
-                $params, $orderBy, $limit, $offset
+                $params, $orderBy, $paginator->get('limit'), $paginator->get('offset')
             );
 
             // Response data
-            $this->responseData['data']     = $publicationsData;
-            $this->responseData['count']    = $publicationTotalCount;
-            $this->responseData['info']     = 'success';
-            $this->responseData['message']  = 'Success to get publications data!';
-            $this->responseStatusCode       = 200;
+            $this->response = $this->commonSvc->setResponse([
+                'info'     => 'success',
+                'message'  => 'Success to get publications data!',
+                'data'     => $publicationsData,
+                'count'    => $publicationTotalCount,
+            ], 200);
 
             $this->logger->info('Get publications data: ');
         } catch (\Exception $e) {
-            $this->responseData['message']  = 'Error on get publications data!';
-            $this->responseStatusCode       = 400;
+            $this->response = $this->commonSvc->setResponse([
+                'info'     => 'error',
+                'message'  => 'Error on get publications data!'
+            ], 400);
             $this->logger->error(
-                'Get publications data exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(),
+                'Get publications data exception log: ' . $e->getMessage()
+                    . ', line: ' . $e->getLine(),
                 [$e->getFile(), 'trace => ', $e->getTrace()]
             );
         }
 
-        return $this->json($this->responseData, $this->responseStatusCode);
+        return $this->json($this->response->get('data'), $this->response->get('status_code'));
     }
 
     #[Route('/api/v1/publications/{uuid}', methods: ['GET'], name: 'app_v1_publication_by_uuid')]
@@ -210,9 +219,10 @@ class PublicationQueryController extends AbstractController
     {
         $entityManager                  = $doctrine->getManager();
 
-        $this->responseData['info']     = 'error';
-        $this->responseData['message']  = '';
-        $this->responseStatusCode       = 500;
+        $this->response = $this->commonSvc->setResponse([
+            'info' => 'error',
+            'message' => 'No process is running in app_v1_publication_by_uuid.',
+        ], 500);
 
         try {
             $params                     = ['uuid' => $uuid];
@@ -223,15 +233,18 @@ class PublicationQueryController extends AbstractController
             $publication['meta_data']   = $publicationRaw->getPublicationMetas();
 
             // Response data
-            $this->responseData['data']     = $publication;
-            $this->responseData['info']     = 'success';
-            $this->responseData['message']  = 'Success to get publication data!';
-            $this->responseStatusCode       = 200;
+            $this->response = $this->commonSvc->setResponse([
+                'info'     => 'success',
+                'message'  => 'Success to get publication data!',
+                'data'     => $publication,
+            ], 200);
 
             $this->logger->info('Get publication data by UUID `' . $uuid . '`.');
         } catch (\Exception $e) {
-            $this->responseData['message']  = 'Error on get publication data!';
-            $this->responseStatusCode       = 400;
+            $this->response = $this->commonSvc->setResponse([
+                'info'     => 'error',
+                'message'  => 'Error on get publication data!'
+            ], 400);
             $this->logger->error(
                 'Get publication data by UUID `' . $uuid
                     . '` exception log: ' . $e->getMessage()
@@ -240,7 +253,7 @@ class PublicationQueryController extends AbstractController
             );
         }
 
-        return $this->json($this->responseData, $this->responseStatusCode);
+        return $this->json($this->response->get('data'), $this->response->get('status_code'));
     }
 
     /** =============================== Form metadata (Forms of Publication) =============================== */
@@ -257,9 +270,10 @@ class PublicationQueryController extends AbstractController
     {
         $entityManager                  = $doctrine->getManager();
 
-        $this->responseData['info']     = 'error';
-        $this->responseData['message']  = '';
-        $this->responseStatusCode       = 500;
+        $this->response = $this->commonSvc->setResponse([
+            'info' => 'error',
+            'message' => 'No process is running in app_v1_publication_form_metadata_by_publication_type_code.',
+        ], 500);
 
         $formVersionCode                = $this->request->query->get('form-version-code');
 
@@ -322,22 +336,25 @@ class PublicationQueryController extends AbstractController
             }
 
             // Response data
-            $this->responseData['data']     = $formVersionNormalize ?: [];
-            $this->responseData['info']     = 'success';
-            $this->responseData['message']  = 'Success to get publication form metadata!';
-            $this->responseStatusCode       = 200;
+            $this->response = $this->commonSvc->setResponse([
+                'info'     => 'success',
+                'message'  => 'Success to get publication form metadata!',
+                'data'     => $formVersionNormalize ?: [],
+            ], 200);
 
             $this->logger->info('Get publication form: ' . $publicationType->getPublicationTypeName());
         } catch (\Exception $e) {
-            $this->responseData['message']  = 'Error on get publication form metadata!';
-            $this->responseStatusCode       = 400;
+            $this->response = $this->commonSvc->setResponse([
+                'info'     => 'error',
+                'message'  => 'Error on get publication form metadata!'
+            ], 400);
             $this->logger->error(
                 'Get form metadata exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(),
                 [$e->getFile(), $e->getTraceAsString()]
             );
         }
 
-        return $this->json($this->responseData, $this->responseStatusCode);
+        return $this->json($this->response->get('data'), $this->response->get('status_code'));
     }
 
     #[Route(
@@ -352,9 +369,10 @@ class PublicationQueryController extends AbstractController
     {
         $entityManager                  = $doctrine->getManager();
 
-        $this->responseData['info']     = 'error';
-        $this->responseData['message']  = '';
-        $this->responseStatusCode       = 500;
+        $this->response = $this->commonSvc->setResponse([
+            'info' => 'error',
+            'message' => 'No process is running in app_v1_publication_form_metadata_by_publication_uuid.',
+        ], 500);
 
         $formVersionCode                = $this->request->query->get('form-version-code');
 
@@ -423,15 +441,18 @@ class PublicationQueryController extends AbstractController
             }
 
             // Response data
-            $this->responseData['data']     = $formVersionNormalize ?: [];
-            $this->responseData['info']     = 'success';
-            $this->responseData['message']  = 'Success to get publication form metadata!';
-            $this->responseStatusCode       = 200;
+            $this->response = $this->commonSvc->setResponse([
+                'info'     => 'success',
+                'message'  => 'Success to get publication form metadata!',
+                'data'     => $formVersionNormalize ?: [],
+            ], 200);
 
             $this->logger->info('Get publication form meta data by uuid `' . $publicationUuid . '`');
         } catch (\Exception $e) {
-            $this->responseData['message']  = 'Error on get publication form metadata!';
-            $this->responseStatusCode       = 400;
+            $this->response = $this->commonSvc->setResponse([
+                'info'     => 'error',
+                'message'  => 'Error on get publication form metadata!'
+            ], 400);
             $this->logger->error(
                 'Get publication form meta data by uuid `' . $publicationUuid
                 . '` exception log: ' . $e->getMessage()
@@ -440,7 +461,7 @@ class PublicationQueryController extends AbstractController
             );
         }
 
-        return $this->json($this->responseData, $this->responseStatusCode);
+        return $this->json($this->response->get('data'), $this->response->get('status_code'));
     }
 
     /** ======================================== Template functions ======================================== */
