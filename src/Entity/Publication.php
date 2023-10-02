@@ -70,13 +70,16 @@ class Publication
     #[ORM\Column(type: 'guid', nullable: false)]
     private $uuid;
 
-    #[ORM\OneToMany(
-        mappedBy: 'publication',
-        targetEntity: PublicationMeta::class,
-        cascade: ["ALL"],
-        orphanRemoval: true,
-        fetch: 'EAGER',
-    )]
+    #[
+        ORM\OneToMany(
+            mappedBy: 'publication',
+            targetEntity: PublicationMeta::class,
+            cascade: ["ALL"],
+            orphanRemoval: true,
+            fetch: 'EAGER',
+        ),
+        ORM\OrderBy(['order_position' => 'ASC'])
+    ]
     #[Ignore]
     private Collection $publication_metas;
 

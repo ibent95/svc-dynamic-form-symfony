@@ -4,6 +4,8 @@ namespace App\Service;
 
 use Brick\Math\BigInteger;
 use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
@@ -26,6 +28,11 @@ use Symfony\Component\String\UnicodeString;
 use Symfony\Component\Uid\Uuid;
 
 class CommonService {
+
+    private Collection $response;
+    private Collection $responseData;
+    private int $responseStatusCode;
+
 	/** @var $results Mixed */
 	private $results;
 	private $serializer;
@@ -37,6 +44,7 @@ class CommonService {
 	private $dateTimeFormat;
 	private $slugger;
     private $parameter;
+	private Collection $paginator;
 
 	public function __construct(
 		SerializerInterface $serializer,
@@ -46,6 +54,19 @@ class CommonService {
         ParameterBagInterface $parameter
 	)
 	{
+		
+        // Initial response value
+        $this->responseData         = new ArrayCollection([
+            'info'      	=> '',
+            'message'   	=> '',
+            'data'      	=> [],
+        ]);
+        $this->responseStatusCode   = 400;
+		$this->response				= new ArrayCollection([
+			'data'			=> $this->responseData,
+			'status_code'	=> $this->responseStatusCode,
+		]);
+
 		$this->results			= [];
 		/** @var $serializer SerializeInterface */
 		$this->serializer 		= $serializer;
@@ -60,6 +81,44 @@ class CommonService {
 
 		$this->slugger 			= $slugger;
         $this->parameter        = $parameter;
+		$this->paginator	    = new ArrayCollection([
+			'limit' => 0,
+			'offset' => 0,
+			'page_index' => 0,
+		]);
+	}
+
+	public function setResponse(
+		array $responseData,
+		int $responseStatusCode,
+		?array $responseDataAppend = null,
+	) : Collection {
+		$this->responseData 		= ($responseData) ? new ArrayCollection($responseData) : $this->responseData;
+		$this->responseStatusCode 	= ($responseStatusCode) ? $responseStatusCode : $this->responseStatusCode;
+
+		if ($responseData || $responseStatusCode) {
+			$this->response->set('data', $this->responseData);
+			$this->response->set('status_code', $this->responseStatusCode);
+		}
+
+		return $this->response;
+	}
+
+	public function setPaginator(Request $request) : Collection
+	{
+		$limit                      = $request->get('limit');
+		$offset                     = $request->get('offset');
+		$pageIndex                  = $request->get('page_index');
+
+		if ($pageIndex) {
+			$offset                 = $limit * $pageIndex; // Can also ($pageNumber -1)
+		}
+
+		$this->paginator->set('limit', $limit);
+		$this->paginator->set('offset', $offset);
+		$this->paginator->set('page_index', $pageIndex);
+
+		return $this->paginator;
 	}
 
 	public function getEntityIdentifierFromUnit(object $object): Mixed
