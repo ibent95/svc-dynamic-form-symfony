@@ -137,7 +137,7 @@ class CommonService {
 		 * Brick/Math func: BigInteger::randomRange($from, $to);
 		 */ 
 		$from = '0';
-		$to = '92233720368547758';
+		$to = '9223372036854775807';
 		return BigInteger::randomRange($from, $to);
 	}
 
