@@ -185,7 +185,7 @@ class PublicationQueryController extends AbstractController
             $paginator                  = $this->commonSvc->setPaginator($request);
 
             $publicationsEntity         = $entityManager->getRepository(Publication::class);
-            $publicationTotalCount      = $publicationsEntity->count([]);
+            $publicationTotalCount      = $publicationsEntity->count($params);
             $publicationsData           = $publicationsEntity->findBy(
                 $params, $orderBy, $paginator->get('limit'), $paginator->get('offset')
             );
