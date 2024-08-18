@@ -13,8 +13,8 @@ namespace Nelmio\CorsBundle\DependencyInjection;
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader;
-use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
@@ -34,6 +34,7 @@ class NelmioCorsExtension extends Extension
                 'allow_origin' => [],
                 'allow_credentials' => false,
                 'allow_headers' => [],
+                'allow_private_network' => false,
                 'expose_headers' => [],
                 'allow_methods' => [],
                 'max_age' => 0,

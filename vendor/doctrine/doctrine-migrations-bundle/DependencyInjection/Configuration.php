@@ -14,7 +14,6 @@ use function constant;
 use function count;
 use function in_array;
 use function is_string;
-use function method_exists;
 use function strlen;
 use function strpos;
 use function strtoupper;
@@ -34,12 +33,7 @@ class Configuration implements ConfigurationInterface
     {
         $treeBuilder = new TreeBuilder('doctrine_migrations');
 
-        if (method_exists($treeBuilder, 'getRootNode')) {
-            $rootNode = $treeBuilder->getRootNode();
-        } else {
-            // BC layer for symfony/config 4.1 and older
-            $rootNode = $treeBuilder->root('doctrine_migrations', 'array');
-        }
+        $rootNode = $treeBuilder->getRootNode();
 
         $organizeMigrationModes = $this->getOrganizeMigrationsModes();
 
@@ -170,15 +164,15 @@ class Configuration implements ConfigurationInterface
         $constPrefix = 'VERSIONS_ORGANIZATION_';
         $prefixLen   = strlen($constPrefix);
         $refClass    = new ReflectionClass('Doctrine\Migrations\Configuration\Configuration');
-        $constsArray = $refClass->getConstants();
+        $constsArray = array_keys($refClass->getConstants());
         $namesArray  = [];
 
-        foreach ($constsArray as $key => $value) {
-            if (strpos($key, $constPrefix) !== 0) {
+        foreach ($constsArray as $constant) {
+            if (strpos($constant, $constPrefix) !== 0) {
                 continue;
             }
 
-            $namesArray[] = substr($key, $prefixLen);
+            $namesArray[] = substr($constant, $prefixLen);
         }
 
         return $namesArray;

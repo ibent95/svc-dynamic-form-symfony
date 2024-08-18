@@ -40,16 +40,17 @@ class Configuration implements ConfigurationInterface
             ->children()
                 ->arrayNode('defaults')
                     ->addDefaultsIfNotSet()
-                    ->append($this->getAllowCredentials())
+                    ->append($this->getAllowCredentials(true))
                     ->append($this->getAllowOrigin())
                     ->append($this->getAllowHeaders())
                     ->append($this->getAllowMethods())
+                    ->append($this->getAllowPrivateNetwork())
                     ->append($this->getExposeHeaders())
                     ->append($this->getMaxAge())
                     ->append($this->getHosts())
-                    ->append($this->getOriginRegex())
+                    ->append($this->getOriginRegex(true))
                     ->append($this->getForcedAllowOriginValue())
-                    ->append($this->getSkipSameAsOrigin())
+                    ->append($this->getSkipSameAsOrigin(true))
                 ->end()
 
                 ->arrayNode('paths')
@@ -60,6 +61,7 @@ class Configuration implements ConfigurationInterface
                         ->append($this->getAllowOrigin())
                         ->append($this->getAllowHeaders())
                         ->append($this->getAllowMethods())
+                        ->append($this->getAllowPrivateNetwork())
                         ->append($this->getExposeHeaders())
                         ->append($this->getMaxAge())
                         ->append($this->getHosts())
@@ -73,18 +75,24 @@ class Configuration implements ConfigurationInterface
         return $treeBuilder;
     }
 
-    private function getSkipSameAsOrigin(): BooleanNodeDefinition
+    private function getSkipSameAsOrigin(bool $withDefaultValue = false): BooleanNodeDefinition
     {
         $node = new BooleanNodeDefinition('skip_same_as_origin');
-        $node->defaultTrue();
+
+        if ($withDefaultValue) {
+            $node->defaultTrue();
+        }
 
         return $node;
     }
 
-    private function getAllowCredentials(): BooleanNodeDefinition
+    private function getAllowCredentials(bool $withDefaultValue = false): BooleanNodeDefinition
     {
         $node = new BooleanNodeDefinition('allow_credentials');
-        $node->defaultFalse();
+
+        if ($withDefaultValue) {
+            $node->defaultFalse();
+        }
 
         return $node;
     }
@@ -137,6 +145,14 @@ class Configuration implements ConfigurationInterface
         return $node;
     }
 
+    private function getAllowPrivateNetwork(): BooleanNodeDefinition
+    {
+        $node = new BooleanNodeDefinition('allow_private_network');
+        $node->defaultFalse();
+
+        return $node;
+    }
+
     private function getExposeHeaders(): ArrayNodeDefinition
     {
         $node = new ArrayNodeDefinition('expose_headers');
@@ -182,10 +198,13 @@ class Configuration implements ConfigurationInterface
         return $node;
     }
 
-    private function getOriginRegex(): BooleanNodeDefinition
+    private function getOriginRegex(bool $withDefaultValue = false): BooleanNodeDefinition
     {
         $node = new BooleanNodeDefinition('origin_regex');
-        $node->defaultFalse();
+
+        if ($withDefaultValue) {
+            $node->defaultFalse();
+        }
 
         return $node;
     }

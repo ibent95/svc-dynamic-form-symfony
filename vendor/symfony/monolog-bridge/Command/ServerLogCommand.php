@@ -13,7 +13,9 @@ namespace Symfony\Bridge\Monolog\Command;
 
 use Monolog\Formatter\FormatterInterface;
 use Monolog\Handler\HandlerInterface;
+use Monolog\Level;
 use Monolog\Logger;
+use Monolog\LogRecord;
 use Symfony\Bridge\Monolog\Formatter\ConsoleFormatter;
 use Symfony\Bridge\Monolog\Handler\ConsoleHandler;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -155,6 +157,17 @@ EOF
         }
         $logBlock = sprintf('<bg=%s> </>', self::BG_COLOR[$clientId % 8]);
         $output->write($logBlock);
+
+        if (Logger::API >= 3) {
+            $record = new LogRecord(
+                $record['datetime'],
+                $record['channel'],
+                Level::fromValue($record['level']),
+                $record['message'],
+                $record['context']->getValue(true),
+                $record['extra']->getValue(true),
+            );
+        }
 
         $this->handler->handle($record);
     }

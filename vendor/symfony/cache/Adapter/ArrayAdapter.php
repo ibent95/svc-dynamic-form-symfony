@@ -74,7 +74,7 @@ class ArrayAdapter implements AdapterInterface, CacheInterface, LoggerAwareInter
         );
     }
 
-    public function get(string $key, callable $callback, float $beta = null, array &$metadata = null): mixed
+    public function get(string $key, callable $callback, ?float $beta = null, ?array &$metadata = null): mixed
     {
         $item = $this->getItem($key);
         $metadata = $item->getMetadata();
@@ -298,7 +298,7 @@ class ArrayAdapter implements AdapterInterface, CacheInterface, LoggerAwareInter
         }
     }
 
-    private function freeze($value, string $key): string|int|float|bool|array|null
+    private function freeze($value, string $key): string|int|float|bool|array|\UnitEnum|null
     {
         if (null === $value) {
             return 'N;';

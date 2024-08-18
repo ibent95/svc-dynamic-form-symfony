@@ -536,6 +536,7 @@ class SecurityExtension extends Extension implements PrependExtensionInterface
                 ->register('debug.security.firewall.authenticator.'.$id, TraceableAuthenticatorManagerListener::class)
                 ->setDecoratedService('security.firewall.authenticator.'.$id)
                 ->setArguments([new Reference('debug.security.firewall.authenticator.'.$id.'.inner')])
+                ->addTag('kernel.reset', ['method' => 'reset'])
             ;
         }
 
@@ -936,7 +937,7 @@ class SecurityExtension extends Extension implements PrependExtensionInterface
         return $this->expressions[$id] = new Reference($id);
     }
 
-    private function createRequestMatcher(ContainerBuilder $container, string $path = null, string $host = null, int $port = null, array $methods = [], array $ips = null, array $attributes = []): Reference
+    private function createRequestMatcher(ContainerBuilder $container, ?string $path = null, ?string $host = null, ?int $port = null, array $methods = [], ?array $ips = null, array $attributes = []): Reference
     {
         if ($methods) {
             $methods = array_map('strtoupper', $methods);

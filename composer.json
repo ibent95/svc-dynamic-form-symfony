@@ -1,4 +1,7 @@
 {
+    "name": "ibent95/svc-dynamic-form-symfony",
+    "description": "svc-dynamic-form-symfony.",
+    "keywords": ["framework", "symfony"],
 	"type" : "project",
 	"license" : "proprietary",
 	"minimum-stability" : "stable",

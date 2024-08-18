@@ -159,9 +159,9 @@ class PublicationQueryController extends AbstractController
 
         $this->response = $this->commonSvc->setResponse([
             'info' => 'success',
-            'message' => 'Success to access the publication`s API!',
+            'message' => 'Success to access the Publication`s API!',
             'data' => [
-                'message' 	=> 'Welcome to publication`s API!',
+                'message' 	=> 'Welcome to Publication`s API!',
                 'date' 		=> date('Y-m-d'),
             ],
         ], 200);

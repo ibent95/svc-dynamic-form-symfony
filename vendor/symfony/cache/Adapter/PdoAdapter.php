@@ -31,8 +31,8 @@ class PdoAdapter extends AbstractAdapter implements PruneableInterface
     private mixed $dataCol = 'item_data';
     private mixed $lifetimeCol = 'item_lifetime';
     private mixed $timeCol = 'item_time';
-    private mixed $username = '';
-    private mixed $password = '';
+    private mixed $username = null;
+    private mixed $password = null;
     private mixed $connectionOptions = [];
     private string $namespace;
 
@@ -55,7 +55,7 @@ class PdoAdapter extends AbstractAdapter implements PruneableInterface
      * @throws InvalidArgumentException When PDO error mode is not PDO::ERRMODE_EXCEPTION
      * @throws InvalidArgumentException When namespace contains invalid characters
      */
-    public function __construct(#[\SensitiveParameter] \PDO|string $connOrDsn, string $namespace = '', int $defaultLifetime = 0, array $options = [], MarshallerInterface $marshaller = null)
+    public function __construct(#[\SensitiveParameter] \PDO|string $connOrDsn, string $namespace = '', int $defaultLifetime = 0, array $options = [], ?MarshallerInterface $marshaller = null)
     {
         if (\is_string($connOrDsn) && str_contains($connOrDsn, '://')) {
             throw new InvalidArgumentException(sprintf('Usage of Doctrine DBAL URL with "%s" is not supported. Use a PDO DSN or "%s" instead.', __CLASS__, DoctrineDbalAdapter::class));
@@ -285,8 +285,8 @@ class PdoAdapter extends AbstractAdapter implements PruneableInterface
         $lifetime = $lifetime ?: null;
         try {
             $stmt = $conn->prepare($sql);
-        } catch (\PDOException) {
-            if (!$conn->inTransaction() || \in_array($this->driver, ['pgsql', 'sqlite', 'sqlsrv'], true)) {
+        } catch (\PDOException $e) {
+            if ($this->isTableMissing($e) && (!$conn->inTransaction() || \in_array($this->driver, ['pgsql', 'sqlite', 'sqlsrv'], true))) {
                 $this->createTable();
             }
             $stmt = $conn->prepare($sql);
@@ -320,8 +320,8 @@ class PdoAdapter extends AbstractAdapter implements PruneableInterface
         foreach ($values as $id => $data) {
             try {
                 $stmt->execute();
-            } catch (\PDOException) {
-                if (!$conn->inTransaction() || \in_array($this->driver, ['pgsql', 'sqlite', 'sqlsrv'], true)) {
+            } catch (\PDOException $e) {
+                if ($this->isTableMissing($e) && (!$conn->inTransaction() || \in_array($this->driver, ['pgsql', 'sqlite', 'sqlsrv'], true))) {
                     $this->createTable();
                 }
                 $stmt->execute();
@@ -368,5 +368,22 @@ class PdoAdapter extends AbstractAdapter implements PruneableInterface
     private function getServerVersion(): string
     {
         return $this->serverVersion ??= $this->conn->getAttribute(\PDO::ATTR_SERVER_VERSION);
+    }
+
+    private function isTableMissing(\PDOException $exception): bool
+    {
+        $driver = $this->driver;
+        $code = $exception->getCode();
+
+        switch (true) {
+            case 'pgsql' === $driver && '42P01' === $code:
+            case 'sqlite' === $driver && str_contains($exception->getMessage(), 'no such table:'):
+            case 'oci' === $driver && 942 === $code:
+            case 'sqlsrv' === $driver && 208 === $code:
+            case 'mysql' === $driver && 1146 === $code:
+                return true;
+            default:
+                return false;
+        }
     }
 }

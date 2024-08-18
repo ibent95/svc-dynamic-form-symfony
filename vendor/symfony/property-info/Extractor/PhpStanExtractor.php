@@ -58,7 +58,7 @@ final class PhpStanExtractor implements PropertyTypeExtractorInterface, Construc
      * @param list<string>|null $accessorPrefixes
      * @param list<string>|null $arrayMutatorPrefixes
      */
-    public function __construct(array $mutatorPrefixes = null, array $accessorPrefixes = null, array $arrayMutatorPrefixes = null)
+    public function __construct(?array $mutatorPrefixes = null, ?array $accessorPrefixes = null, ?array $arrayMutatorPrefixes = null)
     {
         if (!class_exists(ContextFactory::class)) {
             throw new \LogicException(sprintf('Unable to use the "%s" class as the "phpdocumentor/type-resolver" package is not installed. Try running composer require "phpdocumentor/type-resolver".', __CLASS__));
@@ -183,9 +183,7 @@ final class PhpStanExtractor implements PropertyTypeExtractorInterface, Construc
             return null;
         }
 
-        $tokens = new TokenIterator($this->lexer->tokenize($rawDocNode));
-        $phpDocNode = $this->phpDocParser->parse($tokens);
-        $tokens->consumeTokenType(Lexer::TOKEN_END);
+        $phpDocNode = $this->getPhpDocNode($rawDocNode);
 
         return $this->filterDocBlockParams($phpDocNode, $property);
     }
@@ -239,23 +237,26 @@ final class PhpStanExtractor implements PropertyTypeExtractorInterface, Construc
             return null;
         }
 
+        // Type can be inside property docblock as `@var`
+        $rawDocNode = $reflectionProperty->getDocComment();
+        $phpDocNode = $rawDocNode ? $this->getPhpDocNode($rawDocNode) : null;
         $source = self::PROPERTY;
 
-        if ($reflectionProperty->isPromoted()) {
+        if (!$phpDocNode?->getTagsByName('@var')) {
+            $phpDocNode = null;
+        }
+
+        // or in the constructor as `@param` for promoted properties
+        if (!$phpDocNode && $reflectionProperty->isPromoted()) {
             $constructor = new \ReflectionMethod($class, '__construct');
             $rawDocNode = $constructor->getDocComment();
+            $phpDocNode = $rawDocNode ? $this->getPhpDocNode($rawDocNode) : null;
             $source = self::MUTATOR;
-        } else {
-            $rawDocNode = $reflectionProperty->getDocComment();
         }
 
-        if (!$rawDocNode) {
+        if (!$phpDocNode) {
             return null;
         }
-
-        $tokens = new TokenIterator($this->lexer->tokenize($rawDocNode));
-        $phpDocNode = $this->phpDocParser->parse($tokens);
-        $tokens->consumeTokenType(Lexer::TOKEN_END);
 
         return [$phpDocNode, $source, $reflectionProperty->class];
     }
@@ -296,10 +297,17 @@ final class PhpStanExtractor implements PropertyTypeExtractorInterface, Construc
             return null;
         }
 
+        $phpDocNode = $this->getPhpDocNode($rawDocNode);
+
+        return [$phpDocNode, $prefix, $reflectionMethod->class];
+    }
+
+    private function getPhpDocNode(string $rawDocNode): PhpDocNode
+    {
         $tokens = new TokenIterator($this->lexer->tokenize($rawDocNode));
         $phpDocNode = $this->phpDocParser->parse($tokens);
         $tokens->consumeTokenType(Lexer::TOKEN_END);
 
-        return [$phpDocNode, $prefix, $reflectionMethod->class];
+        return $phpDocNode;
     }
 }

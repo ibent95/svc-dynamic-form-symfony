@@ -103,7 +103,7 @@ class Configuration implements ConfigurationInterface
                     ->info('Set true to enable support for xsendfile in binary file responses.')
                     ->defaultFalse()
                 ->end()
-                ->scalarNode('ide')->defaultValue('%env(default::SYMFONY_IDE)%')->end()
+                ->scalarNode('ide')->defaultValue($this->debug ? '%env(default::SYMFONY_IDE)%' : null)->end()
                 ->booleanNode('test')->end()
                 ->scalarNode('default_locale')->defaultValue('en')->end()
                 ->booleanNode('set_locale_from_accept_language')
@@ -142,7 +142,7 @@ class Configuration implements ConfigurationInterface
             ->end()
         ;
 
-        $willBeAvailable = static function (string $package, string $class, string $parentPackage = null) {
+        $willBeAvailable = static function (string $package, string $class, ?string $parentPackage = null) {
             $parentPackages = (array) $parentPackage;
             $parentPackages[] = 'symfony/framework-bundle';
 
