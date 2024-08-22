@@ -5,7 +5,7 @@
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => '51c885cdba72d6a372047a196c2a2174eac32eb1',
+        'reference' => '8e015b6c17315b4511e515c73e73e9eb5cdaf05d',
         'name' => 'ibent95/svc-dynamic-form-symfony',
         'dev' => true,
     ),
@@ -187,7 +187,7 @@
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => '51c885cdba72d6a372047a196c2a2174eac32eb1',
+            'reference' => '8e015b6c17315b4511e515c73e73e9eb5cdaf05d',
             'dev_requirement' => false,
         ),
         'laminas/laminas-code' => array(
@@ -434,19 +434,19 @@
             ),
         ),
         'psr/log' => array(
-            'pretty_version' => '3.0.0',
-            'version' => '3.0.0.0',
+            'pretty_version' => '3.0.1',
+            'version' => '3.0.1.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../psr/log',
             'aliases' => array(),
-            'reference' => 'fe5ea303b0887d5caefd3d431c3e61ad47037001',
+            'reference' => '79dff0b268932c640297f5208d6298f71855c03e',
             'dev_requirement' => false,
         ),
         'psr/log-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '1.0|2.0|3.0',
-                1 => '3.0.0',
+                0 => '3.0.0',
+                1 => '1.0|2.0|3.0',
             ),
         ),
         'psr/simple-cache-implementation' => array(

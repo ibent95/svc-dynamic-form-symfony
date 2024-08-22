@@ -1,5 +1,5 @@
 api_platform:
-    title: Hello API Platform
+    title: 'Hello API Platform'
     version: 1.0.0
     # Good defaults for REST APIs
     defaults:

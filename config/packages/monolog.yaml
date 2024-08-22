@@ -6,10 +6,10 @@ when@dev:
     monolog:
         handlers:
             main:
-                type: rotating_file
-                path: "%kernel.logs_dir%/%kernel.environment%.log"
+                type: 'rotating_file'
+                path: '%kernel.logs_dir%/%kernel.environment%.log'
                 level: debug
-                channels: ["!event"]
+                channels: ['!event']
                 max_files: 0
                 filename_format: '{date}'
                 date_format: 'Y-m-d'
@@ -24,22 +24,22 @@ when@dev:
             console:
                 type: console
                 process_psr_3_messages: false
-                channels: ["!event", "!doctrine", "!console"]
+                channels: ['!event', '!doctrine', '!console']
 
 when@test:
     monolog:
         handlers:
             main:
-                type: fingers_crossed
+                type: 'fingers_crossed'
                 action_level: error
                 handler: nested
                 excluded_http_codes: [404, 405]
-                channels: ["!event"]
+                channels: ['!event']
                 filename_format: '{date}'
                 date_format: 'Y-m-d'
             nested:
                 type: stream
-                path: "%kernel.logs_dir%/%kernel.environment%.log"
+                path: '%kernel.logs_dir%/%kernel.environment%.log'
                 level: debug
 
 # when@prod:

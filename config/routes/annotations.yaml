@@ -1,9 +1,9 @@
 controllers:
-  resource: ../../src/Controller/
-  type: annotation
+  resource: '../../src/Controller/'
+  type: 'annotation'
   defaults:
-    schemes: [https]
+    schemes: ['https']
 
 kernel:
-  resource: ../../src/Kernel.php
-  type: annotation
+  resource: '../../src/Kernel.php'
+  type: 'annotation'
