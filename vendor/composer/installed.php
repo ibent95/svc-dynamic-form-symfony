@@ -5,7 +5,7 @@
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => '8e015b6c17315b4511e515c73e73e9eb5cdaf05d',
+        'reference' => '724ea95bf55dd5758446621a279fea1a6d240464',
         'name' => 'ibent95/svc-dynamic-form-symfony',
         'dev' => true,
     ),
@@ -187,7 +187,7 @@
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => '8e015b6c17315b4511e515c73e73e9eb5cdaf05d',
+            'reference' => '724ea95bf55dd5758446621a279fea1a6d240464',
             'dev_requirement' => false,
         ),
         'laminas/laminas-code' => array(
@@ -305,12 +305,12 @@
             'dev_requirement' => false,
         ),
         'phpunit/php-code-coverage' => array(
-            'pretty_version' => '9.2.31',
-            'version' => '9.2.31.0',
+            'pretty_version' => '9.2.32',
+            'version' => '9.2.32.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../phpunit/php-code-coverage',
             'aliases' => array(),
-            'reference' => '48c34b5d8d983006bd2adc2d0de92963b9155965',
+            'reference' => '85402a822d1ecf1db1096959413d35e1c37cf1a5',
             'dev_requirement' => true,
         ),
         'phpunit/php-file-iterator' => array(
