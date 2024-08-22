@@ -4,9 +4,10 @@ doctrine:
 
         # IMPORTANT: You MUST configure your server version,
         # either here or in the DATABASE_URL env var (see .env file)
-        #server_version: '15'
+        #server_version: '16'
 
         profiling_collect_backtrace: '%kernel.debug%'
+        use_savepoints: true
     orm:
         auto_generate_proxy_classes: true
         enable_lazy_ghost_objects: true
@@ -16,10 +17,11 @@ doctrine:
         auto_mapping: true
         mappings:
             App:
+                type: attribute
                 is_bundle: false
                 dir: '%kernel.project_dir%/src/Entity'
                 prefix: 'App\Entity'
-                alias: 'App'
+                alias: App
 
 when@test:
     doctrine:
@@ -33,16 +35,16 @@ when@prod:
             auto_generate_proxy_classes: false
             proxy_dir: '%kernel.build_dir%/doctrine/orm/Proxies'
             query_cache_driver:
-                type: 'pool'
-                pool: 'doctrine.system_cache_pool'
+                type: pool
+                pool: doctrine.system_cache_pool
             result_cache_driver:
                 type: pool
-                pool: 'doctrine.result_cache_pool'
+                pool: doctrine.result_cache_pool
 
     framework:
         cache:
             pools:
                 doctrine.result_cache_pool:
-                    adapter: 'cache.app'
+                    adapter: cache.app
                 doctrine.system_cache_pool:
-                    adapter: 'cache.system'
+                    adapter: cache.system
