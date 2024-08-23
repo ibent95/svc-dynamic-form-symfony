@@ -5,8 +5,10 @@ namespace App\Repository;
 use App\Entity\PublicationForm;
 use App\Entity\PublicationStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\Result;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
+use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -17,9 +19,42 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class PublicationFormRepository extends ServiceEntityRepository
 {
+    private Array $publicColumns;
+    private $results;
+    private Int $count;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, PublicationForm::class);
+
+        $this->publicColumns = [
+            "field_label",
+            "field_type",
+            "field_name",
+            "field_id",
+            "field_class",
+            "field_placeholder",
+            "field_options",
+            "field_configs",
+            "description",
+            "order_position",
+            "validation_configs",
+            "error_message",
+            "dependency_child",
+            "dependency_parent",
+            "flag_required",
+            "flag_field_form_type",
+            "flag_field_title",
+            "flag_field_publish_date",
+            "flag_active",
+            //"create_user",
+            "created_at",
+            //"update_user",
+            "updated_at",
+            "uuid",
+        ];
+        $this->results = null;
+        $this->count = 0;
     }
 
     /**
@@ -44,6 +79,10 @@ class PublicationFormRepository extends ServiceEntityRepository
         if ($flush) {
             $this->_em->flush();
         }
+    }
+
+    public function getCount() : Int {
+        return $this->count;
     }
 
     public function getFormByCode(String $code)
@@ -139,22 +178,102 @@ class PublicationFormRepository extends ServiceEntityRepository
         return $result;
     }
 
-    // /**
+    /**
+      * @return PublicationForm[] Returns an array of PublicationForm objects
+      */
+    public function getQueryBuilderAll(
+        Array $parameters = [],
+        Array $orderBy = ['id' => 'DESC'],
+        Int $maxResults = null,
+        Int $firstResult = null
+    ): Query
+    {
+        $this->results = $this->createQueryBuilder('pf');
+
+        if ($parameters) {
+            foreach ($parameters as $key => $value) {
+                $this->results = $this->results
+                    ->andWhere("pf.$key = :$key")
+                    ->setParameter($key, $value)
+                ;
+            }
+        }
+
+        if ($orderBy) {
+            foreach ($orderBy as $key => $order) {
+                $this->results = $this->results->orderBy("pf.$key", $order);
+            }
+        }
+
+        if ($maxResults !== NULL) {
+            $this->results = $this->results->setMaxResults($maxResults);
+        }
+
+        if ($firstResult !== NULL) {
+            $this->results = $this->results->setFirstResult($firstResult);
+        }
+
+        return $this->results->getQuery(); // ->getResult()
+    }
+
+    /**
+      * @return PublicationForm[] Returns an array of PublicationForm objects
+      */
+    public function getRawQueryBuilderAll(
+        Array $parameters = [],
+        Array $orderBy = ['id' => 'DESC'],
+        Int $maxResults = null,
+        Int $firstResult = null
+    ): Result
+    {
+        $connection = $this->_em->getConnection();
+
+        $sql = 'SELECT ';
+
+        $publicColumnsLastIndex = count($this->publicColumns) - 1;
+        foreach ($this->publicColumns as $index => $column) {
+            $sql .= "pf.$column" . (($index !== $publicColumnsLastIndex) ? ', ' : ' ' );
+        }
+
+        $sql .= 'FROM publication_form pf ';
+
+        if ($orderBy) {
+            $sql .= "ORDER BY ";
+            $increment = 0;
+            $lastIncrement = count(array_keys($orderBy)) - 1;
+            foreach ($orderBy as $key => $order) {
+                $sql .= "pf.$key $order" . (($increment !== $lastIncrement) ? ', ' : ' ');
+                $increment++;
+            }
+        }
+
+        $this->count = $connection->executeQuery($sql, $parameters)->rowCount();
+
+        if ($maxResults !== NULL) {
+            $sql .= "LIMIT $maxResults ";
+        }
+
+        if ($firstResult !== NULL) {
+            $sql .= "OFFSET $firstResult";
+        }
+
+        return $connection->executeQuery($sql, $parameters); // ->fetchAllAssociative();
+    }
+
+    ///**
     //  * @return PublicationForm[] Returns an array of PublicationForm objects
     //  */
-    /*
-    public function findByExampleField($value)
-    {
-        return $this->createQueryBuilder('f')
-            ->andWhere('f.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('f.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
+    //public function findByExampleField($value)
+    //{
+    //    return $this->createQueryBuilder('f')
+    //        ->andWhere('f.exampleField = :val')
+    //        ->setParameter('val', $value)
+    //        ->orderBy('f.id', 'ASC')
+    //        ->setMaxResults(10)
+    //        ->getQuery()
+    //        ->getResult()
+    //    ;
+    //}
 
     /*
     public function findOneBySomeField($value): ?PublicationForm

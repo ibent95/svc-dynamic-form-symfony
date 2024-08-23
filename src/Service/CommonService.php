@@ -11,6 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -54,7 +55,7 @@ class CommonService {
         ParameterBagInterface $parameter
 	)
 	{
-		
+
         // Initial response value
         $this->responseData         = new ArrayCollection([
             'info'      	=> '',
@@ -104,6 +105,36 @@ class CommonService {
 		return $this->response;
 	}
 
+	// Need more time to develop
+	public function buildResponse(
+		array $responseData,
+		int $responseStatusCode,
+		?array $responseDataAppend = null,
+	) : ?JsonResponse {
+		//if ($this->container->has('serializer')) {
+		//	$json = $this->container->get('serializer')->serialize($data, 'json', array_merge([
+		//		'json_encode_options' => JsonResponse::DEFAULT_ENCODING_OPTIONS,
+		//	], $context));
+
+		//	return new JsonResponse($json, $status, $headers, true);
+		//}
+
+		//return new JsonResponse($data, $status, $headers);
+	}
+
+	/**
+	 * Make the given, typically visible, attributes hidden.
+	 *
+	 * @param  array|string  $attributes
+	 * @return $hidden
+	 */
+	public function makeHidden(mixed $attributes, array $data): array
+	{
+		$results = array_merge($data, (array) $attributes);
+
+		return $results;
+	}
+
 	public function setPaginator(Request $request) : Collection
 	{
 		$limit                      = $request->get('limit');
@@ -131,11 +162,11 @@ class CommonService {
 		/** Changed from mysql UUID_SHORT() function,
 		 * to PHP arbitrary precision numbers library such as GMP BCMath based.
 		 * Alternativelly, I use Brick/Math library (https://github.com/brick/math).
-		 * 
+		 *
 		 * MySQL func: $this->doctrineManager->getConnection()->executeQuery('SELECT UUID_SHORT() AS uuid_short')->fetchOne();
 		 * GMP func: (string) gmp_random_range($from, $to);
 		 * Brick/Math func: BigInteger::randomRange($from, $to);
-		 */ 
+		 */
 		$from = '0';
 		$to = '9223372036854775807';
 		return BigInteger::randomRange($from, $to);
