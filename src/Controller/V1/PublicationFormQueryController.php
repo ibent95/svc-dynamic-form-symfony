@@ -1,10 +1,12 @@
 <?php
 
-namespace App\Controller\V1\Configurations;
+namespace App\Controller\V1;
 
+use App\Entity\PublicationForm;
 use App\Service\CommonService;
 use App\Service\DynamicFormService;
-use App\Service\PublicationFormVersionService;
+use App\Service\PublicationFormService;
+use App\Service\PublicationService;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Persistence\ManagerRegistry;
@@ -14,7 +16,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
-class PublicationFormVersionQueryController extends AbstractController
+class PublicationFormQueryController extends AbstractController
 {
     private $logger;
     private $request;
@@ -22,7 +24,7 @@ class PublicationFormVersionQueryController extends AbstractController
     private $criteria;
     private $commonSvc;
     private DynamicFormService $dynamicFormSvc;
-    private PublicationFormVersionService $publicationFormVersionSvc;
+    private PublicationFormService $publicationFormSvc;
     private Collection $response;
     private array $responseData;
     private int $responseStatusCode;
@@ -31,7 +33,7 @@ class PublicationFormVersionQueryController extends AbstractController
         LoggerInterface $logger,
         CommonService $commonSvc,
         DynamicFormService $dynamicFormSvc,
-        PublicationFormVersionService $publicationFormVersionSvc
+        PublicationFormService $publicationFormSvc
     ) {
         $this->logger               = $logger;
 
@@ -127,7 +129,7 @@ class PublicationFormVersionQueryController extends AbstractController
         // Services
         $this->commonSvc            = $commonSvc;
         $this->dynamicFormSvc       = $dynamicFormSvc;
-        $this->publicationFormVersionSvc   = $publicationFormVersionSvc;
+        $this->publicationFormSvc   = $publicationFormSvc;
 
 
         // Response initial value
@@ -140,16 +142,16 @@ class PublicationFormVersionQueryController extends AbstractController
         $this->response             = $this->commonSvc->setResponse($this->responseData, $this->responseStatusCode);
     }
 
-    #[Route('/api/v1/configurations/publication-form-version', name: 'app_v1_configurations_publication_form_version_query')]
+    #[Route('/api/v1/publication-form', name: 'app_v1_publication_form_query')]
     public function index(): JsonResponse
     {
-        $this->logger->info('The publication forms configuration menu has been accessed!');
+        $this->logger->info('The publication forms menu has been accessed!');
 
         $this->response = $this->commonSvc->setResponse([
             'info' => 'success',
-            'message' => 'Success to access the publication forms configuration API!',
+            'message' => 'Success to access the publication forms API!',
             'data' => [
-                'message'     => 'Welcome to publication forms configuration API!',
+                'message'     => 'Welcome to publication forms API!',
                 'date'         => date('Y-m-d'),
             ],
         ], 200);
@@ -157,22 +159,22 @@ class PublicationFormVersionQueryController extends AbstractController
         return $this->json($this->response->get('data'), $this->response->get('status_code'));
     }
 
-    #[Route('/api/v1/configurations/publication-form-versions', methods: ['GET'], name: 'app_v1_configurations_publication_form_version_get_all')]
+    #[Route('/api/v1/publication-forms', methods: ['GET'], name: 'app_v1_publication_form_get_all')]
     public function all(ManagerRegistry $doctrine, Request $request): JsonResponse
     {
         $entityManager                  = $doctrine->getManager();
 
         $this->response = $this->commonSvc->setResponse([
             'info' => 'error',
-            'message' => 'No process is running in app_v1_configurations_publication_form_version_get_all.',
+            'message' => 'No process is running in app_v1_publication_form_get_all.',
         ], 500);
 
         try {
             $params                     = []; // 'flag_active' => true
-            $orderBy                    = ['updated_at' => 'DESC'];
+            $orderBy                    = ['updated_at' => 'DESC', 'order_position' => 'ASC'];
             $paginator                  = $this->commonSvc->setPaginator($request);
 
-            $publicationFormData            = $this->publicationFormVersionSvc->getQueryBuilderAll($params, $orderBy, $paginator->get('limit'), $paginator->get('offset'));
+            $publicationFormData            = $this->publicationFormSvc->getQueryBuilderAll($params, $orderBy, $paginator->get('limit'), $paginator->get('offset'));
             $publicationFormsTotalCount     = $publicationFormData['count'];
             $publicationFormsData           = $publicationFormData['data'];
 
@@ -187,19 +189,19 @@ class PublicationFormVersionQueryController extends AbstractController
             // Response data
             $this->response = $this->commonSvc->setResponse([
                 'info'     => 'success',
-                'message'  => 'Success to get publication forms configuration data!',
+                'message'  => 'Success to get publication forms data!',
                 'data'     => $publicationFormsData,
                 'count'    => $publicationFormsTotalCount,
             ], 200);
 
-            $this->logger->info('Get publication forms configuration data: ');
+            $this->logger->info('Get publication forms data: ');
         } catch (\Exception $e) {
             $this->response = $this->commonSvc->setResponse([
                 'info'     => 'error',
-                'message'  => 'Error on get publication forms configuration data!'
+                'message'  => 'Error on get publication forms data!'
             ], 400);
             $this->logger->error(
-                'Get publication forms configuration data exception log: ' . $e->getMessage()
+                'Get publication forms data exception log: ' . $e->getMessage()
                     . ', line: ' . $e->getLine(),
                 [$e->getFile(), 'trace => ', $e->getTrace()]
             );

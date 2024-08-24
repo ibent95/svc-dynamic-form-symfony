@@ -4,47 +4,73 @@ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
 use App\Repository\DynamicFormFieldTypeRepository;
+use Doctrine\DBAL\Types\GuidType;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: DynamicFormFieldTypeRepository::class)]
 #[ApiResource]
 class DynamicFormFieldType
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
+    #[
+        ORM\Id,
+        ORM\Column(type: 'bigint', options: ["unsigned" => true])
+    ]
+    #[Ignore]
+    private ?string $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $dynamic_form_field_type_code = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $dynamic_form_field_type = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\Column]
-    private ?bool $flag_active = null;
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    #[Ignore]
+    private ?bool $flag_active;
 
-    #[ORM\Column(length: 50, nullable: true)]
-    private ?string $create_user = null;
+    #[ORM\Column(type: 'string', length: 50, options: ['default' => 'system'])]
+    #[Ignore]
+    private ?string $create_user;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $created_at = null;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: false)]
+    #[Ignore]
+    private ?\DateTimeInterface $created_at;
 
-    #[ORM\Column(length: 50)]
-    private ?string $update_user = null;
+    #[ORM\Column(type: 'string', length: 50, options: ['default' => 'system'])]
+    #[Ignore]
+    private ?string $update_user;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $updated_at = null;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: false)]
+    #[Ignore]
+    private ?\DateTimeInterface $updated_at;
 
-    #[ORM\Column(type: 'uuid')]
-    private ?Uuid $uuid = null;
+    #[ORM\Column(type: Types::GUID, nullable: false)]
+    private ?string $uuid;
 
-    public function getId(): ?int
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        $this->flag_active = true;
+        $this->created_at = new \DateTimeImmutable();
+        $this->create_user = 'system';
+        $this->updated_at = new \DateTimeImmutable();
+        $this->update_user = 'system';
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updated_at = new \DateTimeImmutable();
+        $this->update_user = 'system';
+    }
+
+    public function getId(): ?string
     {
         return $this->id;
     }
@@ -92,6 +118,7 @@ class DynamicFormFieldType
         return $this;
     }
 
+    #[Ignore]
     public function isFlagActive(): ?bool
     {
         return $this->flag_active;
@@ -104,6 +131,7 @@ class DynamicFormFieldType
         return $this;
     }
 
+    #[Ignore]
     public function getCreateUser(): ?string
     {
         return $this->create_user;
@@ -116,6 +144,7 @@ class DynamicFormFieldType
         return $this;
     }
 
+    #[Ignore]
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -128,6 +157,7 @@ class DynamicFormFieldType
         return $this;
     }
 
+    #[Ignore]
     public function getUpdateUser(): ?string
     {
         return $this->update_user;
@@ -140,6 +170,7 @@ class DynamicFormFieldType
         return $this;
     }
 
+    #[Ignore]
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updated_at;
@@ -152,12 +183,12 @@ class DynamicFormFieldType
         return $this;
     }
 
-    public function getUuid(): ?Uuid
+    public function getUuid(): ?string
     {
         return $this->uuid;
     }
 
-    public function setUuid(Uuid $uuid): static
+    public function setUuid(string $uuid): static
     {
         $this->uuid = $uuid;
 

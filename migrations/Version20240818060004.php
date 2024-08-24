@@ -28,7 +28,6 @@ final class Version20240818060004 extends AbstractMigration
         $this->addSql('CREATE TABLE publication_status (id BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, publication_status_name VARCHAR(255) NOT NULL, publication_status_code VARCHAR(50) NOT NULL, flag_active TINYINT(1) DEFAULT 1 NOT NULL, create_user VARCHAR(50) DEFAULT NULL, created_at DATETIME NOT NULL, update_user VARCHAR(50) DEFAULT NULL, updated_at DATETIME NOT NULL, uuid CHAR(36) NOT NULL COMMENT \'(DC2Type:guid)\', PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
         $this->addSql('CREATE TABLE publication_type (id BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, id_publication_general_type BIGINT UNSIGNED NOT NULL, publication_type_name VARCHAR(255) NOT NULL, publication_type_code VARCHAR(50) NOT NULL, flag_active TINYINT(1) DEFAULT 1 NOT NULL, create_user VARCHAR(50) DEFAULT NULL, created_at DATETIME NOT NULL, update_user VARCHAR(50) DEFAULT NULL, updated_at DATETIME NOT NULL, uuid CHAR(36) NOT NULL COMMENT \'(DC2Type:guid)\', INDEX IDX_8726D6E45ECB64EE (id_publication_general_type), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
         $this->addSql('CREATE TABLE temporary_file_upload (id BIGINT UNSIGNED NOT NULL, id_parrent_service BIGINT UNSIGNED DEFAULT NULL, uploaded_datetime DATETIME NOT NULL, value LONGTEXT NOT NULL, other_value JSON NOT NULL COMMENT \'(DC2Type:json)\', flag_active TINYINT(1) NOT NULL, create_user VARCHAR(50) DEFAULT \'system\' NOT NULL, created_at DATETIME NOT NULL, update_user VARCHAR(50) DEFAULT \'system\' NOT NULL, updated_at DATETIME NOT NULL, uuid CHAR(36) NOT NULL COMMENT \'(DC2Type:guid)\', PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
-        $this->addSql('CREATE TABLE try01 (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(255) NOT NULL, uuid CHAR(36) NOT NULL COMMENT \'(DC2Type:guid)\', PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
         $this->addSql('ALTER TABLE publication ADD CONSTRAINT FK_AF3C67795ECB64EE FOREIGN KEY (id_publication_general_type) REFERENCES publication_general_type (id) ON DELETE CASCADE');
         $this->addSql('ALTER TABLE publication ADD CONSTRAINT FK_AF3C677964AC8335 FOREIGN KEY (id_publication_type) REFERENCES publication_type (id) ON DELETE CASCADE');
         $this->addSql('ALTER TABLE publication ADD CONSTRAINT FK_AF3C6779A4A6901E FOREIGN KEY (id_publication_form_version) REFERENCES publication_form_version (id) ON DELETE CASCADE');
@@ -62,6 +61,5 @@ final class Version20240818060004 extends AbstractMigration
         $this->addSql('DROP TABLE publication_status');
         $this->addSql('DROP TABLE publication_type');
         $this->addSql('DROP TABLE temporary_file_upload');
-        $this->addSql('DROP TABLE try01');
     }
 }
