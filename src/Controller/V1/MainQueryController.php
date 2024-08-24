@@ -27,7 +27,7 @@ class MainQueryController extends AbstractController
     )
     {
         $this->logger = $logger;
-        $this->loggerMessage        = 'No process is running.';
+        $this->loggerMessage = 'No process is running.';
         $this->responseData = [
             'info'      => '',
             'message'   => '',
@@ -35,7 +35,7 @@ class MainQueryController extends AbstractController
         ];
         $this->responseStatusCode = 400;
 
-        $this->commonSvc            = $commonSvc;
+        $this->commonSvc = $commonSvc;
     }
 
     #[Route('/api/v1', name: 'app_v1_main')]
@@ -134,6 +134,34 @@ class MainQueryController extends AbstractController
                 [$e->getFile(), $e->getTraceAsString()]
             );
         }
+
+        return $this->json($this->responseData, $this->responseStatusCode);
+    }
+
+    #[Route('/api/v1/generate/uuid-short', name: 'app_v1_generate_uuid_short')]
+    public function generateUUIDShort(): JsonResponse
+    {
+        $this->responseData['info']     = 'success';
+        $this->responseData['message']  = 'Success to generate UUID short.';
+        $this->responseData['data']     = $this->commonSvc->createUUIDShort();
+
+        $this->responseStatusCode = 200;
+
+        $this->logger->info($this->responseData['message'], [$this->responseData['data']]);
+
+        return $this->json($this->responseData, $this->responseStatusCode);
+    }
+
+    #[Route('/api/v1/generate/uuid', name: 'app_v1_generate_uuid')]
+    public function generateUUID(): JsonResponse
+    {
+        $this->responseData['info']     = 'success';
+        $this->responseData['message']  = 'Success to generate UUID.';
+        $this->responseData['data']     = $this->commonSvc->createUUID();
+
+        $this->responseStatusCode = 200;
+
+        $this->logger->info($this->responseData['message'], [$this->responseData['data']]);
 
         return $this->json($this->responseData, $this->responseStatusCode);
     }
