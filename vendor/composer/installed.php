@@ -5,7 +5,7 @@
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => '724ea95bf55dd5758446621a279fea1a6d240464',
+        'reference' => '9583ae41cb86acf0fb987749a6d5e275ce51743b',
         'name' => 'ibent95/svc-dynamic-form-symfony',
         'dev' => true,
     ),
@@ -146,12 +146,12 @@
             'dev_requirement' => false,
         ),
         'doctrine/orm' => array(
-            'pretty_version' => '2.19.6',
-            'version' => '2.19.6.0',
+            'pretty_version' => '2.19.7',
+            'version' => '2.19.7.0',
             'type' => 'library',
             'install_path' => __DIR__ . '/../doctrine/orm',
             'aliases' => array(),
-            'reference' => 'c1bb2ccf4b19c845f91ff7c4c01dc7cbba7f4073',
+            'reference' => '168ac31084226f94d42e7461a40ff5607a56bd35',
             'dev_requirement' => false,
         ),
         'doctrine/persistence' => array(
@@ -187,7 +187,7 @@
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => '724ea95bf55dd5758446621a279fea1a6d240464',
+            'reference' => '9583ae41cb86acf0fb987749a6d5e275ce51743b',
             'dev_requirement' => false,
         ),
         'laminas/laminas-code' => array(
