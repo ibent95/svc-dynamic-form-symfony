@@ -2159,6 +2159,7 @@ class ComposerStaticInit9d30e14add22c29681fea677ff4ed27a
         'Doctrine\\Migrations\\Tools\\Console\\Helper\\ConfigurationHelper' => __DIR__ . '/..' . '/doctrine/migrations/src/Tools/Console/Helper/ConfigurationHelper.php',
         'Doctrine\\Migrations\\Tools\\Console\\Helper\\MigrationDirectoryHelper' => __DIR__ . '/..' . '/doctrine/migrations/src/Tools/Console/Helper/MigrationDirectoryHelper.php',
         'Doctrine\\Migrations\\Tools\\Console\\Helper\\MigrationStatusInfosHelper' => __DIR__ . '/..' . '/doctrine/migrations/src/Tools/Console/Helper/MigrationStatusInfosHelper.php',
+        'Doctrine\\Migrations\\Tools\\Console\\InvalidAllOrNothingConfiguration' => __DIR__ . '/..' . '/doctrine/migrations/src/Tools/Console/InvalidAllOrNothingConfiguration.php',
         'Doctrine\\Migrations\\Tools\\Console\\MigratorConfigurationFactory' => __DIR__ . '/..' . '/doctrine/migrations/src/Tools/Console/MigratorConfigurationFactory.php',
         'Doctrine\\Migrations\\Tools\\TransactionHelper' => __DIR__ . '/..' . '/doctrine/migrations/src/Tools/TransactionHelper.php',
         'Doctrine\\Migrations\\Version\\AliasResolver' => __DIR__ . '/..' . '/doctrine/migrations/src/Version/AliasResolver.php',

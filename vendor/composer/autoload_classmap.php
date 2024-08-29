@@ -1615,6 +1615,7 @@ return array(
     'Doctrine\\Migrations\\Tools\\Console\\Helper\\ConfigurationHelper' => $vendorDir . '/doctrine/migrations/src/Tools/Console/Helper/ConfigurationHelper.php',
     'Doctrine\\Migrations\\Tools\\Console\\Helper\\MigrationDirectoryHelper' => $vendorDir . '/doctrine/migrations/src/Tools/Console/Helper/MigrationDirectoryHelper.php',
     'Doctrine\\Migrations\\Tools\\Console\\Helper\\MigrationStatusInfosHelper' => $vendorDir . '/doctrine/migrations/src/Tools/Console/Helper/MigrationStatusInfosHelper.php',
+    'Doctrine\\Migrations\\Tools\\Console\\InvalidAllOrNothingConfiguration' => $vendorDir . '/doctrine/migrations/src/Tools/Console/InvalidAllOrNothingConfiguration.php',
     'Doctrine\\Migrations\\Tools\\Console\\MigratorConfigurationFactory' => $vendorDir . '/doctrine/migrations/src/Tools/Console/MigratorConfigurationFactory.php',
     'Doctrine\\Migrations\\Tools\\TransactionHelper' => $vendorDir . '/doctrine/migrations/src/Tools/TransactionHelper.php',
     'Doctrine\\Migrations\\Version\\AliasResolver' => $vendorDir . '/doctrine/migrations/src/Version/AliasResolver.php',
