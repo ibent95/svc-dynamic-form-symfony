@@ -136,7 +136,7 @@ class PublicationMeta
     private $publication;
 
     #[
-        ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'EAGER'),
+        ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'publication_metas', fetch: 'EAGER'),
         ORM\JoinColumn(name: 'id_form_version', referencedColumnName: 'id', onDelete: 'CASCADE')
     ]
     #[Ignore]

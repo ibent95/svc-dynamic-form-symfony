@@ -27,6 +27,12 @@ class DynamicFormFieldType
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $dynamic_form_field_type = null;
 
+    #[ORM\Column(type: 'json', nullable: true)]
+    private $dynamic_form_field_configs = [];
+
+    #[ORM\Column(type: 'json', nullable: true)]
+    private $dynamic_form_field_validation_configs = [];
+
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
@@ -102,6 +108,30 @@ class DynamicFormFieldType
     public function setDynamicFormFieldType(string $dynamic_form_field_type): static
     {
         $this->dynamic_form_field_type = $dynamic_form_field_type;
+
+        return $this;
+    }
+
+    public function getDynamicFormFieldConfigs(): ?array
+    {
+        return $this->dynamic_form_field_configs;
+    }
+
+    public function setDynamicFormFieldConfigs(?array $dynamic_form_field_configs): self
+    {
+        $this->dynamic_form_field_configs = $dynamic_form_field_configs;
+
+        return $this;
+    }
+
+    public function getDynamicFormFieldValidationConfigs(): ?array
+    {
+        return $this->dynamic_form_field_validation_configs;
+    }
+
+    public function setDynamicFormFieldValidationConfigs(?array $dynamic_form_field_validation_configs): self
+    {
+        $this->dynamic_form_field_validation_configs = $dynamic_form_field_validation_configs;
 
         return $this;
     }

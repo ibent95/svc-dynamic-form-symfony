@@ -20,6 +20,8 @@ htdocs
 .project
 /.settings
 /.phpintel
+/nbproject/private/
+/.vscode
 ###< Others ###
 ###> symfony/phpunit-bridge ###
 .phpunit.result.cache
@@ -30,4 +32,3 @@ htdocs
 /phpunit.xml
 .phpunit.result.cache
 ###< phpunit/phpunit ###
-/nbproject/private/
