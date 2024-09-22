@@ -57,7 +57,7 @@ class PublicationService {
         $this->criteria->where(
             $this->exprBuilder->eq('flag_active', true)
         );
-        
+
         if ($otherData) {
             $this->criteria->orWhere($this->exprBuilder->eq('id', $otherData->getId()));
         }
@@ -74,7 +74,7 @@ class PublicationService {
         $this->criteria->where(
             $this->exprBuilder->eq('id', $id)
         );
-        
+
         // FormVersion data
         return $sourceData->matching($this->criteria)->first();
     }
@@ -88,7 +88,7 @@ class PublicationService {
         $this->criteria->where(
             $this->exprBuilder->eq('uuid', $uuid)
         );
-        
+
         // FormVersion data
         return $sourceData->matching($this->criteria)->first();
     }
@@ -274,7 +274,7 @@ class PublicationService {
         $results->setTitle($title);
         $results->setPublicationDate($publishDate);
         $results->setFlagActive(true);
-		
+
 		return $results;
 	}
 
@@ -294,8 +294,8 @@ class PublicationService {
          * Remove the old Meta Data if there is Meta Data.
          * There are two options:
          * 1. Set active flag to false (0)
-         * 2. Remove existing data from PersistenceCollection 
-         *    array ($results->removePublicationMetas($metaDataConfig);) 
+         * 2. Remove existing data from PersistenceCollection
+         *    array ($results->removePublicationMetas($metaDataConfig));
          */
         $metaDataConfigs    = $publication->getPublicationMetas();
         if (count($metaDataConfigs->toArray()) > 0) {
@@ -337,34 +337,21 @@ class PublicationService {
 
         // Organize data $requestData['meta_data']
         foreach ($formConfigs->toArray() as $fieldConfigIndex => $fieldConfig) {
-            
+
             /**
              * Initial value:
              * If there is Meta Data in previous Publication Meta Data, then use it as initial value.
              * Other than that, set Meta Data by Form Configuration.
              */
-            $metaData           = (
-                    $this->getRequestMetaDataByUuid(
-                        $requestMetadataCollection,
-                        $fieldConfig->getUuid()
-                    )
-                )
-                ? $this->getRequestMetaDataByUuid(
-                    $requestMetadataCollection,
-                    $fieldConfig->getUuid()
-                )
-                : $this->getRequestMetaDataByFieldName(
-                    $requestMetadataCollection,
-                    $fieldConfig->getFieldName()
-                );
+            $metaData = ($this->getRequestMetaDataByUuid($requestMetadataCollection, $fieldConfig->getUuid()))
+                ? $this->getRequestMetaDataByUuid($requestMetadataCollection, $fieldConfig->getUuid())
+                : $this->getRequestMetaDataByFieldName($requestMetadataCollection, $fieldConfig->getFieldName());
 
             $metaDataConfigQueries = ($metaData)
                 ? ['uuid' => $metaData['data']['uuid']]
                 : ['id_form' => $fieldConfig->getId()];
 
-            $metaDataConfig     = (
-                $this->getPublicationMetaDataBy($metaDataConfigs, $metaDataConfigQueries)
-            )
+            $metaDataConfig = ($this->getPublicationMetaDataBy($metaDataConfigs, $metaDataConfigQueries))
                 ? $this->getPublicationMetaDataBy($metaDataConfigs, $metaDataConfigQueries)
                 : $this->setPublicationMetaDataByPublicationFormConfig(
                     new PublicationMeta(),
@@ -398,12 +385,7 @@ class PublicationService {
                 case 'panel':
                 case 'stepper':
                 case 'step':
-                    $this->updateMetaData(
-                        $request,
-                        $formVersion,
-                        $results,
-                        $metaDataConfig
-                    );
+                    $this->updateMetaData($request, $formVersion, $results, $metaDataConfig);
                     break;
 
                 case 'multiple_select':
@@ -425,14 +407,10 @@ class PublicationService {
                 case 'file':
                 case 'image':
                     /** Check if file exist.
-                     *  Another way is (isset($requestFiles) && isset($requestFiles[$metaData['index']])) */ 
+                     *  Another way is (isset($requestFiles) && isset($requestFiles[$metaData['index']])) */
                     $file = $requestFiles[$metaData['index']]['value'] ?? null;
                     $uploadedFile = ($file)
-                        ? $this->commonSvc->uploadFile(
-                            $file,
-                            'publications_directory',
-                            'api/v1/files/publications'
-                        )
+                        ? $this->commonSvc->uploadFile($file, 'publications_directory', 'api/v1/files/publications')
                         : null;
 
                     if ($uploadedFile) {
@@ -539,7 +517,7 @@ class PublicationService {
          * Organize data
          */
 
-        // Ids 
+        // Ids
         $results->setId($this->commonSvc->createUUIDShort());
         $results->setUuid($this->commonSvc->createUUID());
 

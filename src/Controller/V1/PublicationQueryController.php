@@ -138,7 +138,7 @@ class PublicationQueryController extends AbstractController
         $this->dynamicFormSvc       = $dynamicFormSvc;
         $this->publicationSvc       = $publicationSvc;
 
-        
+
         // Response initial value
         $this->responseData         = [
             'info'      => '',
@@ -302,25 +302,25 @@ class PublicationQueryController extends AbstractController
                 switch ($field['field_type']) {
                     case 'select':
                         $fieldOptions			= explode('-', $field['field_options']);
-        
+
                         // Get options of select from database (Master data or terms of taxonomy)
-                        $field['options']		= ($fieldOptions[0] === 'master') ? 
-                            $entityManager->getRepository(PublicationForm::class)->getMasterData($fieldOptions[1]) : 
+                        $field['options']		= ($fieldOptions[0] === 'master') ?
+                            $entityManager->getRepository(PublicationForm::class)->getMasterData($fieldOptions[1]) :
                             $entityManager->getRepository(PublicationForm::class)->getTaxonomyTerms($fieldOptions[1]) ;
                         break;
 
                     case 'autoselect':
                     case 'autocomplete':
                         $fieldOptions			= explode('-', $field['field_options']);
-        
+
                         // Get options of autoselect from database (Master data or terms of taxonomy)
-                        $field['options']		= ($fieldOptions[0] === 'master') ? 
+                        $field['options']		= ($fieldOptions[0] === 'master') ?
                             $entityManager->getRepository(PublicationForm::class)
-                                ->getMasterData($fieldOptions[1], 'ASC', 25) : 
+                                ->getMasterData($fieldOptions[1], 'ASC', 25) :
                             $entityManager->getRepository(PublicationForm::class)
                                 ->getTaxonomyTerms($fieldOptions[1], 'ASC', 25) ;
                         break;
-                    
+
                     default: break;
                 }
 
@@ -409,21 +409,21 @@ class PublicationQueryController extends AbstractController
                 switch ($field['field_type']) {
                     case 'select':
                         $fieldOptions			= explode('-', $field['field_options']);
-        
+
                         // Get options of select from database (Master data or terms of taxonomy)
-                        $field['options']		= ($fieldOptions[0] === 'master') ? 
-                            $entityManager->getRepository(PublicationForm::class)->getMasterData($fieldOptions[1]) : 
+                        $field['options']		= ($fieldOptions[0] === 'master') ?
+                            $entityManager->getRepository(PublicationForm::class)->getMasterData($fieldOptions[1]) :
                             $entityManager->getRepository(PublicationForm::class)->getTaxonomyTerms($fieldOptions[1]) ;
                         break;
 
                     case 'autoselect':
                     case 'autocomplete':
                         $fieldOptions			= explode('-', $field['field_options']);
-        
+
                         // Get options of autoselect from database (Master data or terms of taxonomy)
-                        $field['options']		= ($fieldOptions[0] === 'master') ? 
+                        $field['options']		= ($fieldOptions[0] === 'master') ?
                             $entityManager->getRepository(PublicationForm::class)
-                                ->getMasterData($fieldOptions[1], 'ASC', 25) : 
+                                ->getMasterData($fieldOptions[1], 'ASC', 25) :
                             $entityManager->getRepository(PublicationForm::class)
                                 ->getTaxonomyTerms($fieldOptions[1], 'ASC', 25) ;
                         break;

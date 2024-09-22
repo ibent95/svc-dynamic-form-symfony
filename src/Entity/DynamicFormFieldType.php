@@ -27,11 +27,17 @@ class DynamicFormFieldType
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $dynamic_form_field_type = null;
 
-    #[ORM\Column(type: 'json', nullable: true)]
+    #[ORM\Column(type: Types::JSON, nullable: true)]
     private $dynamic_form_field_configs = [];
 
-    #[ORM\Column(type: 'json', nullable: true)]
+    #[ORM\Column(type: Types::JSON, nullable: true)]
     private $dynamic_form_field_validation_configs = [];
+
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $dynamic_form_field_dependency_parent_configs = null;
+
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $dynamic_form_field_dependency_child_configs = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
@@ -224,4 +230,29 @@ class DynamicFormFieldType
 
         return $this;
     }
+
+    public function getDynamicFormFieldDependencyParentConfigs(): ?array
+    {
+        return $this->dynamic_form_field_dependency_parent_configs;
+    }
+
+    public function setDynamicFormFieldDependencyParentConfigs(?array $dynamic_form_field_dependency_parent_configs): static
+    {
+        $this->dynamic_form_field_dependency_parent_configs = $dynamic_form_field_dependency_parent_configs;
+
+        return $this;
+    }
+
+    public function getDynamicFormFieldDependencyChildConfigs(): ?array
+    {
+        return $this->dynamic_form_field_dependency_child_configs;
+    }
+
+    public function setDynamicFormFieldDependencyChildConfigs(?array $dynamic_form_field_dependency_child_configs): static
+    {
+        $this->dynamic_form_field_dependency_child_configs = $dynamic_form_field_dependency_child_configs;
+
+        return $this;
+    }
+
 }

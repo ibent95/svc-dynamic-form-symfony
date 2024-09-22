@@ -70,7 +70,7 @@ class PublicationFormVersionRepository extends ServiceEntityRepository
         return $this->count;
     }
 
-    public function findFormVersionWithForm(Int $publicationFormVersionId, String $publicationFormVersionCode = NULL): ?Array
+    public function findFormVersionWithForm(int $publicationFormVersionId, string $publicationFormVersionCode = null): ?array
     {
         return $this->createQueryBuilder('fv')
             ->andWhere('fv.id = :id')
@@ -86,8 +86,8 @@ class PublicationFormVersionRepository extends ServiceEntityRepository
     public function getQueryBuilderAll(
         array $parameters = [],
         array $orderBy = ['id' => 'DESC'],
-        Int $maxResults = null,
-        Int $firstResult = null
+        int $maxResults = null,
+        int $firstResult = null
     ): Query {
         $this->results = $this->createQueryBuilder('pfv');
 
@@ -122,8 +122,8 @@ class PublicationFormVersionRepository extends ServiceEntityRepository
     public function getRawQueryBuilderAll(
         array $parameters = [],
         array $orderBy = ['id' => 'DESC'],
-        Int $maxResults = null,
-        Int $firstResult = null
+        int $maxResults = null,
+        int $firstResult = null
     ): Result {
         $connection = $this->_em->getConnection();
 
@@ -136,6 +136,33 @@ class PublicationFormVersionRepository extends ServiceEntityRepository
 
         $sql .= 'FROM publication_form_version pfv ';
 
+        // Prepare parameters before set bindings
+        if ($parameters) {
+            $sql .= 'WHERE ';
+
+            $parametersInc = 0;
+            $parametersLength = count($parameters) - 1;
+
+            foreach ($parameters as $key => $value) {
+
+                if ($key == 'search_key') {
+                    $formVersionNameBindKey = $key . '_1';
+                    $formVersionCodeBindKey = $key . '_2';
+
+                    $sql .= "(LOWER(pfv.publication_form_version_name) LIKE :$formVersionNameBindKey OR LOWER(pfv.publication_form_version_code) LIKE :$formVersionCodeBindKey) ";
+                } else {
+                    $sql .= "pfv.$key = :$key ";
+                }
+
+                if ($parametersInc != $parametersLength) {
+                    $sql .= 'AND ';
+                }
+
+                $parametersInc++;
+            }
+        }
+
+        // Ordering data
         if ($orderBy) {
             $sql .= "ORDER BY ";
             $increment = 0;
@@ -146,17 +173,59 @@ class PublicationFormVersionRepository extends ServiceEntityRepository
             }
         }
 
-        $this->count = $connection->executeQuery($sql, $parameters)->rowCount();
+        $preparedStatement = $connection->prepare($sql);
 
-        if ($maxResults !== NULL) {
+        $this->count = $this->countRowFromNativeSql($sql, $parameters);
+
+        if ($maxResults !== null) {
             $sql .= "LIMIT $maxResults ";
         }
 
-        if ($firstResult !== NULL) {
+        if ($firstResult !== null) {
             $sql .= "OFFSET $firstResult";
         }
 
-        return $connection->executeQuery($sql, $parameters); // ->fetchAllAssociative();
+        $preparedStatement = $connection->prepare($sql);
+
+        // Set bindings after prepare parameters
+        if ($parameters) {
+            foreach ($parameters as $key => &$value) {
+
+                if ($key == 'search_key') {
+                    $value = strtolower($value);
+                    $preparedStatement->bindValue($key . '_1', "%$value%");
+                    $preparedStatement->bindValue($key . '_2', "%$value%");
+                } else {
+                    $preparedStatement->bindValue($key, $value);
+                }
+
+            }
+        }
+
+        return $preparedStatement->executeQuery(); // ->fetchAllAssociative();
+    }
+
+    private function countRowFromNativeSql(string $sql, array $parameters = []): int {
+        $connection = $this->_em->getConnection();
+
+        $preparedStatement = $connection->prepare($sql);
+
+        // Set bindings after prepare parameters
+        if ($parameters) {
+            foreach ($parameters as $key => &$value) {
+
+                if ($key == 'search_key') {
+                    $value = strtolower($value);
+                    $preparedStatement->bindValue($key . '_1', "%$value%");
+                    $preparedStatement->bindValue($key . '_2', "%$value%");
+                } else {
+                    $preparedStatement->bindValue($key, $value);
+                }
+
+            }
+        }
+
+        return $preparedStatement->executeQuery()->rowCount();
     }
 
     /*

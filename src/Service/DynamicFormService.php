@@ -110,8 +110,8 @@ class DynamicFormService
 		// Clean property of recursive data
 		$data = $this->cleanFields(
 			[
-				"id", "id_form", "id_form_version", "id_form_parent", 
-				"order", "flag_judul_publikasi", "flag_tgl_publikasi", 
+				"id", "id_form", "id_form_version", "id_form_parent",
+				"order", "flag_judul_publikasi", "flag_tgl_publikasi",
 				"flag_peran"
 			],
 			$recursiveData
@@ -150,14 +150,14 @@ class DynamicFormService
 					$element[$uniqueField], $gridSystem
 				);
 
-				//
-				if ($element['dependency_parent'] || $element['dependency_child']) {
-					$dependencyParent				= json_decode($element['dependency_parent']);
-					$dependencyChild				= json_decode($element['dependency_child']);
+				// Cast the string of dependency configs to array
+				//if ($element['dependency_parent'] || $element['dependency_child']) {
+				//	$dependencyParent				= (is_string($element['dependency_parent'])) ? json_decode($element['dependency_parent']) : $element['dependency_parent'] ;
+				//	$dependencyChild				= (is_string($element['dependency_child'])) ? json_decode($element['dependency_child']) : $element['dependency_child'] ;
 
-					$element['dependency_parent']	= (is_array($dependencyParent)) ? $dependencyParent : $element['dependency_parent'];
-					$element['dependency_child']	= (is_array($dependencyChild))	? $dependencyChild	: $element['dependency_child'];
-				}
+				//	$element['dependency_parent']	= (is_array($dependencyParent)) ? $dependencyParent : $element['dependency_parent'];
+				//	$element['dependency_child']	= (is_array($dependencyChild))	? $dependencyChild	: $element['dependency_child'];
+				//}
 
 				$element['children'] = ($children) ? $children : [];
 				if ($element['field_type'] == 'multiple') {
@@ -345,7 +345,7 @@ class DynamicFormService
 			$titleFieldName 			=> $title 				?? null,
 			$publishDateFieldName 		=> $publishDate 		?? null,
 		];
-		
+
 		return $results;
 	}
 
@@ -379,14 +379,14 @@ class DynamicFormService
 							$requestData[$fieldConfig->getFieldName()], $fieldConfig->getChildren()
 						);
 						break;
-	
+
 					case 'select':
 					case 'autoselect':
 					case 'autocomplete':
 						$item['value'] = $requestData[$fieldConfig->getFieldName()];
 						$item['other_value'] = $requestData[$fieldConfig->getFieldName()];
 						break;
-	
+
 					default:
 						$item['value'] = $requestData[$fieldConfig->getFieldName()];
 						break;
@@ -398,7 +398,7 @@ class DynamicFormService
 
 		return $results;
 	}
-	
+
 	function getFieldConfigFromFormConfigs(PersistentCollection $formConfigs, string $key, mixed $value): object | false
 	{
 
@@ -408,7 +408,7 @@ class DynamicFormService
 		 *  return ($srcFile->getKind() === 'master' && $srcFile->getSrcSheet()->getName() === 'MainData');
 		 * });
 		 */
-		
+
 
         $this->criteria->where(
 			$this->exprBuilder->eq($key, $value)

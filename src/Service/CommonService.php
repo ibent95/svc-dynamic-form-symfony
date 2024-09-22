@@ -34,10 +34,11 @@ class CommonService {
     private Collection $responseData;
     private int $responseStatusCode;
 
-	/** @var $results Mixed */
+	/** @var mixed $results */
 	private $results;
 	private $serializer;
 	private $doctrine;
+	/** @var ObjectManager $doctrineManager */
 	private $doctrineManager;
 	private $entityManager;
 	private $exprBuilder;
@@ -52,7 +53,7 @@ class CommonService {
 		ManagerRegistry $doctrine,
 		EntityManagerInterface $entityManager,
 		SluggerInterface $slugger,
-        ParameterBagInterface $parameter
+		ParameterBagInterface $parameter
 	)
 	{
 
@@ -119,7 +120,7 @@ class CommonService {
 		//	return new JsonResponse($json, $status, $headers, true);
 		//}
 
-		//return new JsonResponse($data, $status, $headers);
+		return new JsonResponse($responseData, $responseStatusCode);
 	}
 
 	/**
@@ -128,18 +129,18 @@ class CommonService {
 	 * @param  array|string  $attributes
 	 * @return $hidden
 	 */
-	public function makeHidden(mixed $attributes, array $data): array
+	public function makeHidden(array $data, mixed $attributes): array
 	{
-		$results = array_merge($data, (array) $attributes);
+		$this->results = array_merge($data, (array) $attributes);
 
-		return $results;
+		return $this->results;
 	}
 
-	public function setPaginator(Request $request) : Collection
+	public function setPaginator(Request $request, array $defaultValue = ['limit' => 10, 'offset' => 0, 'page_index' => 0]) : Collection
 	{
-		$limit                      = $request->get('limit');
-		$offset                     = $request->get('offset');
-		$pageIndex                  = $request->get('page_index');
+		$limit                      = $request->get('limit', $defaultValue['limit'] ?? 10);
+		$offset                     = $request->get('offset', $defaultValue['offset'] ?? 0);
+		$pageIndex                  = $request->get('page_index', $defaultValue['page_index'] ?? 0);
 
 		if ($pageIndex) {
 			$offset                 = $limit * $pageIndex; // Can also ($pageNumber -1)
@@ -152,7 +153,7 @@ class CommonService {
 		return $this->paginator;
 	}
 
-	public function getEntityIdentifierFromUnit(object $object): Mixed
+	public function getEntityIdentifierFromUnit(object $object): mixed
 	{
 		return $this->doctrineManager->getUnitOfWork()->getEntityIdentifier($object);
 	}
@@ -174,10 +175,16 @@ class CommonService {
 
 	public function createUUID() : string
 	{
-		return Uuid::v4();
+		return Uuid::v7(); // v4(); Changed from v4 to v7
 	}
 
-	public function normalizeObject($object, string $resultFormat = null, bool $enableMaxDepth = false): ?array
+	public function normalizeObject(
+		mixed $object,
+		array $ignoredAttributes = [],
+		string $resultFormat = null,
+		bool $enableMaxDepth = false,
+		array $groups = []
+	): ?array
 	{
 		$this->results = null;
 
@@ -195,9 +202,12 @@ class CommonService {
 		$objectNormalizerDefaultContext = [
 			AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false,
 			AbstractNormalizer::IGNORED_ATTRIBUTES => [
-				'lazyObjectState',
-				'lazyObjectInitialized',
-				'lazyObjectAsInitialized'
+				...[
+					'lazyObjectState',
+					'lazyObjectInitialized',
+					'lazyObjectAsInitialized',
+				],
+				...$ignoredAttributes
 			],
 			AbstractObjectNormalizer::ENABLE_MAX_DEPTH => $enableMaxDepth,
 			AbstractObjectNormalizer::SKIP_UNINITIALIZED_VALUES => false,
@@ -215,7 +225,7 @@ class CommonService {
 
 		$this->serializer = new Serializer($normalizers);
 
-		$this->results = $this->serializer->normalize($object, $resultFormat);
+		$this->results = $this->serializer->normalize($object, $resultFormat, ['groups' => $groups]);
 
 		return $this->results;
 	}
@@ -223,7 +233,8 @@ class CommonService {
 	public function serializeObject(
 		$object,
 		string $resultFormat = null,
-		bool $enableMaxDepth = false
+		bool $enableMaxDepth = false,
+		array $groups = []
 	): ?string
 	{
 		$this->results = null;
@@ -260,7 +271,7 @@ class CommonService {
 
 		$this->serializer = new Serializer($normalizers, $encoders);
 
-		$this->results = $this->serializer->serialize($object, $resultFormat);
+		$this->results = $this->serializer->serialize($object, $resultFormat, ['groups' => $groups]);
 
 		return $this->results;
 	}

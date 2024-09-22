@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller\V1\Configurations;
+namespace App\Controller\V1\Master;
 
 use App\Entity\PublicationForm;
 use App\Service\CommonService;
@@ -34,8 +34,7 @@ class PublicationFormQueryController extends AbstractController
         CommonService $commonSvc,
         DynamicFormService $dynamicFormSvc,
         PublicationFormService $publicationFormSvc
-    )
-    {
+    ) {
         $this->logger               = $logger;
 
         $this->request              = Request::createFromGlobals();
@@ -141,19 +140,18 @@ class PublicationFormQueryController extends AbstractController
         ];
         $this->responseStatusCode   = 400;
         $this->response             = $this->commonSvc->setResponse($this->responseData, $this->responseStatusCode);
-
     }
 
-    #[Route('/api/v1/configurations/publication-form', name: 'app_v1_configurations_publication_form_index')]
+    #[Route('/api/v1/master/publication-form', name: 'app_v1_master_publication_form_query')]
     public function index(): JsonResponse
     {
-        $this->logger->info('The publication forms configuration menu has been accessed!');
+        $this->logger->info('The publication forms menu has been accessed!');
 
         $this->response = $this->commonSvc->setResponse([
             'info' => 'success',
-            'message' => 'Success to access the publication forms configuration API!',
+            'message' => 'Success to access the publication forms API!',
             'data' => [
-                'message'     => 'Welcome to publication forms configuration API!',
+                'message'     => 'Welcome to publication forms API!',
                 'date'         => date('Y-m-d'),
             ],
         ], 200);
@@ -161,91 +159,50 @@ class PublicationFormQueryController extends AbstractController
         return $this->json($this->response->get('data'), $this->response->get('status_code'));
     }
 
-    #[Route('/api/v1/configurations/publication-forms', methods: ['GET'], name: 'app_v1_configurations_publication_form_all')]
-    public function all(Request $request): JsonResponse
+    #[Route('/api/v1/master/publication-forms', methods: ['GET'], name: 'app_v1_master_publication_form_get_all')]
+    public function all(ManagerRegistry $doctrine, Request $request): JsonResponse
     {
+        $entityManager                  = $doctrine->getManager();
 
         $this->response = $this->commonSvc->setResponse([
             'info' => 'error',
-            'message' => 'No process is running in app_v1_configurations_publication_form_get_all.',
+            'message' => 'No process is running in app_v1_publication_form_get_all.',
         ], 500);
 
         try {
-            $params                     = [
-                'search_key' => $request->get('search_key'),
-                'uuid_publication_form_version' => $request->get('uuid_publication_form_version')
-            ]; // 'flag_active' => true
-            $orderBy                    = [
-                'updated_at' => 'DESC',
-                'order_position' => 'ASC'
-            ];
-            $paginator                  = $this->commonSvc->setPaginator($request);
+            $params                     = ['search_key' => $request->get('search_key'), 'uuid_publication_form_version' => $request->get('uuid_publication_form_version'), 'flag_active' => true]; // 'flag_active' => true
+            $orderBy                    = ['updated_at' => 'DESC', 'order_position' => 'ASC'];
+            $paginator                  = $this->commonSvc->setPaginator($request, ['limit' => 25]);
 
-            $publicationFormData        = $this->publicationFormSvc->getQueryBuilderAll(
-                $params,
-                $orderBy,
-                $paginator->get('limit'),
-                $paginator->get('offset')
-            );
-            $publicationFormsTotalCount     = $publicationFormData['count'];
-            $publicationFormsData           = $this->commonSvc->normalizeObject($publicationFormData['data'], [], null, true, ['internal']) ;
+            $publicationFormData        = $this->publicationFormSvc->getQueryBuilderAll($params, $orderBy, $paginator->get('limit'), $paginator->get('offset'));
+            $publicationFormsTotalCount = $publicationFormData['count'];
+            $publicationFormsData       = $publicationFormData['data'];
+
+            //$publicationFormsEntity         = $entityManager->getRepository(PublicationForm::class);
+            //$publicationFormsTotalCount     = $publicationFormsEntity->count($params);
+            //$publicationFormsData           = $publicationFormsEntity->findBy(
+            //    $params, $orderBy, $paginator->get('limit'), $paginator->get('offset')
+            //);
+
+            //$data = $this->commonSvc->makeHidden(['id'], $publicationFormsData);
 
             // Response data
             $this->response = $this->commonSvc->setResponse([
                 'info'     => 'success',
-                'message'  => 'Success to get publication forms configuration data!',
+                'message'  => 'Success to get publication forms data!',
                 'data'     => $publicationFormsData,
                 'count'    => $publicationFormsTotalCount,
             ], 200);
 
-            $this->logger->info('Get publication fo rms configuration data: ');
+            $this->logger->info('Get publication forms data: ');
         } catch (\Exception $e) {
             $this->response = $this->commonSvc->setResponse([
                 'info'     => 'error',
-                'message'  => 'Error on get publication forms configuration data!'
+                'message'  => 'Error on get publication forms data!'
             ], 400);
             $this->logger->error(
-                'Get publication forms configuration data exception log: ' . $e->getMessage()
+                'Get publication forms data exception log: ' . $e->getMessage()
                     . ', line: ' . $e->getLine(),
-                [$e->getFile(), 'trace => ', $e->getTrace()]
-            );
-        }
-
-        return $this->json($this->response->get('data'), $this->response->get('status_code'));
-    }
-
-    #[Route('/api/v1/configurations/publication-forms/{uuid}', methods: ['GET'], name: 'app_v1_configurations_publication_form_detail')]
-    public function detail(Request $request, string $uuid): JsonResponse
-    {
-        $this->response = $this->commonSvc->setResponse([
-            'info' => 'error',
-            'message' => 'No process is running in app_v1_configurations_publication_form_get_all.',
-        ], 500);
-
-        try {
-            $params              = ['uuid' => $uuid]; // 'flag_active' => true
-
-            $publicationFormDataRaw              = $this->publicationFormSvc->findOneBy($params);
-            $publicationFormData                 = $this->commonSvc->normalizeObject($publicationFormDataRaw, ['id', 'id_form_version', 'id_form_parent']);
-            $publicationFormData['form_version'] = $this->commonSvc->normalizeObject($publicationFormDataRaw->getFormVersion(), ['id']);
-            $publicationFormData['form_parent']  = $this->commonSvc->normalizeObject($publicationFormDataRaw->getFormParent(), ['id', 'id_form_version', 'id_form_parent']);
-
-            // Response data
-            $this->response = $this->commonSvc->setResponse([
-                'info'     => 'success',
-                'message'  => 'Success to get publication forms configuration detail data!',
-                'data'     => $publicationFormData,
-            ], 200);
-
-            $this->logger->info('Get publication forms configuration detail data: ');
-        } catch (\Exception $e) {
-            $this->response = $this->commonSvc->setResponse([
-                'info'     => 'error',
-                'message'  => 'Error on get publication forms configuration detail data!'
-            ], 400);
-            $this->logger->error(
-                'Get publication forms configuration detail data exception log: ' . $e->getMessage()
-                . ', line: ' . $e->getLine(),
                 [$e->getFile(), 'trace => ', $e->getTrace()]
             );
         }

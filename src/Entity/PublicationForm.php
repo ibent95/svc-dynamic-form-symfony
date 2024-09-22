@@ -9,6 +9,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[
@@ -21,101 +22,125 @@ class PublicationForm
 {
     #[
         ORM\Id,
-        ORM\GeneratedValue,
-        ORM\Column(type: 'bigint', options: ["unsigned" => true])
+        ORM\Column(type: 'bigint', options: ["unsigned" => true], unique: true)
     ]
     private $id;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
     private $id_form_version;
 
-    #[ORM\Column(type: 'bigint', nullable: true)]
+    #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
     private $id_form_parent;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $field_label;
 
     #[ORM\Column(type: 'string', length: 100)]
+    #[Groups(['public', 'internal'])]
     private $field_type;
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $field_name;
 
     #[ORM\Column(type: 'string', length: 100)]
+    #[Groups(['public', 'internal'])]
     private $field_id;
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $field_class;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $field_placeholder;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    #[Ignore]
+    #[Groups(['public', 'internal'])]
     private $field_options;
 
     #[ORM\Column(type: 'json', nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $field_configs = [];
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $description;
 
     #[ORM\Column(type: 'integer', nullable: true)]
+    #[Groups(['internal'])]
     private $order_position;
 
     #[ORM\Column(type: 'json', nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $validation_configs = [];
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $error_message;
 
     #[ORM\Column(type: 'json', nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $dependency_child = [];
 
     #[ORM\Column(type: 'json', nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $dependency_parent = [];
 
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    #[Groups(['public', 'internal'])]
     private $flag_required;
 
     #[ORM\Column(options: ['default' => false])]
+    #[Groups(['public', 'internal'])]
     private ?bool $flag_field_form_type = null;
 
     #[ORM\Column(options: ['default' => false])]
+    #[Groups(['public', 'internal'])]
     private ?bool $flag_field_title = null;
 
     #[ORM\Column(options: ['default' => false])]
+    #[Groups(['public', 'internal'])]
     private ?bool $flag_field_publish_date = null;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $flag_active;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $create_user;
 
     #[ORM\Column(type: 'datetime', nullable: false)]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $created_at;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $update_user;
 
     #[ORM\Column(type: 'datetime', nullable: false)]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $updated_at;
 
-    #[ORM\Column(type: 'guid', nullable: false)]
+    #[ORM\Column(type: 'guid', nullable: false, unique:true)]
+    #[Groups(['public', 'internal'])]
     private $uuid;
 
     #[
         ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'EAGER'),
         ORM\JoinColumn(name: 'id_form_version', referencedColumnName: 'id', onDelete:"CASCADE")
     ]
-    #[Ignore]
+    #[Groups(['public', 'internal'])]
     private ?PublicationFormVersion $form_version;
+
+    #[
+        ORM\ManyToOne(targetEntity: PublicationForm::class, inversedBy: 'form_parent', fetch: 'EAGER'),
+        ORM\JoinColumn(name: 'id_form_parent', referencedColumnName: 'id', onDelete: "CASCADE")
+    ]
+    #[Groups(['public', 'internal'])]
+    private ?PublicationForm $form_parent;
 
     #[ORM\OneToMany(
         mappedBy: 'form',
@@ -124,7 +149,6 @@ class PublicationForm
         orphanRemoval: true,
         fetch: 'EAGER',
     )]
-    #[Ignore]
     private Collection $publicationMeta;
 
     public function __construct()
@@ -154,13 +178,19 @@ class PublicationForm
         return $this->id;
     }
 
-    #[Ignore]
+    public function setId(?string $id): self
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
     public function getIdFormVersion(): ?string
     {
         return $this->id_form_version;
     }
 
-    public function setIdFormVersion(string $id_form_version): self
+    public function setIdFormVersion(?string $id_form_version): self
     {
         $this->id_form_version = $id_form_version;
 
@@ -395,7 +425,6 @@ class PublicationForm
         return $this;
     }
 
-    #[Ignore]
     public function getFlagActive(): ?bool
     {
         return $this->flag_active;
@@ -408,7 +437,6 @@ class PublicationForm
         return $this;
     }
 
-    #[Ignore]
     public function getCreateUser(): ?string
     {
         return $this->create_user;
@@ -421,7 +449,6 @@ class PublicationForm
         return $this;
     }
 
-    #[Ignore]
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -434,7 +461,6 @@ class PublicationForm
         return $this;
     }
 
-    #[Ignore]
     public function getUpdateUser(): ?string
     {
         return $this->update_user;
@@ -447,7 +473,6 @@ class PublicationForm
         return $this;
     }
 
-    #[Ignore]
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updated_at;
@@ -472,7 +497,6 @@ class PublicationForm
         return $this;
     }
 
-    #[Ignore]
     public function getFormVersion(): ?PublicationFormVersion
     {
         return $this->form_version;
@@ -485,10 +509,21 @@ class PublicationForm
         return $this;
     }
 
+    public function getFormParent(): ?PublicationForm
+    {
+        return $this->form_parent;
+    }
+
+    public function setFormParent(?PublicationForm $form_parent): self
+    {
+        $this->form_parent = $form_parent;
+
+        return $this;
+    }
+
     /**
      * @return Collection<int, PublicationMeta>
      */
-    #[Ignore]
     public function getPublicationMeta(): Collection
     {
         return $this->publicationMeta;
@@ -507,7 +542,7 @@ class PublicationForm
     public function removePublicationMeta(PublicationMeta $publicationMeta): static
     {
         if (
-            $this->publicationMeta->removeElement($publicationMeta) && 
+            $this->publicationMeta->removeElement($publicationMeta) &&
             $publicationMeta->getForm() === $this
         ) {
             $publicationMeta->setForm(null);

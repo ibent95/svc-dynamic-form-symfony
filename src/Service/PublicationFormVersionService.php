@@ -55,18 +55,24 @@ class PublicationFormVersionService {
     }
 
     public function getQueryBuilderAll(
-        Array $parameters = [],
-        Array $orderBy = ['id' => 'DESC'],
+        array $parameters = [],
+        array $orderBy = ['id' => 'DESC'],
         Int $maxResults = null,
         Int $firstResult = null
-    ): ?Array
+    ): ?array
     {
         $this->results = [
             'count' => 0,
             'data' => []
         ];
 
-        $data = $this->publicationFormVersionRepo->getRawQueryBuilderAll($parameters, $orderBy, $maxResults, $firstResult);
+        $params = new ArrayCollection($parameters);
+        $params = $params->filter(function (mixed $value, mixed $key) {
+            return $value !== null;
+        });
+
+        /** @var Result $data */
+        $data = $this->publicationFormVersionRepo->getRawQueryBuilderAll($params->toArray(), $orderBy, $maxResults, $firstResult);
 
         if ($data) {
             $this->results = [

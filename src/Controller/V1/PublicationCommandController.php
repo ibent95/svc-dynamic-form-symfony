@@ -62,7 +62,7 @@ class PublicationCommandController extends AbstractController
     #[Route('/api/v1/publications/{uuid}', methods: ['PUT'], name: 'app_v1_publication_command_put')]
     public function save(ManagerRegistry $doctrine, Request $request, String $uuid = null): JsonResponse
     {
-        /** @var $entityManager EntityManager */
+        /** @var ObjectManager $entityManager */
         $entityManager = $doctrine->getManager();
 
         $this->responseData['info']     = 'error';
@@ -93,14 +93,14 @@ class PublicationCommandController extends AbstractController
                 $entityManager->persist($publicationData);
                 $this->loggerMessage = 'Create publication data: ';
             }
-            
+
             // Update command
             if ($uuid) {
                 $this->loggerMessage = 'Update publication data: ';
             }
             $entityManager->flush();
             $entityManager->getConnection()->commit();
-            
+
             $this->responseData['info']     = 'success';
             $this->responseData['message']  = 'Success on save publication data!';
             $this->logger->info($this->loggerMessage, $this->commonSvc->normalizeObject($publicationData));
@@ -119,8 +119,9 @@ class PublicationCommandController extends AbstractController
     }
 
     #[Route('/api/v1/publications/{uuid}', methods: ['DELETE'], name: 'app_v1_publication_command_delete')]
-    public function delete(ManagerRegistry $doctrine, Request $request, String $uuid = null) : JsonResponse {
-        /** @var $entityManager EntityManager */
+    public function delete(ManagerRegistry $doctrine, Request $request, String $uuid = null): JsonResponse
+    {
+        /** @var ObjectManager $entityManager */
         $entityManager = $doctrine->getManager();
 
         $this->responseData['info']     = 'error';

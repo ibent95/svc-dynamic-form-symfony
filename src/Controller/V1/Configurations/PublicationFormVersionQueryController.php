@@ -160,6 +160,7 @@ class PublicationFormVersionQueryController extends AbstractController
     #[Route('/api/v1/configurations/publication-form-versions', methods: ['GET'], name: 'app_v1_configurations_publication_form_version_get_all')]
     public function all(ManagerRegistry $doctrine, Request $request): JsonResponse
     {
+        /** @var ObjectManager $entityManager */
         $entityManager                  = $doctrine->getManager();
 
         $this->response = $this->commonSvc->setResponse([

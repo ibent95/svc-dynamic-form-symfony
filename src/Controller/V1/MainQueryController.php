@@ -73,7 +73,7 @@ class MainQueryController extends AbstractController
         string $serviceName
     ): JsonResponse
     {
-        /** @var $entityManager EntityManager */
+        /** @var ObjectManager $entityManager */
         $entityManager = $doctrine->getManager();
 
         $this->responseData['info']     = 'error';

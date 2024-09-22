@@ -1,12 +1,10 @@
 <?php
 
-namespace App\Controller\V1\Configurations;
+namespace App\Controller\V1\Master;
 
-use App\Entity\PublicationForm;
 use App\Service\CommonService;
 use App\Service\DynamicFormService;
-use App\Service\PublicationFormService;
-use App\Service\PublicationService;
+use App\Service\PublicationFormVersionService;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Persistence\ManagerRegistry;
@@ -16,7 +14,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
-class PublicationFormQueryController extends AbstractController
+class PublicationFormVersionQueryController extends AbstractController
 {
     private $logger;
     private $request;
@@ -24,7 +22,7 @@ class PublicationFormQueryController extends AbstractController
     private $criteria;
     private $commonSvc;
     private DynamicFormService $dynamicFormSvc;
-    private PublicationFormService $publicationFormSvc;
+    private PublicationFormVersionService $publicationFormVersionSvc;
     private Collection $response;
     private array $responseData;
     private int $responseStatusCode;
@@ -33,9 +31,8 @@ class PublicationFormQueryController extends AbstractController
         LoggerInterface $logger,
         CommonService $commonSvc,
         DynamicFormService $dynamicFormSvc,
-        PublicationFormService $publicationFormSvc
-    )
-    {
+        PublicationFormVersionService $publicationFormVersionSvc
+    ) {
         $this->logger               = $logger;
 
         $this->request              = Request::createFromGlobals();
@@ -130,7 +127,7 @@ class PublicationFormQueryController extends AbstractController
         // Services
         $this->commonSvc            = $commonSvc;
         $this->dynamicFormSvc       = $dynamicFormSvc;
-        $this->publicationFormSvc   = $publicationFormSvc;
+        $this->publicationFormVersionSvc   = $publicationFormVersionSvc;
 
 
         // Response initial value
@@ -141,19 +138,18 @@ class PublicationFormQueryController extends AbstractController
         ];
         $this->responseStatusCode   = 400;
         $this->response             = $this->commonSvc->setResponse($this->responseData, $this->responseStatusCode);
-
     }
 
-    #[Route('/api/v1/configurations/publication-form', name: 'app_v1_configurations_publication_form_index')]
+    #[Route('/api/v1/master/publication-form-version', name: 'app_v1_master_publication_form_version_query')]
     public function index(): JsonResponse
     {
-        $this->logger->info('The publication forms configuration menu has been accessed!');
+        $this->logger->info('The publication form versions menu has been accessed!');
 
         $this->response = $this->commonSvc->setResponse([
             'info' => 'success',
-            'message' => 'Success to access the publication forms configuration API!',
+            'message' => 'Success to access the publication form versions API!',
             'data' => [
-                'message'     => 'Welcome to publication forms configuration API!',
+                'message'     => 'Welcome to publication form versions API!',
                 'date'         => date('Y-m-d'),
             ],
         ], 200);
@@ -161,91 +157,50 @@ class PublicationFormQueryController extends AbstractController
         return $this->json($this->response->get('data'), $this->response->get('status_code'));
     }
 
-    #[Route('/api/v1/configurations/publication-forms', methods: ['GET'], name: 'app_v1_configurations_publication_form_all')]
-    public function all(Request $request): JsonResponse
+    #[Route('/api/v1/master/publication-form-versions', methods: ['GET'], name: 'app_v1_master_publication_form_version_get_all')]
+    public function all(ManagerRegistry $doctrine, Request $request): JsonResponse
     {
+        $entityManager                  = $doctrine->getManager();
 
         $this->response = $this->commonSvc->setResponse([
             'info' => 'error',
-            'message' => 'No process is running in app_v1_configurations_publication_form_get_all.',
+            'message' => 'No process is running in app_v1_publication_form_version_get_all.',
         ], 500);
 
         try {
-            $params                     = [
-                'search_key' => $request->get('search_key'),
-                'uuid_publication_form_version' => $request->get('uuid_publication_form_version')
-            ]; // 'flag_active' => true
-            $orderBy                    = [
-                'updated_at' => 'DESC',
-                'order_position' => 'ASC'
-            ];
-            $paginator                  = $this->commonSvc->setPaginator($request);
+            $params                            = ['search_key' => $request->get('search_key'), 'flag_active' => true];
+            $orderBy                           = ['updated_at' => 'DESC'];
+            $paginator                         = $this->commonSvc->setPaginator($request);
 
-            $publicationFormData        = $this->publicationFormSvc->getQueryBuilderAll(
-                $params,
-                $orderBy,
-                $paginator->get('limit'),
-                $paginator->get('offset')
-            );
-            $publicationFormsTotalCount     = $publicationFormData['count'];
-            $publicationFormsData           = $this->commonSvc->normalizeObject($publicationFormData['data'], [], null, true, ['internal']) ;
+            $publicationFormVersionData        = $this->publicationFormVersionSvc->getQueryBuilderAll($params, $orderBy, $paginator->get('limit'), $paginator->get('offset'));
+            $publicationFormVersionsTotalCount = $publicationFormVersionData['count'];
+            $publicationFormVersionsData       = $publicationFormVersionData['data'];
+
+            //$publicationFormVersionsEntity         = $entityManager->getRepository(PublicationForm::class);
+            //$publicationFormVersionsTotalCount     = $publicationFormVersionsEntity->count($params);
+            //$publicationFormVersionsData           = $publicationFormVersionsEntity->findBy(
+            //    $params, $orderBy, $paginator->get('limit'), $paginator->get('offset')
+            //);
+
+            //$data = $this->commonSvc->makeHidden(['id'], $publicationFormVersionsData);
 
             // Response data
             $this->response = $this->commonSvc->setResponse([
                 'info'     => 'success',
-                'message'  => 'Success to get publication forms configuration data!',
-                'data'     => $publicationFormsData,
-                'count'    => $publicationFormsTotalCount,
+                'message'  => 'Success to get publication form versions data!',
+                'data'     => $publicationFormVersionsData,
+                'count'    => $publicationFormVersionsTotalCount,
             ], 200);
 
-            $this->logger->info('Get publication fo rms configuration data: ');
+            $this->logger->info('Get publication form versions data: ');
         } catch (\Exception $e) {
             $this->response = $this->commonSvc->setResponse([
                 'info'     => 'error',
-                'message'  => 'Error on get publication forms configuration data!'
+                'message'  => 'Error on get publication form versions data!'
             ], 400);
             $this->logger->error(
-                'Get publication forms configuration data exception log: ' . $e->getMessage()
+                'Get publication form versions data exception log: ' . $e->getMessage()
                     . ', line: ' . $e->getLine(),
-                [$e->getFile(), 'trace => ', $e->getTrace()]
-            );
-        }
-
-        return $this->json($this->response->get('data'), $this->response->get('status_code'));
-    }
-
-    #[Route('/api/v1/configurations/publication-forms/{uuid}', methods: ['GET'], name: 'app_v1_configurations_publication_form_detail')]
-    public function detail(Request $request, string $uuid): JsonResponse
-    {
-        $this->response = $this->commonSvc->setResponse([
-            'info' => 'error',
-            'message' => 'No process is running in app_v1_configurations_publication_form_get_all.',
-        ], 500);
-
-        try {
-            $params              = ['uuid' => $uuid]; // 'flag_active' => true
-
-            $publicationFormDataRaw              = $this->publicationFormSvc->findOneBy($params);
-            $publicationFormData                 = $this->commonSvc->normalizeObject($publicationFormDataRaw, ['id', 'id_form_version', 'id_form_parent']);
-            $publicationFormData['form_version'] = $this->commonSvc->normalizeObject($publicationFormDataRaw->getFormVersion(), ['id']);
-            $publicationFormData['form_parent']  = $this->commonSvc->normalizeObject($publicationFormDataRaw->getFormParent(), ['id', 'id_form_version', 'id_form_parent']);
-
-            // Response data
-            $this->response = $this->commonSvc->setResponse([
-                'info'     => 'success',
-                'message'  => 'Success to get publication forms configuration detail data!',
-                'data'     => $publicationFormData,
-            ], 200);
-
-            $this->logger->info('Get publication forms configuration detail data: ');
-        } catch (\Exception $e) {
-            $this->response = $this->commonSvc->setResponse([
-                'info'     => 'error',
-                'message'  => 'Error on get publication forms configuration detail data!'
-            ], 400);
-            $this->logger->error(
-                'Get publication forms configuration detail data exception log: ' . $e->getMessage()
-                . ', line: ' . $e->getLine(),
                 [$e->getFile(), 'trace => ', $e->getTrace()]
             );
         }

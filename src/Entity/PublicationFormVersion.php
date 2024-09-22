@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\ApiResource;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[
@@ -22,56 +23,60 @@ class PublicationFormVersion
         ORM\Id, ORM\GeneratedValue(strategy: "IDENTITY"),
         ORM\Column(type: 'bigint', options: ["unsigned" => true])
     ]
-    #[Ignore]
     protected $id;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true])]
-    #[Ignore]
     private $id_publication_type;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Groups(['public', 'internal'])]
     protected $publication_form_version_name;
 
     #[ORM\Column(type: 'string', length: 50)]
+    #[Groups(['public', 'internal'])]
     protected $publication_form_version_code;
 
     #[ORM\Column(
         type: 'json', nullable: true,
         options: ['default' => '{"type":"no_grid_system","cols":12,"config":{}}']
     )]
+    #[Groups(['public', 'internal'])]
     private $grid_system = [];
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
-    #[Ignore]
+    #[Groups(['internal'])]
     protected $flag_active;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
-    #[Ignore]
+    #[Groups(['internal'])]
     protected $create_user;
 
     #[ORM\Column(type: 'datetime')]
-    #[Ignore]
+    #[Groups(['internal'])]
     protected $created_at;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
-    #[Ignore]
+    #[Groups(['internal'])]
     protected $update_user;
 
     #[ORM\Column(type: 'datetime')]
-    #[Ignore]
+    #[Groups(['internal'])]
     protected $updated_at;
 
     #[ORM\Column(type: 'guid')]
+    #[Groups(['public', 'internal'])]
     protected $uuid;
 
-    #[ORM\ManyToOne(
-        targetEntity: PublicationType::class,
-        cascade: ['ALL'],
-        fetch: 'EAGER',
-        inversedBy: 'form_versions'
-    )]
-    #[ORM\JoinColumn(name: 'id_publication_type', referencedColumnName: 'id', onDelete: 'CASCADE')]
-    #[Ignore]
+    #[
+        ORM\ManyToOne(
+            targetEntity: PublicationType::class,
+            cascade: ['ALL'],
+            fetch: 'EAGER',
+            inversedBy: 'form_versions'
+        ),
+        ORM\JoinColumn(name: 'id_publication_type', referencedColumnName: 'id', onDelete: 'CASCADE')
+    ]
+    #[Groups(['public', 'internal'])]
     protected $publication_type;
 
     #[ORM\OneToMany(
@@ -80,7 +85,7 @@ class PublicationFormVersion
         fetch: 'EAGER',
         cascade: ['ALL']
     )]
-    #[Ignore]
+    #[Groups(['others'])]
     protected $publication_metas;
 
     #[
@@ -92,7 +97,7 @@ class PublicationFormVersion
         ),
         ORM\OrderBy(['order_position' => 'ASC'])
     ]
-    #[Ignore]
+    #[Groups(['others'])]
     protected $forms;
 
     #[ORM\OneToMany(
@@ -101,7 +106,7 @@ class PublicationFormVersion
         fetch: 'EAGER',
         cascade: ["ALL"]
     )]
-    #[Ignore]
+    #[Groups(['others'])]
     private $publications;
 
     public function __construct()
@@ -133,7 +138,6 @@ class PublicationFormVersion
         return $this->id;
     }
 
-    #[Ignore]
     public function getIdPublicationType(): ?string
     {
         return $this->id_publication_type;
@@ -194,7 +198,6 @@ class PublicationFormVersion
         return $this;
     }
 
-    #[Ignore]
     public function getCreateUser(): ?string
     {
         return $this->create_user;
@@ -207,7 +210,6 @@ class PublicationFormVersion
         return $this;
     }
 
-    #[Ignore]
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -220,7 +222,6 @@ class PublicationFormVersion
         return $this;
     }
 
-    #[Ignore]
     public function getUpdateUser(): ?string
     {
         return $this->update_user;
@@ -233,7 +234,6 @@ class PublicationFormVersion
         return $this;
     }
 
-    #[Ignore]
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updated_at;
@@ -258,7 +258,6 @@ class PublicationFormVersion
         return $this;
     }
 
-    #[Ignore]
     public function getPublicationType(): ?PublicationType
     {
         return $this->publication_type;
@@ -274,7 +273,6 @@ class PublicationFormVersion
     /**
      * @return Collection<int, PublicationForm>
      */
-    #[Ignore]
     public function getForms(): Collection
     {
         return $this->forms;
@@ -293,7 +291,7 @@ class PublicationFormVersion
     public function removeForm(PublicationForm $publicationForm): self
     {
         if (
-            $this->forms->removeElement($publicationForm) && 
+            $this->forms->removeElement($publicationForm) &&
             $publicationForm->getFormVersion() === $this
         ) {
             $publicationForm->setFormVersion(null);
@@ -305,7 +303,6 @@ class PublicationFormVersion
     /**
      * @return Collection<int, Publication>
      */
-    #[Ignore]
     public function getPublications(): Collection
     {
         return $this->publications;
@@ -336,7 +333,6 @@ class PublicationFormVersion
     /**
      * @return Collection<int, Publication>
      */
-    #[Ignore]
     public function getPublicationMetas(): Collection
     {
         return $this->publication_metas;

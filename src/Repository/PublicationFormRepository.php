@@ -19,9 +19,9 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class PublicationFormRepository extends ServiceEntityRepository
 {
-    private Array $publicColumns;
+    private array $publicColumns;
     private $results;
-    private Int $count;
+    private int $count;
 
     public function __construct(ManagerRegistry $registry)
     {
@@ -81,18 +81,18 @@ class PublicationFormRepository extends ServiceEntityRepository
         }
     }
 
-    public function getCount() : Int {
+    public function getCount(): int {
         return $this->count;
     }
 
-    public function getFormByCode(String $code)
+    public function getFormByCode(string $code)
     {
         $result = $this->_em->f;
 
         return $result;
     }
 
-    public function getMasterData(String $tableName, String $orderDirection = 'ASC', Int $maxResult = NULL): ?Array
+    public function getMasterData(string $tableName, string $orderDirection = 'ASC', int $maxResult = null): ?array
     {
         // Initiate result variable
         $result = [];
@@ -135,7 +135,7 @@ class PublicationFormRepository extends ServiceEntityRepository
         return $result;
     }
 
-    public function getTaxonomyTerms(String $taxonomyName, String $orderDirection = 'ASC', Int $maxResult = NULL): ?Array
+    public function getTaxonomyTerms(string $taxonomyName, string $orderDirection = 'ASC', int $maxResult = null): ?array
     {
         // Initiate result variable
         $result = [];
@@ -182,20 +182,44 @@ class PublicationFormRepository extends ServiceEntityRepository
       * @return PublicationForm[] Returns an array of PublicationForm objects
       */
     public function getQueryBuilderAll(
-        Array $parameters = [],
-        Array $orderBy = ['id' => 'DESC'],
-        Int $maxResults = null,
-        Int $firstResult = null
+        array $parameters = [],
+        array $orderBy = ['id' => 'DESC'],
+        int $maxResults = null,
+        int $firstResult = null
     ): Query
     {
         $this->results = $this->createQueryBuilder('pf');
 
         if ($parameters) {
             foreach ($parameters as $key => $value) {
-                $this->results = $this->results
-                    ->andWhere("pf.$key = :$key")
-                    ->setParameter($key, $value)
-                ;
+                if ($value && $key == 'search_key') {
+                    $formNameBindKey        = $key . '_1';
+                    $formTypeBindKey        = $key . '_2';
+                    $formIdBindKey          = $key . '_3';
+                    $formClassBindKey       = $key . '_4';
+                    $formPlaceholderBindKey = $key . '_5';
+                    $formDescriptionBindKey = $key . '_6';
+
+                    $this->results = $this->results
+                        ->orWhere("pf.field_name LIKE :$formNameBindKey")
+                        ->orWhere("pf.field_type LIKE :$formTypeBindKey")
+                        ->orWhere("pf.field_id LIKE :$formIdBindKey")
+                        ->orWhere("pf.field_class LIKE :$formClassBindKey")
+                        ->orWhere("pf.field_placeholder LIKE :$formPlaceholderBindKey")
+                        ->orWhere("pf.description LIKE :$formDescriptionBindKey")
+                        ->setParameter($formNameBindKey, "%$value%")
+                        ->setParameter($formTypeBindKey, "%$value%")
+                        ->setParameter($formIdBindKey, "%$value%")
+                        ->setParameter($formClassBindKey, "%$value%")
+                        ->setParameter($formPlaceholderBindKey, "%$value%")
+                        ->setParameter($formDescriptionBindKey, "%$value%");
+                } else {
+                    $this->results = $this->results
+                        ->andWhere("pf.$key = :$key")
+                        ->setParameter($key, $value)
+                    ;
+                }
+
             }
         }
 
@@ -205,11 +229,13 @@ class PublicationFormRepository extends ServiceEntityRepository
             }
         }
 
-        if ($maxResults !== NULL) {
+        $this->count = count($this->results->getQuery()->getArrayResult());
+
+        if ($maxResults !== null) {
             $this->results = $this->results->setMaxResults($maxResults);
         }
 
-        if ($firstResult !== NULL) {
+        if ($firstResult !== null) {
             $this->results = $this->results->setFirstResult($firstResult);
         }
 
@@ -220,10 +246,10 @@ class PublicationFormRepository extends ServiceEntityRepository
       * @return PublicationForm[] Returns an array of PublicationForm objects
       */
     public function getRawQueryBuilderAll(
-        Array $parameters = [],
-        Array $orderBy = ['id' => 'DESC'],
-        Int $maxResults = null,
-        Int $firstResult = null
+        array $parameters = [],
+        array $orderBy = ['id' => 'DESC'],
+        int $maxResults = null,
+        int $firstResult = null
     ): Result
     {
         $connection = $this->_em->getConnection();
@@ -237,6 +263,37 @@ class PublicationFormRepository extends ServiceEntityRepository
 
         $sql .= 'FROM publication_form pf ';
 
+        // Prepare parameters before set bindings
+        if ($parameters) {
+            $sql .= 'WHERE ';
+
+            $parametersInc = 0;
+            $parametersLength = count($parameters) - 1;
+
+            foreach ($parameters as $key => $value) {
+
+                if ($value && $key == 'search_key') {
+                    $formNameBindKey        = $key . '_1';
+                    $formTypeBindKey        = $key . '_2';
+                    $formIdBindKey          = $key . '_3';
+                    $formClassBindKey       = $key . '_4';
+                    $formPlaceholderBindKey = $key . '_5';
+                    $formDescriptionBindKey = $key . '_6';
+
+                    $sql .= "(LOWER(pf.field_name) LIKE :$formNameBindKey OR LOWER(pf.field_type) LIKE :$formTypeBindKey OR LOWER(pf.field_id) LIKE :$formIdBindKey OR LOWER(pf.field_class) LIKE :$formClassBindKey OR LOWER(pf.field_placeholder) LIKE :$formPlaceholderBindKey OR LOWER(pf.description) LIKE :$formDescriptionBindKey) ";
+                } else {
+                    if ($value) $sql .= "pf.$key = :$key ";
+                }
+
+                if ($value && $parametersInc != $parametersLength) {
+                    $sql .= 'AND ';
+                }
+
+                $parametersInc++;
+            }
+        }
+
+        // Ordering data
         if ($orderBy) {
             $sql .= "ORDER BY ";
             $increment = 0;
@@ -247,17 +304,67 @@ class PublicationFormRepository extends ServiceEntityRepository
             }
         }
 
-        $this->count = $connection->executeQuery($sql, $parameters)->rowCount();
+        $preparedStatement = $connection->prepare($sql);
 
-        if ($maxResults !== NULL) {
+        $this->count = $this->countRowFromNativeSql($sql, $parameters);
+
+        if ($maxResults !== null) {
             $sql .= "LIMIT $maxResults ";
         }
 
-        if ($firstResult !== NULL) {
+        if ($firstResult !== null) {
             $sql .= "OFFSET $firstResult";
         }
 
-        return $connection->executeQuery($sql, $parameters); // ->fetchAllAssociative();
+        $preparedStatement = $connection->prepare($sql);
+
+        // Set bindings after prepare parameters
+        if ($parameters) {
+            foreach ($parameters as $key => &$value) {
+
+                if ($value && $key == 'search_key') {
+                    $value = strtolower($value);
+                    $preparedStatement->bindValue($key . '_1', "%$value%");
+                    $preparedStatement->bindValue($key . '_2', "%$value%");
+                    $preparedStatement->bindValue($key . '_3', "%$value%");
+                    $preparedStatement->bindValue($key . '_4', "%$value%");
+                    $preparedStatement->bindValue($key . '_5', "%$value%");
+                    $preparedStatement->bindValue($key . '_6', "%$value%");
+                } else {
+                    if ($value) $preparedStatement->bindValue($key, $value);
+                }
+
+            }
+        }
+
+        return $preparedStatement->executeQuery(); // ->fetchAllAssociative();
+    }
+
+    private function countRowFromNativeSql(string $sql, array $parameters = []): int {
+        $connection = $this->_em->getConnection();
+
+        $preparedStatement = $connection->prepare($sql);
+
+        // Set bindings after prepare parameters
+        if ($parameters) {
+            foreach ($parameters as $key => &$value) {
+
+                if ($value && $key == 'search_key') {
+                    $value = strtolower($value);
+                    $preparedStatement->bindValue($key . '_1', "%$value%");
+                    $preparedStatement->bindValue($key . '_2', "%$value%");
+                    $preparedStatement->bindValue($key . '_3', "%$value%");
+                    $preparedStatement->bindValue($key . '_4', "%$value%");
+                    $preparedStatement->bindValue($key . '_5', "%$value%");
+                    $preparedStatement->bindValue($key . '_6', "%$value%");
+                } else {
+                    if ($value) $preparedStatement->bindValue($key, $value);
+                }
+
+            }
+        }
+
+        return $preparedStatement->executeQuery()->rowCount();
     }
 
     ///**
