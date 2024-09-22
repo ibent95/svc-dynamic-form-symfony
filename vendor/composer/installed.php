@@ -5,7 +5,7 @@
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => '688528476a4f57efa909c901849e56557a537491',
+        'reference' => 'bc4225d3b757261935dad569a487153b5f8e93f8',
         'name' => 'ibent95/svc-dynamic-form-symfony',
         'dev' => true,
     ),
@@ -187,7 +187,7 @@
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => '688528476a4f57efa909c901849e56557a537491',
+            'reference' => 'bc4225d3b757261935dad569a487153b5f8e93f8',
             'dev_requirement' => false,
         ),
         'laminas/laminas-code' => array(
