@@ -20,6 +20,8 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\SerializerInterface;
 
+use function PHPUnit\Framework\isEmpty;
+
 class PublicationFormService {
     private $publicationFormRepo;
     private $publicationFormVersionRepo;
@@ -85,7 +87,7 @@ class PublicationFormService {
             $params->remove('uuid_publication_form_version');
         }
         $params = $params->filter(function (mixed $value, mixed $key) {
-            return $value !== null;
+            return !$this->commonSvc->isEmptyValue($value);
         });
 
         /** @var Query $data */
@@ -128,7 +130,7 @@ class PublicationFormService {
             $params->remove('uuid_publication_form_version');
         }
         $params = $params->filter(function (mixed $value, mixed $key) {
-            return $value !== null;
+            return !$this->commonSvc->isEmptyValue($value);
         });
 
         /** @var Result $data */
@@ -154,7 +156,9 @@ class PublicationFormService {
     {
         $requestAll     = $request->request->all();
 
-        $this->results  = ($request->get('uuid')) ? $this->publicationFormRepo->findOneBy(['uuid' => $requestAll['uuid']]) : new PublicationForm() ;
+        $this->results  = ($request->get('uuid'))
+            ? $this->publicationFormRepo->findOneBy(['uuid' => $requestAll['uuid']])
+            : new PublicationForm() ;
 
         // Master Data
         $formVersion = ($request->get('uuid_form_version'))
@@ -174,7 +178,7 @@ class PublicationFormService {
         $dependencyParentConfigs = ($request->get('dependency_parent')) ? json_decode($requestAll['dependency_parent'], true) : null;
 
         if (empty($requestAll['uuid']) && $request->getMethod() === 'POST') {
-            $this->results->setId($this->commonSvc->createUUIDShort());
+            $this->results->setId($this->commonSvc->createIDTimestamp());
             $this->results->setUuid($this->commonSvc->createUUID());
         }
 
@@ -183,6 +187,7 @@ class PublicationFormService {
         }
 
         if ($formParent) {
+            dd('test');
             $this->results->setFormParent($formParent);
         }
 

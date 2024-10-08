@@ -71,7 +71,7 @@ class PublicationFormVersion
         ORM\ManyToOne(
             targetEntity: PublicationType::class,
             cascade: ['ALL'],
-            fetch: 'EAGER',
+            fetch: 'LAZY',
             inversedBy: 'form_versions'
         ),
         ORM\JoinColumn(name: 'id_publication_type', referencedColumnName: 'id', onDelete: 'CASCADE')
@@ -82,31 +82,31 @@ class PublicationFormVersion
     #[ORM\OneToMany(
         mappedBy: 'form_version',
         targetEntity: PublicationMeta::class,
-        fetch: 'EAGER',
+        fetch: 'LAZY',
         cascade: ['ALL']
     )]
-    #[Groups(['others'])]
+    #[Groups(['publication_form_version-publication_metas'])]
     protected $publication_metas;
 
     #[
         ORM\OneToMany(
             mappedBy: 'form_version',
             targetEntity: PublicationForm::class,
-            fetch: 'EAGER',
+            fetch: 'LAZY',
             cascade: ['ALL']
         ),
         ORM\OrderBy(['order_position' => 'ASC'])
     ]
-    #[Groups(['others'])]
+    #[Groups(['publication_form-publication_forms'])]
     protected $forms;
 
     #[ORM\OneToMany(
         mappedBy: 'publication_form_version',
         targetEntity: Publication::class,
-        fetch: 'EAGER',
+        fetch: 'LAZY',
         cascade: ["ALL"]
     )]
-    #[Groups(['others'])]
+    #[Groups(['publication_form-publications'])]
     private $publications;
 
     public function __construct()

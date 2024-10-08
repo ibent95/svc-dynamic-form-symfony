@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\PublicationForm;
 use App\Entity\PublicationStatus;
+use App\Service\CommonService;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\Result;
 use Doctrine\ORM\OptimisticLockException;
@@ -23,7 +24,9 @@ class PublicationFormRepository extends ServiceEntityRepository
     private $results;
     private int $count;
 
-    public function __construct(ManagerRegistry $registry)
+    private $commonSvc;
+
+    public function __construct(ManagerRegistry $registry, CommonService $commonSvc)
     {
         parent::__construct($registry, PublicationForm::class);
 
@@ -55,6 +58,9 @@ class PublicationFormRepository extends ServiceEntityRepository
         ];
         $this->results = null;
         $this->count = 0;
+
+        // Other service`s
+        $this->commonSvc         = $commonSvc;
     }
 
     /**
@@ -192,7 +198,16 @@ class PublicationFormRepository extends ServiceEntityRepository
 
         if ($parameters) {
             foreach ($parameters as $key => $value) {
-                if ($value && $key == 'search_key') {
+
+                // Default filters
+                if (!$this->commonSvc->isEmptyValue($value) && $key !== 'search_key') {
+                    $this->results = $this->results
+                        ->andWhere("pf.$key = :$key")
+                        ->setParameter($key, $value);
+                }
+
+                // Custom filters
+                if (!$this->commonSvc->isEmptyValue($value) && $key === 'search_key') {
                     $formNameBindKey        = $key . '_1';
                     $formTypeBindKey        = $key . '_2';
                     $formIdBindKey          = $key . '_3';
@@ -213,11 +228,6 @@ class PublicationFormRepository extends ServiceEntityRepository
                         ->setParameter($formClassBindKey, "%$value%")
                         ->setParameter($formPlaceholderBindKey, "%$value%")
                         ->setParameter($formDescriptionBindKey, "%$value%");
-                } else {
-                    $this->results = $this->results
-                        ->andWhere("pf.$key = :$key")
-                        ->setParameter($key, $value)
-                    ;
                 }
 
             }
@@ -349,7 +359,11 @@ class PublicationFormRepository extends ServiceEntityRepository
         if ($parameters) {
             foreach ($parameters as $key => &$value) {
 
-                if ($value && $key == 'search_key') {
+                if ($key !== 'search_key') {
+                    if ($value) $preparedStatement->bindValue($key, $value);
+                }
+
+                if (!$this->commonSvc->isEmptyValue($value) && $key === 'search_key') {
                     $value = strtolower($value);
                     $preparedStatement->bindValue($key . '_1', "%$value%");
                     $preparedStatement->bindValue($key . '_2', "%$value%");
@@ -357,8 +371,6 @@ class PublicationFormRepository extends ServiceEntityRepository
                     $preparedStatement->bindValue($key . '_4', "%$value%");
                     $preparedStatement->bindValue($key . '_5', "%$value%");
                     $preparedStatement->bindValue($key . '_6', "%$value%");
-                } else {
-                    if ($value) $preparedStatement->bindValue($key, $value);
                 }
 
             }

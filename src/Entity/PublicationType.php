@@ -9,6 +9,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[
     ORM\Entity(repositoryClass: PublicationTypeRepository::class),
@@ -23,49 +24,48 @@ class PublicationType
         ORM\GeneratedValue(strategy: "IDENTITY"),
         ORM\Column(type: 'bigint', options: ["unsigned" => true])
     ]
-    #[Ignore]
     private $id;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true])]
-    #[Ignore]
     private $id_publication_general_type;
 
     #[ORM\Column(type: 'string', length: 255)]
-    #[Ignore]
+    #[Groups(['public', 'internal'])]
     private $publication_type_name;
 
     #[ORM\Column(type: 'string', length: 50)]
-    #[Ignore]
+    #[Groups(['public', 'internal'])]
     private $publication_type_code;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $flag_active;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $create_user;
 
     #[ORM\Column(type: 'datetime')]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $created_at;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $update_user;
 
     #[ORM\Column(type: 'datetime')]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $updated_at;
 
     #[ORM\Column(type: 'guid')]
+    #[Groups(['public', 'internal'])]
     private $uuid;
 
     #[
         ORM\ManyToOne(
             targetEntity: PublicationGeneralType::class,
             inversedBy: 'publication_types',
-            fetch: 'EAGER'
+            fetch: 'LAZY'
         ),
         ORM\JoinColumn(
             name: 'id_publication_general_type',
@@ -73,20 +73,20 @@ class PublicationType
             onDelete:"CASCADE"
         )
     ]
-    #[Ignore]
+    #[Groups(['public', 'internal'])]
     private $publication_general_type;
 
     #[ORM\OneToMany(
         mappedBy: 'publication_type',
         targetEntity: PublicationFormVersion::class,
-        fetch: 'EAGER',
+        fetch: 'LAZY',
         cascade: ["ALL"]
     )]
-    #[Ignore]
+    #[Groups(['publication_type-form_versions'])]
     private $form_versions;
 
     #[ORM\OneToMany(mappedBy: 'publication_type', targetEntity: Publication::class, fetch: 'LAZY', cascade: ["ALL"])]
-    #[Ignore]
+    #[Groups(['publication_type-publications'])]
     private $publications;
 
     public function __construct()
@@ -115,7 +115,6 @@ class PublicationType
     /**
      * @return Collection<int, Publication>
      */
-    #[Ignore]
     public function getPublications(): Collection
     {
         return $this->publications;
@@ -148,7 +147,6 @@ class PublicationType
         return $this->id;
     }
 
-    #[Ignore]
     public function getIdPublicationGeneralType(): ?string
     {
         return $this->id_publication_general_type;
@@ -185,7 +183,6 @@ class PublicationType
         return $this;
     }
 
-    #[Ignore]
     public function getFlagActive(): ?bool
     {
         return $this->flag_active;
@@ -198,7 +195,6 @@ class PublicationType
         return $this;
     }
 
-    #[Ignore]
     public function getCreateUser(): ?string
     {
         return $this->create_user;
@@ -211,7 +207,6 @@ class PublicationType
         return $this;
     }
 
-    #[Ignore]
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -224,7 +219,6 @@ class PublicationType
         return $this;
     }
 
-    #[Ignore]
     public function getUpdateUser(): ?string
     {
         return $this->update_user;
@@ -237,7 +231,6 @@ class PublicationType
         return $this;
     }
 
-    #[Ignore]
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updated_at;
@@ -277,7 +270,6 @@ class PublicationType
     /**
      * @return Collection<int, FormVersion>
      */
-    #[Ignore]
     public function getFormVersions(): Collection
     {
         return $this->form_versions;

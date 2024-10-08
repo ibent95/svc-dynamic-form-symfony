@@ -89,7 +89,7 @@ class MainQueryController extends AbstractController
             $uploadedFileNames  = [];
 
             $tempFileUpload     = new TemporaryFileUpload();
-            $tempFileUpload->setId($this->commonSvc->createUUIDShort());
+            $tempFileUpload->setId($this->commonSvc->createUUID());
             $tempFileUpload->setUuid($this->commonSvc->createUUID());
 
             if (count($files)) {
@@ -138,12 +138,26 @@ class MainQueryController extends AbstractController
         return $this->json($this->responseData, $this->responseStatusCode);
     }
 
-    #[Route('/api/v1/generate/uuid-short', name: 'app_v1_generate_uuid_short')]
+    #[Route('/api/v1/generate/id-timestamp', name: 'app_v1_generate_id_timestamp')]
+    public function generateIDTimestamp(): JsonResponse
+    {
+        $this->responseData['info']     = 'success';
+        $this->responseData['message']  = 'Success to generate ID Timestamp.';
+        $this->responseData['data']     = $this->commonSvc->createIDTimestamp();
+
+        $this->responseStatusCode = 200;
+
+        $this->logger->info($this->responseData['message'], [$this->responseData['data']]);
+
+        return $this->json($this->responseData, $this->responseStatusCode);
+    }
+
+    #[Route('/api/v1/generate/big-integer', name: 'app_v1_generate_big_integer')]
     public function generateUUIDShort(): JsonResponse
     {
         $this->responseData['info']     = 'success';
-        $this->responseData['message']  = 'Success to generate UUID short.';
-        $this->responseData['data']     = $this->commonSvc->createUUIDShort();
+        $this->responseData['message']  = 'Success to generate Big Integer.';
+        $this->responseData['data']     = $this->commonSvc->createBigInteger();
 
         $this->responseStatusCode = 200;
 

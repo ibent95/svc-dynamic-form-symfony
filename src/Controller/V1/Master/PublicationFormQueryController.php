@@ -176,7 +176,7 @@ class PublicationFormQueryController extends AbstractController
 
             $publicationFormData        = $this->publicationFormSvc->getQueryBuilderAll($params, $orderBy, $paginator->get('limit'), $paginator->get('offset'));
             $publicationFormsTotalCount = $publicationFormData['count'];
-            $publicationFormsData       = $publicationFormData['data'];
+            $publicationFormsData       = $this->commonSvc->normalizeObject($publicationFormData['data'], ['internal']);
 
             //$publicationFormsEntity         = $entityManager->getRepository(PublicationForm::class);
             //$publicationFormsTotalCount     = $publicationFormsEntity->count($params);

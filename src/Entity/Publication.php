@@ -9,6 +9,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[
     ORM\Entity(repositoryClass: PublicationRepository::class),
@@ -22,52 +23,50 @@ class Publication
         ORM\Id,
         ORM\Column(type: 'bigint', options: ["unsigned" => true])
     ]
-    #[Ignore]
     private $id;
 
     #[ORM\Column(type: 'string', length: 500, nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $title;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
-    #[Ignore]
     private $id_publication_general_type;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
-    #[Ignore]
     private $id_publication_type;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
-    #[Ignore]
     private $id_publication_form_version;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
-    #[Ignore]
     private $id_publication_status;
 
     #[ORM\Column(type: 'datetime', nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $publication_date;
 
     #[ORM\Column(type:'boolean', options: ['default' => true])]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $flag_active;
 
     #[ORM\Column(type: 'string', length: 50, options: ['default' => 'system'])]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $create_user;
 
     #[ORM\Column(type: 'datetime', nullable: false)]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $created_at;
 
     #[ORM\Column(type: 'string', length: 50, options: ['default' => 'system'])]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $update_user;
 
     #[ORM\Column(type: 'datetime', nullable: false)]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $updated_at;
 
     #[ORM\Column(type: 'guid', nullable: false)]
+    #[Groups(['public', 'internal'])]
     private $uuid;
 
     #[
@@ -80,7 +79,7 @@ class Publication
         ),
         ORM\OrderBy(['order_position' => 'ASC'])
     ]
-    #[Ignore]
+    #[Groups(['publication-publication_metas'])]
     private Collection $publication_metas;
 
     #[
@@ -92,6 +91,7 @@ class Publication
         ),
         ORM\JoinColumn(name: 'id_publication_general_type', referencedColumnName: 'id', onDelete:"CASCADE")
     ]
+    #[Groups(['public', 'internal'])]
     private PublicationGeneralType $publication_general_type;
 
     #[
@@ -103,6 +103,7 @@ class Publication
         ),
         ORM\JoinColumn(name: 'id_publication_type', referencedColumnName: 'id', onDelete:"CASCADE")
     ]
+    #[Groups(['public', 'internal'])]
     private PublicationType $publication_type;
 
     #[
@@ -114,6 +115,7 @@ class Publication
         ),
         ORM\JoinColumn(name: 'id_publication_form_version', referencedColumnName: 'id', onDelete:'CASCADE')
     ]
+    #[Groups(['public', 'internal'])]
     private PublicationFormVersion $publication_form_version;
 
     #[
@@ -125,6 +127,7 @@ class Publication
         ),
         ORM\JoinColumn(name: 'id_publication_status', referencedColumnName: 'id', onDelete:'CASCADE')
     ]
+    #[Groups(['public', 'internal'])]
     private PublicationStatus $publication_status;
 
     public function __construct()
@@ -177,7 +180,6 @@ class Publication
         return $this;
     }
 
-    #[Ignore]
     public function getIdPublicationGeneralType(): ?string
     {
         return $this->id_publication_general_type;
@@ -190,7 +192,6 @@ class Publication
         return $this;
     }
 
-    #[Ignore]
     public function getIdPublicationType(): ?string
     {
         return $this->id_publication_type;
@@ -203,7 +204,6 @@ class Publication
         return $this;
     }
 
-    #[Ignore]
     public function getIdPublicationFormVersion(): ?string
     {
         return $this->id_publication_form_version;
@@ -216,7 +216,6 @@ class Publication
         return $this;
     }
 
-    #[Ignore]
     public function getIdPublicationStatus(): ?string
     {
         return $this->id_publication_status;
@@ -241,7 +240,6 @@ class Publication
         return $this;
     }
 
-    #[Ignore]
     public function getFlagActive(): ?bool
     {
         return $this->flag_active;
@@ -254,7 +252,6 @@ class Publication
         return $this;
     }
 
-    #[Ignore]
     public function getCreateUser(): ?string
     {
         return $this->create_user;
@@ -267,7 +264,6 @@ class Publication
         return $this;
     }
 
-    #[Ignore]
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -280,7 +276,6 @@ class Publication
         return $this;
     }
 
-    #[Ignore]
     public function getUpdateUser(): ?string
     {
         return $this->update_user;
@@ -293,7 +288,6 @@ class Publication
         return $this;
     }
 
-    #[Ignore]
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updated_at;
@@ -321,7 +315,6 @@ class Publication
     /**
      * @return Collection<int, PublicationMeta>
      */
-    #[Ignore]
     public function getPublicationMetas(): Collection
     {
         return $this->publication_metas;

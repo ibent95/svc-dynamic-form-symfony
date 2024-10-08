@@ -336,7 +336,7 @@ class DynamicFormService
 
 		// Wrapp the Main Data
 		$results = [
-			'id' 						=> $this->commonSvc->createUUIDShort(),
+			'id' 						=> $this->commonSvc->createIDTimestamp(),
 			'uuid' 						=> $this->commonSvc->createUUID(),
 			$formTypeIdFieldName 		=> $formTypeId 			?? null,
 			$generalFormTypeIdFieldName => $generalFormTypeId 	?? null,
@@ -363,7 +363,7 @@ class DynamicFormService
 
 		foreach ($formConfigs as $fieldIndex => $fieldConfig) {
 			$item = $formConfigsArray[$fieldIndex];
-			$item['id'] = $this->commonSvc->createUUIDShort();
+			$item['id'] = $this->commonSvc->createIDTimestamp();
 			$item['uuid'] = $this->commonSvc->createUUID();
 			$item['id_publication'] = $mainData['id'];
 			$item['value'] = null;

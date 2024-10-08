@@ -39,6 +39,7 @@ class Configurator
             'copy-from-recipe' => Configurator\CopyFromRecipeConfigurator::class,
             'copy-from-package' => Configurator\CopyFromPackageConfigurator::class,
             'env' => Configurator\EnvConfigurator::class,
+            'dotenv' => Configurator\DotenvConfigurator::class,
             'container' => Configurator\ContainerConfigurator::class,
             'makefile' => Configurator\MakefileConfigurator::class,
             'composer-scripts' => Configurator\ComposerScriptsConfigurator::class,
@@ -104,7 +105,7 @@ class Configurator
     private function get($key): AbstractConfigurator
     {
         if (!isset($this->configurators[$key]) && !isset($this->postInstallConfigurators[$key])) {
-            throw new \InvalidArgumentException(sprintf('Unknown configurator "%s".', $key));
+            throw new \InvalidArgumentException(\sprintf('Unknown configurator "%s".', $key));
         }
 
         if (isset($this->cache[$key])) {

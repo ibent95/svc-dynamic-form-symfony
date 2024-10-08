@@ -19,7 +19,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `app_dynamic_form`
+-- Database: `dynamic_form_app`
 --
 
 -- --------------------------------------------------------
@@ -34,14 +34,6 @@ CREATE TABLE `doctrine_migration_versions` (
   `executed_at` datetime DEFAULT NULL,
   `execution_time` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
-
---
--- Dumping data for table `doctrine_migration_versions`
---
-
-INSERT INTO `doctrine_migration_versions` (`version`, `executed_at`, `execution_time`) VALUES
-('DoctrineMigrations\\Version20230909143732', '2023-09-09 21:39:33', 11754),
-('DoctrineMigrations\\Version20230911083309', '2023-09-11 15:33:17', 11356);
 
 -- --------------------------------------------------------
 

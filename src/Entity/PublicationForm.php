@@ -129,14 +129,14 @@ class PublicationForm
     private $uuid;
 
     #[
-        ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'EAGER'),
+        ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'forms', fetch: 'LAZY'),
         ORM\JoinColumn(name: 'id_form_version', referencedColumnName: 'id', onDelete:"CASCADE")
     ]
     #[Groups(['public', 'internal'])]
     private ?PublicationFormVersion $form_version;
 
     #[
-        ORM\ManyToOne(targetEntity: PublicationForm::class, inversedBy: 'form_parent', fetch: 'EAGER'),
+        ORM\ManyToOne(targetEntity: PublicationForm::class, inversedBy: 'form_parent', fetch: 'LAZY'),
         ORM\JoinColumn(name: 'id_form_parent', referencedColumnName: 'id', onDelete: "CASCADE")
     ]
     #[Groups(['public', 'internal'])]
@@ -147,8 +147,9 @@ class PublicationForm
         targetEntity: PublicationMeta::class,
         cascade: ["ALL"],
         orphanRemoval: true,
-        fetch: 'EAGER',
+        fetch: 'LAZY',
     )]
+    #[Groups(['publication_form-publication_metas'])]
     private Collection $publicationMeta;
 
     public function __construct()

@@ -8,12 +8,13 @@ final class Cursor
 {
     private int $position = -1;
 
-    /** @param Token[] $tokens */
+    /** @param list<Token> $tokens */
     public function __construct(
         private readonly array $tokens,
     ) {
     }
 
+    /** @param Token::TOKEN_TYPE_* $exceptTokenType */
     public function next(int|null $exceptTokenType = null): Token|null
     {
         while ($token = $this->tokens[++$this->position] ?? null) {
@@ -27,6 +28,7 @@ final class Cursor
         return null;
     }
 
+    /** @param Token::TOKEN_TYPE_* $exceptTokenType */
     public function previous(int|null $exceptTokenType = null): Token|null
     {
         while ($token = $this->tokens[--$this->position] ?? null) {

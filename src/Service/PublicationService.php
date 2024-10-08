@@ -264,7 +264,7 @@ class PublicationService {
 
 		// Wrapp the Main Data
         if ($request->getMethod() == 'POST') {
-            $results->setId($this->commonSvc->createUUIDShort());
+            $results->setId($this->commonSvc->createIDTimestamp());
             $results->setUuid($this->commonSvc->createUUID());
         }
         $results->setPublicationGeneralType($generalFormType);
@@ -518,7 +518,7 @@ class PublicationService {
          */
 
         // Ids
-        $results->setId($this->commonSvc->createUUIDShort());
+        $results->setId($this->commonSvc->createIDTimestamp());
         $results->setUuid($this->commonSvc->createUUID());
 
         // Master data

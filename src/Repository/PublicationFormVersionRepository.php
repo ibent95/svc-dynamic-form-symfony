@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\PublicationFormVersion;
+use App\Service\CommonService;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\Result;
 use Doctrine\ORM\OptimisticLockException;
@@ -22,7 +23,9 @@ class PublicationFormVersionRepository extends ServiceEntityRepository
     private $results;
     private Int $count;
 
-    public function __construct(ManagerRegistry $registry)
+    private $commonSvc;
+
+    public function __construct(ManagerRegistry $registry, CommonService $commonSvc)
     {
         parent::__construct($registry, PublicationFormVersion::class);
 
@@ -39,6 +42,9 @@ class PublicationFormVersionRepository extends ServiceEntityRepository
         ];
         $this->results = null;
         $this->count = 0;
+
+        // Other service`s
+        $this->commonSvc         = $commonSvc;
     }
 
     /**
@@ -93,9 +99,14 @@ class PublicationFormVersionRepository extends ServiceEntityRepository
 
         if ($parameters) {
             foreach ($parameters as $key => $value) {
-                $this->results = $this->results
-                    ->andWhere("pfv.$key = :$key")
-                    ->setParameter($key, $value);
+
+                // Default filters
+                if (!$this->commonSvc->isEmptyString($value) && $key !== 'search_key') {
+                    $this->results = $this->results
+                        ->andWhere("pfv.$key = :$key")
+                        ->setParameter($key, $value);
+                }
+
             }
         }
 
@@ -145,7 +156,7 @@ class PublicationFormVersionRepository extends ServiceEntityRepository
 
             foreach ($parameters as $key => $value) {
 
-                if ($key == 'search_key') {
+                if (!$this->commonSvc->isEmptyString($value) && $key == 'search_key') {
                     $formVersionNameBindKey = $key . '_1';
                     $formVersionCodeBindKey = $key . '_2';
 
@@ -191,7 +202,7 @@ class PublicationFormVersionRepository extends ServiceEntityRepository
         if ($parameters) {
             foreach ($parameters as $key => &$value) {
 
-                if ($key == 'search_key') {
+                if (!$this->commonSvc->isEmptyString($value) && $key == 'search_key') {
                     $value = strtolower($value);
                     $preparedStatement->bindValue($key . '_1', "%$value%");
                     $preparedStatement->bindValue($key . '_2', "%$value%");
@@ -214,12 +225,15 @@ class PublicationFormVersionRepository extends ServiceEntityRepository
         if ($parameters) {
             foreach ($parameters as $key => &$value) {
 
-                if ($key == 'search_key') {
+                // Default filters
+                if ($key !== 'search_key') {
+                    $preparedStatement->bindValue($key, $value);
+                }
+
+                if (!$this->commonSvc->isEmptyString($value) && $key == 'search_key') {
                     $value = strtolower($value);
                     $preparedStatement->bindValue($key . '_1', "%$value%");
                     $preparedStatement->bindValue($key . '_2', "%$value%");
-                } else {
-                    $preparedStatement->bindValue($key, $value);
                 }
 
             }

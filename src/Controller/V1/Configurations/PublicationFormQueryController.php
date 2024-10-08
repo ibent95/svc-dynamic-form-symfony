@@ -188,7 +188,7 @@ class PublicationFormQueryController extends AbstractController
                 $paginator->get('offset')
             );
             $publicationFormsTotalCount     = $publicationFormData['count'];
-            $publicationFormsData           = $this->commonSvc->normalizeObject($publicationFormData['data'], [], null, true, ['internal']) ;
+            $publicationFormsData           = $this->commonSvc->normalizeObject($publicationFormData['data'], ['internal'], ['grid_system']) ;
 
             // Response data
             $this->response = $this->commonSvc->setResponse([
@@ -226,9 +226,7 @@ class PublicationFormQueryController extends AbstractController
             $params              = ['uuid' => $uuid]; // 'flag_active' => true
 
             $publicationFormDataRaw              = $this->publicationFormSvc->findOneBy($params);
-            $publicationFormData                 = $this->commonSvc->normalizeObject($publicationFormDataRaw, ['id', 'id_form_version', 'id_form_parent']);
-            $publicationFormData['form_version'] = $this->commonSvc->normalizeObject($publicationFormDataRaw->getFormVersion(), ['id']);
-            $publicationFormData['form_parent']  = $this->commonSvc->normalizeObject($publicationFormDataRaw->getFormParent(), ['id', 'id_form_version', 'id_form_parent']);
+            $publicationFormData                 = $this->commonSvc->normalizeObject($publicationFormDataRaw, ['internal'], [], null, true);
 
             // Response data
             $this->response = $this->commonSvc->setResponse([

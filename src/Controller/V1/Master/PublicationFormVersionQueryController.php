@@ -174,7 +174,7 @@ class PublicationFormVersionQueryController extends AbstractController
 
             $publicationFormVersionData        = $this->publicationFormVersionSvc->getQueryBuilderAll($params, $orderBy, $paginator->get('limit'), $paginator->get('offset'));
             $publicationFormVersionsTotalCount = $publicationFormVersionData['count'];
-            $publicationFormVersionsData       = $publicationFormVersionData['data'];
+            $publicationFormVersionsData       = $this->commonSvc->normalizeObject($publicationFormVersionData['data'], ['internal']);
 
             //$publicationFormVersionsEntity         = $entityManager->getRepository(PublicationForm::class);
             //$publicationFormVersionsTotalCount     = $publicationFormVersionsEntity->count($params);

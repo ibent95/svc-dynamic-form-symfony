@@ -2,7 +2,7 @@
 
 namespace App\Controller\V1\Master;
 
-use App\Entity\DynamicFormFieldType;
+use App\Entity\DynamicFormFieldOptions;
 use App\Service\CommonService;
 
 use Doctrine\Common\Collections\Criteria;
@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
-class DynamicFormFieldTypeController extends AbstractController
+class DynamicFormFieldOptionsQueryController extends AbstractController
 {
 
     private $logger;
@@ -41,15 +41,15 @@ class DynamicFormFieldTypeController extends AbstractController
         $this->responseStatusCode   = 400;
     }
 
-    /** ================================ Required functions for publication ================================ */
+    /** ================================ Required functions for dynamicFormField ================================ */
 
-    #[Route('/api/v1/dynamic-form/field-types', methods: ['GET'], name: 'app_v1_dynamic_form_field_types')]
+    #[Route('/api/v1/dynamic-form/field-options', methods: ['GET'], name: 'app_v1_dynamic_form_field_options')]
     public function index(): JsonResponse
     {
-        $this->logger->info('The dynamic form field types menu has been accessed!');
+        $this->logger->info('The dynamic form field options menu has been accessed!');
 
         $this->responseData['info'] = 'success';
-        $this->responseData['message'] = 'Success to access the dynamic form field types API!';
+        $this->responseData['message'] = 'Success to access the dynamic form field options API!';
         $this->responseData['data'] = [
             'message' => 'Welcome to dynamic form field options!',
             'date' => date('Y-m-d'),
@@ -60,7 +60,7 @@ class DynamicFormFieldTypeController extends AbstractController
         return $this->json($this->responseData, $this->responseStatusCode);
     }
 
-    #[Route('/api/v1/dynamic-form/field-types', methods: ['GET'], name: 'app_v1_dynamic_form_field_types')]
+    #[Route('/api/v1/dynamic-form/field-options', methods: ['GET'], name: 'app_v1_dynamic_form_field_options')]
     public function getAll(ManagerRegistry $doctrine, CommonService $common): JsonResponse
     {
         $entityManager                  = $doctrine->getManager();
@@ -70,23 +70,22 @@ class DynamicFormFieldTypeController extends AbstractController
         $this->responseStatusCode       = 500;
 
         try {
-            // DynamicFormFieldType
+            // DynamicFormFieldOptions
             $dynamicFormFieldOptionsParams          = [];
-            $dynamicFormFieldOptions                = $entityManager->getRepository(DynamicFormFieldType::class)->
-                findBy($dynamicFormFieldOptionsParams);
+            $dynamicFormFieldOptions                = $entityManager->getRepository(DynamicFormFieldOptions::class)->findBy($dynamicFormFieldOptionsParams);
 
             // Response data
             $this->responseData['data']     = $dynamicFormFieldOptions;
             $this->responseData['info']     = 'success';
-            $this->responseData['message']  = 'Success to get dynamic form field types data!';
+            $this->responseData['message']  = 'Success to get dynamic form field options data!';
             $this->responseStatusCode       = 200;
 
-            $this->logger->info('Get dynamic form field types data: ' . json_encode($this->responseData['data']));
+            $this->logger->info('Get dynamic form field options data: ' . json_encode($this->responseData['data']));
         } catch (\Exception $e) {
-            $this->responseData['message']  = 'Error on get dynamic form field types data!';
+            $this->responseData['message']  = 'Error on get dynamic form field options data!';
             $this->responseStatusCode       = 400;
             $this->logger->error(
-                'Get dynamic form field types data exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(),
+                'Get dynamic form field options data exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(),
                 [$e->getFile(), 'trace => ', $e->getTrace()]
             );
         }
@@ -94,7 +93,7 @@ class DynamicFormFieldTypeController extends AbstractController
         return $this->json($this->responseData, $this->responseStatusCode);
     }
 
-    #[Route('/api/v1/master/dynamic-form/field-types', methods: ['GET'], name: 'app_v1_master_dynamic_form_field_types')]
+    #[Route('/api/v1/master/dynamic-form/field-options', methods: ['GET'], name: 'app_v1_master_dynamic_form_field_options')]
     public function getMasterDataAll(ManagerRegistry $doctrine, CommonService $common): JsonResponse
     {
         $entityManager                  = $doctrine->getManager();
@@ -104,25 +103,24 @@ class DynamicFormFieldTypeController extends AbstractController
         $this->responseStatusCode       = 500;
 
         try {
-            // DynamicFormFieldType
+            // DynamicFormFieldOptions
             $dynamicFormFieldOptionsParams          = [
                 'flag_active' => true
             ];
-            $dynamicFormFieldOptions                = $entityManager->getRepository(DynamicFormFieldType::class)->
-                findBy($dynamicFormFieldOptionsParams);
+            $dynamicFormFieldOptions                = $entityManager->getRepository(DynamicFormFieldOptions::class)->findBy($dynamicFormFieldOptionsParams);
 
             // Response data
             $this->responseData['data']     = $dynamicFormFieldOptions;
             $this->responseData['info']     = 'success';
-            $this->responseData['message']  = 'Success to get master data of dynamic form field types!';
+            $this->responseData['message']  = 'Success to get master data of dynamic form field options!';
             $this->responseStatusCode       = 200;
 
-            $this->logger->info('Get master data of dynamic form field types: ' . json_encode($this->responseData['data']));
+            $this->logger->info('Get master data of dynamic form field options: ' . json_encode($this->responseData['data']));
         } catch (\Exception $e) {
-            $this->responseData['message']  = 'Error on get master data of dynamic form field types!';
+            $this->responseData['message']  = 'Error on get master data of dynamic form field options!';
             $this->responseStatusCode       = 400;
             $this->logger->error(
-                'Get master data of dynamic form field types exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(),
+                'Get master data of dynamic form field options exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(),
                 [$e->getFile(), 'trace => ', $e->getTrace()]
             );
         }

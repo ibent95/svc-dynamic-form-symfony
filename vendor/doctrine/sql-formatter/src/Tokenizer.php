@@ -4,19 +4,22 @@ declare(strict_types=1);
 
 namespace Doctrine\SqlFormatter;
 
-use function array_combine;
-use function array_keys;
+use function array_key_last;
 use function array_map;
-use function arsort;
+use function array_pop;
 use function assert;
+use function count;
 use function implode;
+use function is_int;
 use function preg_match;
 use function preg_quote;
+use function reset;
 use function str_replace;
+use function str_starts_with;
 use function strlen;
-use function strpos;
 use function strtoupper;
 use function substr;
+use function usort;
 
 /** @internal */
 final class Tokenizer
@@ -118,6 +121,7 @@ final class Tokenizer
         'EXTENDED',
         'FALSE',
         'FAST',
+        'FETCH',
         'FIELDS',
         'FILE',
         'FILTER',
@@ -375,6 +379,7 @@ final class Tokenizer
         'DELETE FROM',
         'DROP',
         'EXCEPT',
+        'FETCH',
         'FROM',
         'GROUP BY',
         'GROUPS',
@@ -382,6 +387,7 @@ final class Tokenizer
         'INTERSECT',
         'LIMIT',
         'MODIFY',
+        'OFFSET',
         'ORDER BY',
         'PARTITION BY',
         'RANGE',
@@ -716,13 +722,8 @@ final class Tokenizer
         'YEARWEEK',
     ];
 
-    // Regular expressions for tokenizing
-
-    private readonly string $regexBoundaries;
-    private readonly string $regexReserved;
-    private readonly string $regexReservedNewline;
-    private readonly string $regexReservedToplevel;
-    private readonly string $regexFunction;
+    /** Regular expression for tokenizing. */
+    private readonly string $tokenizeRegex;
 
     /**
      * Punctuation that can be used as a boundary between other tokens
@@ -753,39 +754,140 @@ final class Tokenizer
     ];
 
     /**
-     * Stuff that only needs to be done once. Builds regular expressions and
-     * sorts the reserved words.
+     * Stuff that only needs to be done once. Builds tokenizing regular expression.
      */
     public function __construct()
     {
-        // Sort list from longest word to shortest, 3x faster than usort
-        $sortByLengthFx = static function ($values) {
-            $valuesMap = array_combine($values, array_map(strlen(...), $values));
-            assert($valuesMap !== false);
-            arsort($valuesMap);
+        $this->tokenizeRegex = $this->makeTokenizeRegex($this->makeTokenizeRegexes());
+    }
 
-            return array_keys($valuesMap);
-        };
+    /**
+     * Make regex from a list of values matching longest value first.
+     *
+     * Optimized for speed by matching alternative branch only once
+     * https://github.com/PCRE2Project/pcre2/issues/411 .
+     *
+     * @param list<string> $values
+     */
+    private function makeRegexFromList(array $values, bool $sorted = false): string
+    {
+        // sort list alphabetically and from longest word to shortest
+        if (! $sorted) {
+            usort($values, static function (string $a, string $b) {
+                return str_starts_with($a, $b) || str_starts_with($b, $a)
+                    ? strlen($b) <=> strlen($a)
+                    : $a <=> $b;
+            });
+        }
 
+        /** @var array<int|string, list<string>> $valuesBySharedPrefix */
+        $valuesBySharedPrefix = [];
+        $items                = [];
+        $prefix               = null;
+
+        foreach ($values as $v) {
+            if ($prefix !== null && ! str_starts_with($v, substr($prefix, 0, 1))) {
+                $valuesBySharedPrefix[$prefix] = $items;
+                $items                         = [];
+                $prefix                        = null;
+            }
+
+            $items[] = $v;
+
+            if ($prefix === null) {
+                $prefix = $v;
+            } else {
+                while (! str_starts_with($v, $prefix)) {
+                    $prefix = substr($prefix, 0, -1);
+                }
+            }
+        }
+
+        if ($items !== []) {
+            $valuesBySharedPrefix[$prefix] = $items;
+            $items                         = [];
+            $prefix                        = null;
+        }
+
+        $regex = '(?>';
+
+        foreach ($valuesBySharedPrefix as $prefix => $items) {
+            if ($regex !== '(?>') {
+                $regex .= '|';
+            }
+
+            if (is_int($prefix)) {
+                $prefix = (string) $prefix;
+            }
+
+            $regex .= preg_quote($prefix, '/');
+
+            $regex .= count($items) === 1
+                ? preg_quote(substr(reset($items), strlen($prefix)), '/')
+                : $this->makeRegexFromList(array_map(static fn ($v) => substr($v, strlen($prefix)), $items), true);
+        }
+
+        return $regex . ')';
+    }
+
+    /** @return array<Token::TOKEN_TYPE_*, string> */
+    private function makeTokenizeRegexes(): array
+    {
         // Set up regular expressions
-        $this->regexBoundaries       = '(' . implode(
-            '|',
-            $this->quoteRegex($this->boundaries),
-        ) . ')';
-        $this->regexReserved         = '(' . implode(
-            '|',
-            $this->quoteRegex($sortByLengthFx($this->reserved)),
-        ) . ')';
-        $this->regexReservedToplevel = str_replace(' ', '\\s+', '(' . implode(
-            '|',
-            $this->quoteRegex($sortByLengthFx($this->reservedToplevel)),
-        ) . ')');
-        $this->regexReservedNewline  = str_replace(' ', '\\s+', '(' . implode(
-            '|',
-            $this->quoteRegex($sortByLengthFx($this->reservedNewline)),
-        ) . ')');
+        $regexBoundaries       = $this->makeRegexFromList($this->boundaries);
+        $regexReserved         = $this->makeRegexFromList($this->reserved);
+        $regexReservedToplevel = str_replace(' ', '\s+', $this->makeRegexFromList($this->reservedToplevel));
+        $regexReservedNewline  = str_replace(' ', '\s+', $this->makeRegexFromList($this->reservedNewline));
+        $regexFunction         = $this->makeRegexFromList($this->functions);
 
-        $this->regexFunction = '(' . implode('|', $this->quoteRegex($sortByLengthFx($this->functions))) . ')';
+        return [
+            Token::TOKEN_TYPE_WHITESPACE => '\s+',
+            Token::TOKEN_TYPE_COMMENT => '(?:--|#)[^\n]*+',
+            Token::TOKEN_TYPE_BLOCK_COMMENT => '/\*(?:[^*]+|\*(?!/))*+(?:\*|$)(?:/|$)',
+            // 1. backtick quoted string using `` to escape
+            // 2. square bracket quoted string (SQL Server) using ]] to escape
+            Token::TOKEN_TYPE_BACKTICK_QUOTE => <<<'EOD'
+                (?>(?x)
+                    `(?:[^`]+|`(?:`|$))*+(?:`|$)
+                    |\[(?:[^\]]+|\](?:\]|$))*+(?:\]|$)
+                )
+                EOD,
+            // 3. double quoted string using "" or \" to escape
+            // 4. single quoted string using '' or \' to escape
+            Token::TOKEN_TYPE_QUOTE => <<<'EOD'
+                (?>(?sx)
+                    '(?:[^'\\]+|\\(?:.|$)|'(?:'|$))*+(?:'|$)
+                    |"(?:[^"\\]+|\\(?:.|$)|"(?:"|$))*+(?:"|$)
+                )
+                EOD,
+            // User-defined variable, possibly with quoted name
+            Token::TOKEN_TYPE_VARIABLE => '[@:](?:[\w.$]++|(?&t_' . Token::TOKEN_TYPE_BACKTICK_QUOTE . ')|(?&t_' . Token::TOKEN_TYPE_QUOTE . '))',
+            // decimal, binary, or hex
+            Token::TOKEN_TYPE_NUMBER => '(?:\d+(?:\.\d+)?|0x[\da-fA-F]+|0b[01]+)(?=$|\s|"\'`|' . $regexBoundaries . ')',
+            // punctuation and symbols
+            Token::TOKEN_TYPE_BOUNDARY => $regexBoundaries,
+            // A reserved word cannot be preceded by a '.'
+            // this makes it so in "mytable.from", "from" is not considered a reserved word
+            Token::TOKEN_TYPE_RESERVED_TOPLEVEL => '(?<!\.)' . $regexReservedToplevel . '(?=$|\s|' . $regexBoundaries . ')',
+            Token::TOKEN_TYPE_RESERVED_NEWLINE => '(?<!\.)' . $regexReservedNewline . '(?=$|\s|' . $regexBoundaries . ')',
+            Token::TOKEN_TYPE_RESERVED => '(?<!\.)' . $regexReserved . '(?=$|\s|' . $regexBoundaries . ')'
+                // A function must be succeeded by '('
+                // this makes it so "count(" is considered a function, but "count" alone is not function
+                . '|' . $regexFunction . '(?=\s*\()',
+            Token::TOKEN_TYPE_WORD => '.*?(?=$|\s|["\'`]|' . $regexBoundaries . ')',
+        ];
+    }
+
+    /** @param array<Token::TOKEN_TYPE_*, string> $regexes */
+    private function makeTokenizeRegex(array $regexes): string
+    {
+        $parts = [];
+
+        foreach ($regexes as $type => $regex) {
+            $parts[] = '(?<t_' . $type . '>' . $regex . ')';
+        }
+
+        return '~\G(?:' . implode('|', $parts) . ')~';
     }
 
     /**
@@ -796,232 +898,33 @@ final class Tokenizer
      */
     public function tokenize(string $string): Cursor
     {
+        $tokenizeRegex = $this->tokenizeRegex;
+        $upper         = strtoupper($string);
+
         $tokens = [];
+        $offset = 0;
 
-        // Used to make sure the string keeps shrinking on each iteration
-        $oldStringLen = strlen($string) + 1;
+        while ($offset < strlen($string)) {
+            // Get the next token and the token type
+            preg_match($tokenizeRegex, $upper, $matches, 0, $offset);
+            assert(($matches[0] ?? '') !== '');
 
-        $token = null;
-
-        $currentLength = strlen($string);
-
-        // Keep processing the string until it is empty
-        while ($currentLength) {
-            // If the string stopped shrinking, there was a problem
-            if ($oldStringLen <= $currentLength) {
-                $tokens[] = new Token(Token::TOKEN_TYPE_ERROR, $string);
-
-                return new Cursor($tokens);
+            while (is_int($lastMatchesKey = array_key_last($matches))) {
+                array_pop($matches);
             }
 
-            $oldStringLen =  $currentLength;
+            assert(str_starts_with($lastMatchesKey, 't_'));
 
-            // Get the next token and the token type
-            $token       = $this->createNextToken($string, $token);
-            $tokenLength = strlen($token->value());
+            /** @var Token::TOKEN_TYPE_* $tokenType */
+            $tokenType = (int) substr($lastMatchesKey, 2);
+
+            $token = new Token($tokenType, substr($string, $offset, strlen($matches[0])));
+
+            $offset += strlen($token->value());
 
             $tokens[] = $token;
-
-            // Advance the string
-            $string = substr($string, $tokenLength);
-
-            $currentLength -= $tokenLength;
         }
 
         return new Cursor($tokens);
-    }
-
-    /**
-     * Return the next token and token type in a SQL string.
-     * Quoted strings, comments, reserved words, whitespace, and punctuation
-     * are all their own tokens.
-     *
-     * @param string     $string   The SQL string
-     * @param Token|null $previous The result of the previous createNextToken() call
-     *
-     * @return Token An associative array containing the type and value of the token.
-     */
-    private function createNextToken(string $string, Token|null $previous = null): Token
-    {
-        $matches = [];
-        // Whitespace
-        if (preg_match('/^\s+/', $string, $matches)) {
-            return new Token(Token::TOKEN_TYPE_WHITESPACE, $matches[0]);
-        }
-
-        // Comment
-        if (
-            $string[0] === '#' ||
-            (isset($string[1]) && ($string[0] === '-' && $string[1] === '-') ||
-            (isset($string[1]) && $string[0] === '/' && $string[1] === '*'))
-        ) {
-            // Comment until end of line
-            if ($string[0] === '-' || $string[0] === '#') {
-                $last = strpos($string, "\n");
-                $type = Token::TOKEN_TYPE_COMMENT;
-            } else { // Comment until closing comment tag
-                $pos  = strpos($string, '*/', 2);
-                $last = $pos !== false
-                    ? $pos + 2
-                    : false;
-                $type = Token::TOKEN_TYPE_BLOCK_COMMENT;
-            }
-
-            if ($last === false) {
-                $last = strlen($string);
-            }
-
-            return new Token($type, substr($string, 0, $last));
-        }
-
-        // Quoted String
-        if ($string[0] === '"' || $string[0] === '\'' || $string[0] === '`' || $string[0] === '[') {
-            return new Token(
-                ($string[0] === '`' || $string[0] === '['
-                    ? Token::TOKEN_TYPE_BACKTICK_QUOTE
-                    : Token::TOKEN_TYPE_QUOTE),
-                $this->getQuotedString($string),
-            );
-        }
-
-        // User-defined Variable
-        if (($string[0] === '@' || $string[0] === ':') && isset($string[1])) {
-            $value = null;
-            $type  = Token::TOKEN_TYPE_VARIABLE;
-
-            // If the variable name is quoted
-            if ($string[1] === '"' || $string[1] === '\'' || $string[1] === '`') {
-                $value = $string[0] . $this->getQuotedString(substr($string, 1));
-            } else {
-                // Non-quoted variable name
-                preg_match('/^(' . $string[0] . '[a-zA-Z0-9\._\$]+)/', $string, $matches);
-                if ($matches) {
-                    $value = $matches[1];
-                }
-            }
-
-            if ($value !== null) {
-                return new Token($type, $value);
-            }
-        }
-
-        // Number (decimal, binary, or hex)
-        if (
-            preg_match(
-                '/^([0-9]+(\.[0-9]+)?|0x[0-9a-fA-F]+|0b[01]+)($|\s|"\'`|' . $this->regexBoundaries . ')/',
-                $string,
-                $matches,
-            )
-        ) {
-            return new Token(Token::TOKEN_TYPE_NUMBER, $matches[1]);
-        }
-
-        // Boundary Character (punctuation and symbols)
-        if (preg_match('/^(' . $this->regexBoundaries . ')/', $string, $matches)) {
-            return new Token(Token::TOKEN_TYPE_BOUNDARY, $matches[1]);
-        }
-
-        // A reserved word cannot be preceded by a '.'
-        // this makes it so in "mytable.from", "from" is not considered a reserved word
-        if (! $previous || $previous->value() !== '.') {
-            $upper = strtoupper($string);
-            // Top Level Reserved Word
-            if (
-                preg_match(
-                    '/^(' . $this->regexReservedToplevel . ')($|\s|' . $this->regexBoundaries . ')/',
-                    $upper,
-                    $matches,
-                )
-            ) {
-                return new Token(
-                    Token::TOKEN_TYPE_RESERVED_TOPLEVEL,
-                    substr($string, 0, strlen($matches[1])),
-                );
-            }
-
-            // Newline Reserved Word
-            if (
-                preg_match(
-                    '/^(' . $this->regexReservedNewline . ')($|\s|' . $this->regexBoundaries . ')/',
-                    $upper,
-                    $matches,
-                )
-            ) {
-                return new Token(
-                    Token::TOKEN_TYPE_RESERVED_NEWLINE,
-                    substr($string, 0, strlen($matches[1])),
-                );
-            }
-
-            // Other Reserved Word
-            if (
-                preg_match(
-                    '/^(' . $this->regexReserved . ')($|\s|' . $this->regexBoundaries . ')/',
-                    $upper,
-                    $matches,
-                )
-            ) {
-                return new Token(
-                    Token::TOKEN_TYPE_RESERVED,
-                    substr($string, 0, strlen($matches[1])),
-                );
-            }
-        }
-
-        // A function must be succeeded by '('
-        // this makes it so "count(" is considered a function, but "count" alone is not
-        $upper = strtoupper($string);
-        // function
-        if (preg_match('/^(' . $this->regexFunction . '[(]|\s|[)])/', $upper, $matches)) {
-            return new Token(
-                Token::TOKEN_TYPE_RESERVED,
-                substr($string, 0, strlen($matches[1]) - 1),
-            );
-        }
-
-        // Non reserved word
-        preg_match('/^(.*?)($|\s|["\'`]|' . $this->regexBoundaries . ')/', $string, $matches);
-
-        return new Token(Token::TOKEN_TYPE_WORD, $matches[1]);
-    }
-
-    /**
-     * Helper function for building regular expressions for reserved words and boundary characters
-     *
-     * @param string[] $strings The strings to be quoted
-     *
-     * @return string[] The quoted strings
-     */
-    private function quoteRegex(array $strings): array
-    {
-        return array_map(
-            static fn (string $string): string => preg_quote($string, '/'),
-            $strings,
-        );
-    }
-
-    private function getQuotedString(string $string): string
-    {
-        $ret = '';
-
-        // This checks for the following patterns:
-        // 1. backtick quoted string using `` to escape
-        // 2. square bracket quoted string (SQL Server) using ]] to escape
-        // 3. double quoted string using "" or \" to escape
-        // 4. single quoted string using '' or \' to escape
-        if (
-            preg_match(
-                '/^(((`[^`]*($|`))+)|
-            ((\[[^\]]*($|\]))(\][^\]]*($|\]))*)|
-            (("[^"\\\\]*(?:\\\\.[^"\\\\]*)*("|$))+)|
-            ((\'[^\'\\\\]*(?:\\\\.[^\'\\\\]*)*(\'|$))+))/sx',
-                $string,
-                $matches,
-            )
-        ) {
-            $ret = $matches[1];
-        }
-
-        return $ret;
     }
 }

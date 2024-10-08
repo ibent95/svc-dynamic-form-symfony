@@ -158,7 +158,13 @@ class CommonService {
 		return $this->doctrineManager->getUnitOfWork()->getEntityIdentifier($object);
 	}
 
-	public function createUUIDShort() : string
+	public function createIDTimestamp() : string
+	{
+		$this->results = date('YmdHis');
+		return $this->results;
+	}
+
+	public function createBigInteger() : string
 	{
 		/** Changed from mysql UUID_SHORT() function,
 		 * to PHP arbitrary precision numbers library such as GMP BCMath based.
@@ -170,6 +176,7 @@ class CommonService {
 		 */
 		$from = '0';
 		$to = '9223372036854775807';
+
 		return BigInteger::randomRange($from, $to);
 	}
 
@@ -180,10 +187,10 @@ class CommonService {
 
 	public function normalizeObject(
 		mixed $object,
+		array $groups = [],
 		array $ignoredAttributes = [],
 		string $resultFormat = null,
-		bool $enableMaxDepth = false,
-		array $groups = []
+		bool $enableMaxDepth = false
 	): ?array
 	{
 		$this->results = null;
@@ -346,6 +353,54 @@ class CommonService {
 	{
 		$unicode = new UnicodeString($baseString);
 		return $unicode->replace($fromString, $toString);
+	}
+
+	public function isEmptyString(mixed $value): bool
+	{
+		if (!is_string($value)) {
+			return false;
+		}
+
+		$this->results = trim($value);
+		return (
+			$this->results === null
+			|| $this->results === ""
+			|| empty($this->results)
+		);
+	}
+
+	public function isEmptyValue(mixed $value): bool
+	{
+		switch (gettype($value)) {
+
+			case "string":
+				// Remove whitespace in start and end first before set check condition
+				$tempValue = trim($value);
+
+				// Set check condition
+				$this->results = (
+					$tempValue === null || $tempValue === "" || empty($tempValue)
+				);
+				break;
+
+			case "boolean":
+			case "integer":
+			case "double":
+			case "array":
+			case "object":
+				$this->results = empty($tempValue);
+				break;
+
+			case "resource": // Include in default because I don't know to handle right now
+			case "resource (closed)": // Include in default because I don't know to handle right now
+			case "NULL":
+			case "unknown type":
+			default:
+				$this->results = true;
+				break;
+		}
+
+		return $this->results;
 	}
 
 	public function uploadFile(

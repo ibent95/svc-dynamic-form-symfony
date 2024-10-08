@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\ApiResource;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[
     ORM\Entity(repositoryClass: PublicationMetaRepository::class),
@@ -24,122 +25,140 @@ class PublicationMeta
     private $id;
 
     #[ORM\Column(type: Types::BIGINT, options: ["unsigned" => true])]
-    #[Ignore]
     private $id_form;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true])]
-    #[Ignore]
     private $id_publication;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true])]
-    #[Ignore]
     private $id_form_version;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
     private $id_form_parent;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $field_label;
 
     #[ORM\Column(type: 'string', length: 100)]
+    #[Groups(['public', 'internal'])]
     private $field_type;
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $field_name;
 
     #[ORM\Column(type: 'string', length: 100)]
+    #[Groups(['public', 'internal'])]
     private $field_id;
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $field_class;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $field_placeholder;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    #[Ignore]
+    #[Groups(['public', 'internal'])]
     private $field_options;
 
     #[ORM\Column(type: 'json', nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $field_configs = [];
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $description;
 
     #[ORM\Column(type: 'integer', nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $order_position;
 
     #[ORM\Column(type: 'json', nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $validation_configs = [];
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $error_message;
 
     #[ORM\Column(type: 'json', nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $dependency_child = [];
 
     #[ORM\Column(type: 'json', nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $dependency_parent = [];
 
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    #[Groups(['public', 'internal'])]
     private $flag_required;
 
     #[ORM\Column(options: ['default' => false])]
+    #[Groups(['internal'])]
     private ?bool $flag_field_form_type = null;
 
     #[ORM\Column(options: ['default' => false])]
+    #[Groups(['internal'])]
     private ?bool $flag_field_title = null;
 
     #[ORM\Column(options: ['default' => false])]
+    #[Groups(['internal'])]
     private ?bool $flag_field_publish_date = null;
 
     #[ORM\Column(type: 'text', length: 65535, nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $value;
 
     #[ORM\Column(type: 'json', nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $other_value = null;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $flag_active;
 
     #[ORM\Column(type: 'string', length: 50, options: ['default' => 'system'])]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $create_user;
 
     #[ORM\Column(type: 'datetime', nullable: false)]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $created_at;
 
     #[ORM\Column(type: 'string', length: 50, options: ['default' => 'system'])]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $update_user;
 
     #[ORM\Column(type: 'datetime', nullable: false)]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $updated_at;
 
     #[ORM\Column(type: 'guid', nullable: false)]
+    #[Groups(['public', 'internal'])]
     private $uuid;
 
     #[
-        ORM\ManyToOne(targetEntity: PublicationForm::class, inversedBy: 'publicationMeta', fetch: 'EAGER'),
+        ORM\ManyToOne(targetEntity: PublicationForm::class, inversedBy: 'publicationMeta', fetch: 'LAZY'),
         ORM\JoinColumn(name: 'id_form', referencedColumnName: 'id', onDelete: 'CASCADE')
     ]
+    #[Groups(['public', 'internal'])]
     private $form;
 
     #[
-        ORM\ManyToOne(targetEntity: Publication::class, inversedBy: 'publication_metas', fetch: 'EAGER'),
+        ORM\ManyToOne(targetEntity: Publication::class, inversedBy: 'publication_metas', fetch: 'LAZY'),
         ORM\JoinColumn(name: 'id_publication', referencedColumnName: 'id', onDelete: 'CASCADE')
     ]
-    #[Ignore]
+    #[Groups(['public', 'internal'])]
     private $publication;
 
     #[
-        ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'publication_metas', fetch: 'EAGER'),
+        ORM\ManyToOne(targetEntity: PublicationFormVersion::class, inversedBy: 'publication_metas', fetch: 'LAZY'),
         ORM\JoinColumn(name: 'id_form_version', referencedColumnName: 'id', onDelete: 'CASCADE')
     ]
-    #[Ignore]
+    #[Groups(['public', 'internal'])]
     private $form_version;
 
     #[ORM\PrePersist]
@@ -187,7 +206,6 @@ class PublicationMeta
         return $this;
     }
 
-    #[Ignore]
     public function getIdPublication(): ?string
     {
         return $this->id_publication;
@@ -200,7 +218,6 @@ class PublicationMeta
         return $this;
     }
 
-    #[Ignore]
     public function getIdFormVersion(): ?string
     {
         return $this->id_form_version;
@@ -213,7 +230,6 @@ class PublicationMeta
         return $this;
     }
 
-    #[Ignore]
     public function getIdFormParent(): ?string
     {
         return $this->id_form_parent;
@@ -466,7 +482,6 @@ class PublicationMeta
         return $this;
     }
 
-    #[Ignore]
     public function getFlagActive(): ?bool
     {
         return $this->flag_active;
@@ -479,7 +494,6 @@ class PublicationMeta
         return $this;
     }
 
-    #[Ignore]
     public function getCreateUser(): ?string
     {
         return $this->create_user;
@@ -492,7 +506,6 @@ class PublicationMeta
         return $this;
     }
 
-    #[Ignore]
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -505,7 +518,6 @@ class PublicationMeta
         return $this;
     }
 
-    #[Ignore]
     public function getUpdateUser(): ?string
     {
         return $this->update_user;
@@ -518,7 +530,6 @@ class PublicationMeta
         return $this;
     }
 
-    #[Ignore]
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updated_at;
@@ -543,7 +554,6 @@ class PublicationMeta
         return $this;
     }
 
-    #[Ignore]
     public function getForm(): ?PublicationForm
     {
         return $this->form;
@@ -556,7 +566,6 @@ class PublicationMeta
         return $this;
     }
 
-    #[Ignore]
     public function getPublication(): ?Publication
     {
         return $this->publication;
@@ -569,7 +578,6 @@ class PublicationMeta
         return $this;
     }
 
-    #[Ignore]
     public function getFormVersion(): ?PublicationFormVersion
     {
         return $this->form_version;

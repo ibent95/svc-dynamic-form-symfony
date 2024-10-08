@@ -68,7 +68,7 @@ class PublicationFormVersionService {
 
         $params = new ArrayCollection($parameters);
         $params = $params->filter(function (mixed $value, mixed $key) {
-            return $value !== null;
+            return !$this->commonSvc->isEmptyString($value);
         });
 
         /** @var Result $data */

@@ -9,6 +9,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[
     ORM\Entity(repositoryClass: PublicationGeneralTypeRepository::class),
@@ -23,56 +24,56 @@ class PublicationGeneralType
         ORM\GeneratedValue(strategy: "IDENTITY"),
         ORM\Column(type: 'bigint', options: ["unsigned" => true])
     ]
-    #[Ignore]
     private $id;
 
     #[ORM\Column(type: 'string', length: 255)]
-    #[Ignore]
+    #[Groups(['public', 'internal'])]
     private $publication_general_type_name;
 
     #[ORM\Column(type: 'string', length: 100)]
-    #[Ignore]
+    #[Groups(['public', 'internal'])]
     private $publication_general_type_code;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $flag_active;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $create_user;
 
     #[ORM\Column(type: 'datetime')]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $created_at;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $update_user;
 
     #[ORM\Column(type: 'datetime')]
-    #[Ignore]
+    #[Groups(['internal'])]
     private $updated_at;
 
     #[ORM\Column(type: 'guid')]
+    #[Groups(['public', 'internal'])]
     private $uuid;
 
     #[ORM\OneToMany(
         mappedBy: 'publication_general_type',
         targetEntity: PublicationType::class,
-        fetch: 'EAGER',
+        fetch: 'LAZY',
         cascade: ['ALL']
     )]
-    #[Ignore]
+    #[Groups(['public_general_type-publication_types'])]
     private $publication_types;
 
     #[ORM\OneToMany(
         mappedBy: 'publication_general_type',
         targetEntity: Publication::class,
-        fetch: 'EAGER',
+        fetch: 'LAZY',
         cascade: ['ALL']
     )]
-    #[Ignore]
+    #[Groups(['public_general_type-publications'])]
     private $publications;
 
     public function __construct()
@@ -127,7 +128,6 @@ class PublicationGeneralType
         return $this;
     }
 
-    #[Ignore]
     public function getFlagActive(): ?bool
     {
         return $this->flag_active;
@@ -140,7 +140,6 @@ class PublicationGeneralType
         return $this;
     }
 
-    #[Ignore]
     public function getCreateUser(): ?string
     {
         return $this->create_user;
@@ -153,7 +152,6 @@ class PublicationGeneralType
         return $this;
     }
 
-    #[Ignore]
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
@@ -166,7 +164,6 @@ class PublicationGeneralType
         return $this;
     }
 
-    #[Ignore]
     public function getUpdateUser(): ?string
     {
         return $this->update_user;
@@ -179,7 +176,6 @@ class PublicationGeneralType
         return $this;
     }
 
-    #[Ignore]
     public function getUpdatedAt(): ?\DateTimeInterface
     {
         return $this->updated_at;
@@ -207,7 +203,6 @@ class PublicationGeneralType
     /**
      * @return Collection<int, PublicationType>
      */
-    #[Ignore]
     public function getPublicationTypes(): Collection
     {
         return $this->publication_types;
@@ -238,7 +233,6 @@ class PublicationGeneralType
     /**
      * @return Collection<int, Publication>
      */
-    #[Ignore]
     public function getPublications(): Collection
     {
         return $this->publications;
