@@ -95,7 +95,7 @@ class PublicationFormCommandController extends AbstractController
 
             $this->responseData['info']     = 'success';
             $this->responseData['message']  = 'Success on save configuration of publication form data!';
-            $this->logger->info($this->loggerMessage, []);
+            $this->logger->info($this->loggerMessage, $this->commonSvc->normalizeObject($publicationFormData, ['internal']));
         } catch (\Exception $e) {
             $entityManager->getConnection()->rollBack();
 
