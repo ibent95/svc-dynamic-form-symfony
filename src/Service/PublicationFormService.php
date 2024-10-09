@@ -213,4 +213,26 @@ class PublicationFormService {
         return $this->results;
     }
 
+    public function remove(Request $request, string $uuid): mixed
+    {
+        return $this->results;
+    }
+
+    public function disable(Request $request, string $uuid): ?PublicationForm
+    {
+        $requestAll     = $request->request->all();
+
+        $this->results  = ($uuid)
+            ? $this->publicationFormRepo->findOneBy(['uuid' => $uuid])
+            : null ;
+
+        if (!$this->results) {
+            throw new \Exception("The publication form configuration is not found with UUID: $uuid.", 400);
+        }
+
+        $this->results->setFlagActive(false);
+
+        return $this->results;
+    }
+
 }

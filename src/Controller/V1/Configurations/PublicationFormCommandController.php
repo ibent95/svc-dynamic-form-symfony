@@ -111,4 +111,43 @@ class PublicationFormCommandController extends AbstractController
         return $this->json($this->responseData, $this->responseStatusCode);
     }
 
+    #[Route('/api/v1/configurations/publication-forms/{uuid}/disable', methods: ['POST'], name: 'app_v1_configurations_publication_form_disable')]
+    public function disable(ManagerRegistry $doctrine, Request $request, string $uuid): JsonResponse
+    {
+        /** @var ObjectManager $entityManager */
+        $entityManager = $doctrine->getManager();
+
+        $this->responseData['info']     = 'error';
+        $this->responseData['message']  = '';
+        $this->responseStatusCode       = 200;
+        $this->loggerMessage            = 'Save Publication Form field data is running.';
+
+        $requestAll                     = $request->request->all();
+
+        try {
+            $entityManager->getConnection()->beginTransaction();
+
+            $publicationFormData        = $this->publicationFormSvc->disable($request, $uuid);
+
+            $entityManager->flush();
+            $entityManager->getConnection()->commit();
+
+            $this->responseData['info']     = 'success';
+            $this->responseData['message']  = 'Success on disable configuration of publication form data!';
+            $this->logger->info($this->loggerMessage, $this->commonSvc->normalizeObject($publicationFormData, ['internal']));
+        } catch (\Exception $e) {
+            $entityManager->getConnection()->rollBack();
+
+            $this->responseData['info']     = 'error';
+            $this->responseData['message']  = 'Error on disable configuration of publication form data!';
+            $this->responseStatusCode       = 400;
+            $this->logger->error(
+                'Disable configuration of publication form data exception log: ' . $e->getMessage() . ', line: ' . $e->getLine(),
+                [$e->getFile(), $e->getTraceAsString(), $request->request->all()]
+            );
+        }
+
+        return $this->json($this->responseData, $this->responseStatusCode);
+    }
+
 }
