@@ -177,7 +177,7 @@ class PublicationFormQueryController extends AbstractController
             ]; // 'flag_active' => true
             $orderBy                    = [
                 'updated_at' => 'DESC',
-                'order_position' => 'ASC'
+                //'order_position' => 'ASC'
             ];
             $paginator                  = $this->commonSvc->setPaginator($request);
 

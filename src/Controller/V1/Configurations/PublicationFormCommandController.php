@@ -90,12 +90,12 @@ class PublicationFormCommandController extends AbstractController
                 $this->loggerMessage    = 'Update configuration of publication form data: ';
             }
 
-            //$entityManager->flush();
-            //$entityManager->getConnection()->commit();
+            $entityManager->flush();
+            $entityManager->getConnection()->commit();
 
             $this->responseData['info']     = 'success';
             $this->responseData['message']  = 'Success on save configuration of publication form data!';
-            $this->logger->info($this->loggerMessage, $this->commonSvc->normalizeObject($publicationFormData, [], [], 'json'));
+            $this->logger->info($this->loggerMessage, []);
         } catch (\Exception $e) {
             $entityManager->getConnection()->rollBack();
 

@@ -187,7 +187,6 @@ class PublicationFormService {
         }
 
         if ($formParent) {
-            dd('test');
             $this->results->setFormParent($formParent);
         }
 
