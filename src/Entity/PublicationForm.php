@@ -136,11 +136,20 @@ class PublicationForm
     private ?PublicationFormVersion $form_version;
 
     #[
-        ORM\ManyToOne(targetEntity: PublicationForm::class, inversedBy: 'form_parent', fetch: 'LAZY'),
+        ORM\ManyToOne(targetEntity: PublicationForm::class, inversedBy: 'form_children', fetch: 'LAZY'),
         ORM\JoinColumn(name: 'id_form_parent', referencedColumnName: 'id', onDelete: "CASCADE")
     ]
     #[Groups(['public', 'internal'])]
-    private ?PublicationForm $form_parent;
+    private ?self $form_parent = null;
+
+    #[ORM\OneToMany(
+        mappedBy: 'form_parent',
+        targetEntity: self::class,
+        cascade: ["ALL"],
+        orphanRemoval: true,
+        fetch: 'LAZY'
+    )]
+    private ?Collection $form_children;
 
     #[ORM\OneToMany(
         mappedBy: 'form',
@@ -155,6 +164,7 @@ class PublicationForm
     public function __construct()
     {
         $this->publicationMeta = new ArrayCollection();
+        $this->form_children = new ArrayCollection();
     }
 
     #[ORM\PrePersist]
@@ -510,14 +520,44 @@ class PublicationForm
         return $this;
     }
 
-    public function getFormParent(): ?PublicationForm
+    public function getFormParent(): ?self
     {
         return $this->form_parent;
     }
 
-    public function setFormParent(?PublicationForm $form_parent): self
+    public function setFormParent(?self $form_parent): static
     {
         $this->form_parent = $form_parent;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, self>
+     */
+    public function getFormChildren(): Collection
+    {
+        return $this->form_children;
+    }
+
+    public function addFormChild(self $formChild): static
+    {
+        if (!$this->form_children->contains($formChild)) {
+            $this->form_children->add($formChild);
+            $formChild->setFormParent($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFormChild(self $formChild): static
+    {
+        if ($this->form_children->removeElement($formChild)) {
+            // set the owning side to null (unless already changed)
+            if ($formChild->getFormParent() === $this) {
+                $formChild->setFormParent(null);
+            }
+        }
 
         return $this;
     }
