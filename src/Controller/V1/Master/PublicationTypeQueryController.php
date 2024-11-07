@@ -22,7 +22,9 @@ class PublicationTypeQueryController extends AbstractController
     private $responseData;
     private $responseStatusCode;
 
-    public function __construct(LoggerInterface $logger)
+    private $commonSvc;
+
+    public function __construct(LoggerInterface $logger, CommonService $commonSvc)
     {
         $this->logger               = $logger;
 
@@ -38,6 +40,8 @@ class PublicationTypeQueryController extends AbstractController
             'data'      => [],
         ];
         $this->responseStatusCode   = 400;
+
+        $this->commonSvc = $commonSvc;
     }
 
     /** ================================ Required functions for publication ================================ */
@@ -94,7 +98,7 @@ class PublicationTypeQueryController extends AbstractController
     }
 
     #[Route('/api/v1/master/publication-types', methods: ['GET'], name: 'app_v1_master_publication_types')]
-    public function getMasterDataAll(ManagerRegistry $doctrine, CommonService $common): JsonResponse
+    public function getMasterDataAll(ManagerRegistry $doctrine): JsonResponse
     {
         $entityManager                  = $doctrine->getManager();
 
@@ -111,7 +115,7 @@ class PublicationTypeQueryController extends AbstractController
                 findBy($publicationTypesParams);
 
             // Response data
-            $this->responseData['data']     = $publicationTypes;
+            $this->responseData['data']     = $this->commonSvc->normalizeObject($publicationTypes, ['public']);
             $this->responseData['info']     = 'success';
             $this->responseData['message']  = 'Success to get master data of publication types!';
             $this->responseStatusCode       = 200;

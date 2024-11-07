@@ -24,12 +24,14 @@ class PublicationForm
         ORM\Id,
         ORM\Column(type: 'bigint', options: ["unsigned" => true], unique: true)
     ]
+    #[Groups(['internal'])]
     private $id;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
     private $id_form_version;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
+    #[Groups(['internal'])]
     private $id_form_parent;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]

@@ -284,9 +284,9 @@ class PublicationQueryController extends AbstractController
                 findActiveOneByCode($publicationTypeCode);
 
             // FormVersion
-            $formVersionsRaw                 = $publicationType->getFormVersions();
+            $formVersionsRaw                = $publicationType->getFormVersions();
             $formVersion                    = $this->publicationSvc->getActiveFormVersionData($formVersionsRaw);
-            $formVersionNormalize           = ($formVersion) ? $this->commonSvc->normalizeObject($formVersion) : null;
+            $formVersionNormalize           = ($formVersion) ? $this->commonSvc->normalizeObject($formVersion, ['internal'], ['flag_active', 'create_user', 'created_at', 'update_user', 'updated_at']) : null;
 
             // Get Forms raw data
             $formsRaw						= $this->publicationSvc->getAllFormMetaData(
@@ -294,7 +294,7 @@ class PublicationQueryController extends AbstractController
             );
 
             $formsRawNormalizeCollection	= new ArrayCollection(
-                $this->commonSvc->normalizeObject($formsRaw)
+                $this->commonSvc->normalizeObject($formsRaw, ['internal'], ['grid_system', 'flag_active', 'create_user', 'created_at', 'update_user', 'updated_at'])
             );
             $forms							= $formsRawNormalizeCollection->map(function ($field) use ($entityManager) {
                 $field['options']			= [];

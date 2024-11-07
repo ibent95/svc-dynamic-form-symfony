@@ -140,7 +140,7 @@ class PublicationFormQueryController extends AbstractController
             'data'      => [],
         ];
         $this->responseStatusCode   = 400;
-        $this->response             = $this->commonSvc->setResponse($this->responseData, $this->responseStatusCode);
+        //$this->response             = $this->commonSvc->setResponse($this->responseData, $this->responseStatusCode);
 
     }
 
