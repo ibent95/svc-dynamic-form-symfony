@@ -186,9 +186,9 @@ class PublicationQueryController extends AbstractController
 
             $publicationsEntity         = $entityManager->getRepository(Publication::class);
             $publicationTotalCount      = $publicationsEntity->count($params);
-            $publicationsData           = $publicationsEntity->findBy(
+            $publicationsData           = $this->commonSvc->normalizeObject($publicationsEntity->findBy(
                 $params, $orderBy, $paginator->get('limit'), $paginator->get('offset')
-            );
+            ));
 
             // Response data
             $this->response = $this->commonSvc->setResponse([

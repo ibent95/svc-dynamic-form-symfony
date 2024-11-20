@@ -187,7 +187,7 @@ class CommonService {
 
 	public function normalizeObject(
 		mixed $object,
-		array $groups = [],
+		array $groups = ['public'],
 		array $ignoredAttributes = [],
 		string $resultFormat = null,
 		bool $enableMaxDepth = false

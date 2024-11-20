@@ -22,18 +22,23 @@ class PublicationMeta
         ORM\Id,
         ORM\Column(type: 'bigint', options: ["unsigned" => true])
     ]
+    #[Groups(['public', 'internal'])]
     private $id;
 
     #[ORM\Column(type: Types::BIGINT, options: ["unsigned" => true])]
+    #[Groups(['public', 'internal'])]
     private $id_form;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[Groups(['public', 'internal'])]
     private $id_publication;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true])]
+    #[Groups(['public', 'internal'])]
     private $id_form_version;
 
     #[ORM\Column(type: 'bigint', options: ["unsigned" => true], nullable: true)]
+    #[Groups(['public', 'internal'])]
     private $id_form_parent;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]

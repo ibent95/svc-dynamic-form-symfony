@@ -103,7 +103,7 @@ class PublicationCommandController extends AbstractController
 
             $this->responseData['info']     = 'success';
             $this->responseData['message']  = 'Success on save publication data!';
-            $this->logger->info($this->loggerMessage, $this->commonSvc->normalizeObject($publicationData));
+            $this->logger->info($this->loggerMessage, $this->commonSvc->normalizeObject($publicationData, ['public']));
         } catch (\Exception $e) {
             $entityManager->getConnection()->rollBack();
 
