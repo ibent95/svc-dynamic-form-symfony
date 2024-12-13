@@ -160,7 +160,7 @@ class CommonService {
 
 	public function createIDTimestamp() : string
 	{
-		$this->results = date('YmdHis');
+		$this->results = date('YmdHis'); // Unfortunetlly, `u` for milisecond format cannot be added currently
 		return $this->results;
 	}
 

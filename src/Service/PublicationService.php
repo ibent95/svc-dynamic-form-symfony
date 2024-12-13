@@ -27,6 +27,8 @@ class PublicationService {
     private $criteria;
     private $commonSvc;
     private $result;
+    private $metaIds = [];
+    private $metaIdIndex = 1;
 
     public function __construct(
         ManagerRegistry $doctrine,
@@ -322,7 +324,8 @@ class PublicationService {
         Request $request,
         PublicationFormVersion $formVersion,
         Publication $publication,
-        PublicationMeta $parentMetaDataConfig = null
+        PublicationMeta $parentMetaDataConfig = null,
+        string | NULL $index = '0'
     ) : Publication | array
     {
         $requestData        = $request->request->all();
@@ -358,10 +361,13 @@ class PublicationService {
                     $publication,
                     $formVersion,
                     $fieldConfig,
-                    $metaData
+                    $metaData,
+                    ((string) $index ?? '') . ((string) $fieldConfigIndex)
                 ); // 4: $this->getPublicationFormDataByUuid($formConfigs, $metaData['uuid'])
 
             $metaDataConfig->setFlagActive(true);
+
+            $this->metaIdIndex++;
 
             // Specifict handling by type of field
 			switch ($metaDataConfig->getFieldType()) {
@@ -385,7 +391,7 @@ class PublicationService {
                 case 'panel':
                 case 'stepper':
                 case 'step':
-                    $this->updateMetaData($request, $formVersion, $results, $metaDataConfig);
+                    $this->updateMetaData($request, $formVersion, $results, $metaDataConfig, (string) $this->metaIdIndex);
                     break;
 
                 case 'multiple_select':
@@ -500,6 +506,9 @@ class PublicationService {
             $results->addPublicationMetas($metaDataConfig);
 		}
 
+        //dd($this->metaIds);
+        $this->logger->info('meta ids: ', $this->metaIds);
+
         return $results;
     }
 
@@ -508,7 +517,8 @@ class PublicationService {
         Publication $publication,
         PublicationFormVersion $formVersion,
         PublicationForm $fieldConfig,
-        array | false $metaData
+        array | false $metaData,
+        string | NULL $index = null
     ) : PublicationMeta
     {
         $results = $publicationMeta;
@@ -516,9 +526,9 @@ class PublicationService {
         /**
          * Organize data
          */
-
         // Ids
-        $results->setId($this->commonSvc->createIDTimestamp());
+        $results->setId($this->commonSvc->createIDTimestamp() . $index ?? '');
+        $this->metaIds[] = [$results->getId() => $fieldConfig->getFieldName() . ' ' . $fieldConfig->getFieldType()];
         $results->setUuid($this->commonSvc->createUUID());
 
         // Master data
