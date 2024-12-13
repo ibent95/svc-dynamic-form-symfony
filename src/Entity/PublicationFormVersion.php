@@ -273,7 +273,7 @@ class PublicationFormVersion
     /**
      * @return Collection<int, PublicationForm>
      */
-    public function getForms(): Collection
+    public function getForms(): Collection | bool
     {
         return $this->forms;
     }

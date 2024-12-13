@@ -287,7 +287,7 @@ class PublicationQueryController extends AbstractController
             $formVersionsRaw                = $publicationType->getFormVersions();
             $formVersion                    = $this->publicationSvc->getActiveFormVersionData($formVersionsRaw);
             $formVersionNormalize           = ($formVersion) ? $this->commonSvc->normalizeObject($formVersion, ['internal'], ['flag_active', 'create_user', 'created_at', 'update_user', 'updated_at']) : null;
-
+            //dd($formVersion);
             // Get Forms raw data
             $formsRaw						= $this->publicationSvc->getAllFormMetaData(
                 $formVersion->getForms()

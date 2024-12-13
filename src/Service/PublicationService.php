@@ -51,7 +51,7 @@ class PublicationService {
     public function getActiveFormVersionData(
         PersistentCollection $sourceData,
         $otherData = null
-    ): PublicationFormVersion
+    ): PublicationFormVersion | bool
     {
         // Criteria or Query
         $this->criteria->where(
@@ -110,14 +110,14 @@ class PublicationService {
     }
 
     public function getAllFormMetaData(
-        PersistentCollection | ArrayCollection $sourceData
-    ): Collection
+        PersistentCollection | ArrayCollection | bool $sourceData
+    ): Collection | NULL
     {
         $this->criteria = $this->criteria->where(
             $this->exprBuilder->eq('flag_active', true)
         );
 
-        return $sourceData->matching($this->criteria);
+        return $sourceData->matching($this->criteria) ?: null;
     }
 
     private function getRequestMetaDataBy(
