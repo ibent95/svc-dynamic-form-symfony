@@ -59,7 +59,7 @@ class CopyFromPackageConfigurator extends AbstractConfigurator
         // any remaining files are new, and we can copy them
         foreach ($this->getFilesToCopy($newConfig, $packageDir) as $source => $target) {
             if (!file_exists($source)) {
-                throw new \LogicException(sprintf('File "%s" does not exist!', $source));
+                throw new \LogicException(\sprintf('File "%s" does not exist!', $source));
             }
 
             $recipeUpdate->setNewFile($target, file_get_contents($source));
@@ -72,7 +72,7 @@ class CopyFromPackageConfigurator extends AbstractConfigurator
         foreach ($manifest as $source => $target) {
             $target = $this->options->expandTargetDir($target);
             if ('/' === substr($source, -1)) {
-                $files = array_merge($files, $this->getFilesForDir($this->path->concatenate([$from, $source]), $this->path->concatenate([$target])));
+                $files = array_merge($files, $this->getFilesForDir($this->path->concatenate([$from, $source]), $target));
 
                 continue;
             }
@@ -93,7 +93,7 @@ class CopyFromPackageConfigurator extends AbstractConfigurator
                 $targetPath = $this->path->concatenate([$to, $target]);
                 if (file_exists($targetPath)) {
                     @unlink($targetPath);
-                    $this->write(sprintf('  Removed <fg=green>"%s"</>', $this->path->relativize($targetPath)));
+                    $this->write(\sprintf('  Removed <fg=green>"%s"</>', $this->path->relativize($targetPath)));
                 }
             }
         }
@@ -118,29 +118,28 @@ class CopyFromPackageConfigurator extends AbstractConfigurator
      */
     public function copyFile(string $source, string $target, array $options)
     {
-        $target = $this->options->get('root-dir').'/'.$target;
+        $target = $this->options->get('root-dir').'/'.$this->options->expandTargetDir($target);
         if (is_dir($source)) {
             // directory will be created when a file is copied to it
             return;
         }
 
-        $overwrite = $options['force'] ?? false;
-        if (!$this->options->shouldWriteFile($target, $overwrite)) {
+        if (!$this->options->shouldWriteFile($target, $options['force'] ?? false, $options['assumeYesForPrompts'] ?? false)) {
             return;
         }
 
         if (!file_exists($source)) {
-            throw new \LogicException(sprintf('File "%s" does not exist!', $source));
+            throw new \LogicException(\sprintf('File "%s" does not exist!', $source));
         }
 
         if (!file_exists(\dirname($target))) {
             mkdir(\dirname($target), 0777, true);
-            $this->write(sprintf('  Created <fg=green>"%s"</>', $this->path->relativize(\dirname($target))));
+            $this->write(\sprintf('  Created <fg=green>"%s"</>', $this->path->relativize(\dirname($target))));
         }
 
         file_put_contents($target, $this->options->expandTargetDir(file_get_contents($source)));
         @chmod($target, fileperms($target) | (fileperms($source) & 0111));
-        $this->write(sprintf('  Created <fg=green>"%s"</>', $this->path->relativize($target)));
+        $this->write(\sprintf('  Created <fg=green>"%s"</>', $this->path->relativize($target)));
     }
 
     private function removeFilesFromDir(string $source, string $target)
@@ -154,10 +153,10 @@ class CopyFromPackageConfigurator extends AbstractConfigurator
             if ($item->isDir()) {
                 // that removes the dir only if it is empty
                 @rmdir($targetPath);
-                $this->write(sprintf('  Removed directory <fg=green>"%s"</>', $this->path->relativize($targetPath)));
+                $this->write(\sprintf('  Removed directory <fg=green>"%s"</>', $this->path->relativize($targetPath)));
             } else {
                 @unlink($targetPath);
-                $this->write(sprintf('  Removed <fg=green>"%s"</>', $this->path->relativize($targetPath)));
+                $this->write(\sprintf('  Removed <fg=green>"%s"</>', $this->path->relativize($targetPath)));
             }
         }
     }

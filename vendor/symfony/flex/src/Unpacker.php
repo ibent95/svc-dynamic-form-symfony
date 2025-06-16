@@ -29,14 +29,12 @@ class Unpacker
 {
     private $composer;
     private $resolver;
-    private $dryRun;
     private $versionParser;
 
-    public function __construct(Composer $composer, PackageResolver $resolver, bool $dryRun)
+    public function __construct(Composer $composer, PackageResolver $resolver)
     {
         $this->composer = $composer;
         $this->resolver = $resolver;
-        $this->dryRun = $dryRun;
         $this->versionParser = new VersionParser();
     }
 
@@ -53,10 +51,10 @@ class Unpacker
 
             // not unpackable or no --unpack flag or empty packs (markers)
             if (
-                null === $pkg ||
-                'symfony-pack' !== $pkg->getType() ||
-                !$op->shouldUnpack() ||
-                0 === \count($pkg->getRequires()) + \count($pkg->getDevRequires())
+                null === $pkg
+                || 'symfony-pack' !== $pkg->getType()
+                || !$op->shouldUnpack()
+                || 0 === \count($pkg->getRequires()) + \count($pkg->getDevRequires())
             ) {
                 $result->addRequired($package['name'].($package['version'] ? ':'.$package['version'] : ''));
 
@@ -75,7 +73,7 @@ class Unpacker
 
             foreach ($devRequires as $i => $link) {
                 if (!isset($requires[$link->getTarget()])) {
-                    throw new \RuntimeException(sprintf('Symfony pack "%s" must duplicate all entries from "require-dev" into "require" but entry "%s" was not found.', $package['name'], $link->getTarget()));
+                    throw new \RuntimeException(\sprintf('Symfony pack "%s" must duplicate all entries from "require-dev" into "require" but entry "%s" was not found.', $package['name'], $link->getTarget()));
                 }
                 $devRequires[$i] = $requires[$link->getTarget()];
                 unset($requires[$link->getTarget()]);
@@ -131,7 +129,7 @@ class Unpacker
             }
         }
 
-        if ($this->dryRun || 1 < \func_num_args()) {
+        if (1 < \func_num_args()) {
             return $result;
         }
 
@@ -139,6 +137,13 @@ class Unpacker
         $jsonContent = file_get_contents($jsonPath);
         $jsonStored = json_decode($jsonContent, true);
         $jsonManipulator = new JsonManipulator($jsonContent);
+
+        foreach ($result->getUnpacked() as $pkg) {
+            $localRepo->removePackage($pkg);
+            $localRepo->setDevPackageNames(array_diff($localRepo->getDevPackageNames(), [$pkg->getName()]));
+            $jsonManipulator->removeSubNode('require', $pkg->getName());
+            $jsonManipulator->removeSubNode('require-dev', $pkg->getName());
+        }
 
         foreach ($links as $link) {
             // nothing to do, package is already present in the "require" section
@@ -161,7 +166,7 @@ class Unpacker
             $constraint = end($link['constraints']);
 
             if (!$jsonManipulator->addLink($link['type'], $link['name'], $constraint->getPrettyString(), $op->shouldSort())) {
-                throw new \RuntimeException(sprintf('Unable to unpack package "%s".', $link['name']));
+                throw new \RuntimeException(\sprintf('Unable to unpack package "%s".', $link['name']));
             }
         }
 
@@ -197,12 +202,12 @@ class Unpacker
         $lockData['content-hash'] = Locker::getContentHash($jsonContent);
         $lockFile = new JsonFile(substr($json->getPath(), 0, -4).'lock', null, $io);
 
-        if (!$this->dryRun) {
-            $lockFile->write($lockData);
-        }
+        $lockFile->write($lockData);
 
-        // force removal of files under vendor/
         $locker = new Locker($io, $lockFile, $this->composer->getInstallationManager(), $jsonContent);
         $this->composer->setLocker($locker);
+
+        $localRepo = $this->composer->getRepositoryManager()->getLocalRepository();
+        $localRepo->write($localRepo->getDevMode() ?? true, $this->composer->getInstallationManager());
     }
 }

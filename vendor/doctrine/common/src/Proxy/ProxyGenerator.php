@@ -67,6 +67,8 @@ use const PREG_SPLIT_DELIM_CAPTURE;
 /**
  * This factory is used to generate proxy classes.
  * It builds proxies from given parameters, a template and class metadata.
+ *
+ * @deprecated The ProxyGenerator class is deprecated since doctrine/common 3.5.
  */
 class ProxyGenerator
 {
@@ -1282,7 +1284,6 @@ EOT;
         if (
             $type->allowsNull()
             && ! in_array($name, ['mixed', 'null'], true)
-            && ($parameter === null || ! $parameter->isDefaultValueAvailable() || $parameter->getDefaultValue() !== null)
         ) {
             $name = '?' . $name;
         }

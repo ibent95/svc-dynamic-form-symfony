@@ -56,22 +56,22 @@ abstract class AbstractConfigurator
 
     protected function isFileMarked(Recipe $recipe, string $file): bool
     {
-        return is_file($file) && false !== strpos(file_get_contents($file), sprintf('###> %s ###', $recipe->getName()));
+        return is_file($file) && str_contains(file_get_contents($file), \sprintf('###> %s ###', $recipe->getName()));
     }
 
     protected function markData(Recipe $recipe, string $data): string
     {
-        return "\n".sprintf('###> %s ###%s%s%s###< %s ###%s', $recipe->getName(), "\n", rtrim($data, "\r\n"), "\n", $recipe->getName(), "\n");
+        return "\n".\sprintf('###> %s ###%s%s%s###< %s ###%s', $recipe->getName(), "\n", rtrim($data, "\r\n"), "\n", $recipe->getName(), "\n");
     }
 
     protected function isFileXmlMarked(Recipe $recipe, string $file): bool
     {
-        return is_file($file) && false !== strpos(file_get_contents($file), sprintf('###+ %s ###', $recipe->getName()));
+        return is_file($file) && str_contains(file_get_contents($file), \sprintf('###+ %s ###', $recipe->getName()));
     }
 
     protected function markXmlData(Recipe $recipe, string $data): string
     {
-        return "\n".sprintf('        <!-- ###+ %s ### -->%s%s%s        <!-- ###- %s ### -->%s', $recipe->getName(), "\n", rtrim($data, "\r\n"), "\n", $recipe->getName(), "\n");
+        return "\n".\sprintf('        <!-- ###+ %s ### -->%s%s%s        <!-- ###- %s ### -->%s', $recipe->getName(), "\n", rtrim($data, "\r\n"), "\n", $recipe->getName(), "\n");
     }
 
     /**
@@ -104,7 +104,7 @@ abstract class AbstractConfigurator
         $startMark = trim(reset($pieces));
         $endMark = trim(end($pieces));
 
-        if (false === strpos($contents, $startMark) || false === strpos($contents, $endMark)) {
+        if (!str_contains($contents, $startMark) || !str_contains($contents, $endMark)) {
             return null;
         }
 

@@ -18,6 +18,7 @@ use Composer\DependencyResolver\Operation\UninstallOperation;
 use Composer\DependencyResolver\Operation\UpdateOperation;
 use Composer\IO\IOInterface;
 use Composer\Json\JsonFile;
+use Composer\Package\BasePackage;
 use Composer\Util\Http\Response as ComposerResponse;
 use Composer\Util\HttpDownloader;
 use Composer\Util\Loop;
@@ -59,9 +60,9 @@ class Downloader
 
         if (null === $endpoint = $composer->getPackage()->getExtra()['symfony']['endpoint'] ?? null) {
             $this->endpoints = self::DEFAULT_ENDPOINTS;
-        } elseif (\is_array($endpoint) || false !== strpos($endpoint, '.json') || 'flex://defaults' === $endpoint) {
+        } elseif (\is_array($endpoint) || str_contains($endpoint, '.json') || 'flex://defaults' === $endpoint) {
             $this->endpoints = array_values((array) $endpoint);
-            if (\is_string($endpoint) && false !== strpos($endpoint, '.json')) {
+            if (\is_string($endpoint) && str_contains($endpoint, '.json')) {
                 $this->endpoints[] = 'flex://defaults';
             }
         } else {
@@ -70,7 +71,7 @@ class Downloader
 
         if (false === $endpoint = getenv('SYMFONY_ENDPOINT')) {
             // no-op
-        } elseif (false !== strpos($endpoint, '.json') || 'flex://defaults' === $endpoint) {
+        } elseif (str_contains($endpoint, '.json') || 'flex://defaults' === $endpoint) {
             $this->endpoints ?? $this->endpoints = self::DEFAULT_ENDPOINTS;
             array_unshift($this->endpoints, $endpoint);
             $this->legacyEndpoint = null;
@@ -134,7 +135,7 @@ class Downloader
         $this->initialize();
 
         if ($this->conflicts) {
-            $lockedRepository = $this->composer->getLocker()->getLockedRepository();
+            $lockedRepository = $this->composer->getLocker()->getLockedRepository(true);
             foreach ($this->conflicts as $conflicts) {
                 foreach ($conflicts as $package => $versions) {
                     foreach ($versions as $version => $conflicts) {
@@ -173,20 +174,20 @@ class Downloader
             if ($operation instanceof InformationOperation && $operation->getVersion()) {
                 $version = $operation->getVersion();
             }
-            if (0 === strpos($version, 'dev-') && isset($package->getExtra()['branch-alias'])) {
+            if (str_starts_with($version, 'dev-') && isset($package->getExtra()['branch-alias'])) {
                 $branchAliases = $package->getExtra()['branch-alias'];
                 if (
-                    (isset($branchAliases[$version]) && $alias = $branchAliases[$version]) ||
-                    (isset($branchAliases['dev-main']) && $alias = $branchAliases['dev-main']) ||
-                    (isset($branchAliases['dev-trunk']) && $alias = $branchAliases['dev-trunk']) ||
-                    (isset($branchAliases['dev-develop']) && $alias = $branchAliases['dev-develop']) ||
-                    (isset($branchAliases['dev-default']) && $alias = $branchAliases['dev-default']) ||
-                    (isset($branchAliases['dev-latest']) && $alias = $branchAliases['dev-latest']) ||
-                    (isset($branchAliases['dev-next']) && $alias = $branchAliases['dev-next']) ||
-                    (isset($branchAliases['dev-current']) && $alias = $branchAliases['dev-current']) ||
-                    (isset($branchAliases['dev-support']) && $alias = $branchAliases['dev-support']) ||
-                    (isset($branchAliases['dev-tip']) && $alias = $branchAliases['dev-tip']) ||
-                    (isset($branchAliases['dev-master']) && $alias = $branchAliases['dev-master'])
+                    (isset($branchAliases[$version]) && $alias = $branchAliases[$version])
+                    || (isset($branchAliases['dev-main']) && $alias = $branchAliases['dev-main'])
+                    || (isset($branchAliases['dev-trunk']) && $alias = $branchAliases['dev-trunk'])
+                    || (isset($branchAliases['dev-develop']) && $alias = $branchAliases['dev-develop'])
+                    || (isset($branchAliases['dev-default']) && $alias = $branchAliases['dev-default'])
+                    || (isset($branchAliases['dev-latest']) && $alias = $branchAliases['dev-latest'])
+                    || (isset($branchAliases['dev-next']) && $alias = $branchAliases['dev-next'])
+                    || (isset($branchAliases['dev-current']) && $alias = $branchAliases['dev-current'])
+                    || (isset($branchAliases['dev-support']) && $alias = $branchAliases['dev-support'])
+                    || (isset($branchAliases['dev-tip']) && $alias = $branchAliases['dev-tip'])
+                    || (isset($branchAliases['dev-master']) && $alias = $branchAliases['dev-master'])
                 ) {
                     $version = $alias;
                 }
@@ -244,7 +245,7 @@ class Downloader
 
             // FIXME: Multi name with getNames()
             $name = str_replace('/', ',', $package->getName());
-            $path = sprintf('%s,%s%s', $name, $o, $version);
+            $path = \sprintf('%s,%s%s', $name, $o, $version);
             if ($date = $package->getReleaseDate()) {
                 $path .= ','.$date->format('U');
             }
@@ -314,6 +315,30 @@ class Downloader
     public function removeRecipeFromIndex(string $packageName, string $version)
     {
         unset($this->index[$packageName][$version]);
+    }
+
+    public function getSymfonyPacks(array $packages)
+    {
+        $packs = [];
+        foreach ($this->composer->getRepositoryManager()->getRepositories() as $repo) {
+            if (!$packages) {
+                break;
+            }
+
+            $result = $repo->loadPackages($packages, BasePackage::$stabilities, []);
+
+            foreach ($result['packages'] ?? [] as $package) {
+                if (!isset($packages[$package->getName()])) {
+                    continue;
+                }
+                if ('symfony-pack' === $package->getType()) {
+                    $packs[$package->getName()] = true;
+                }
+                unset($packages[$package->getName()]);
+            }
+        }
+
+        return array_keys($packs);
     }
 
     /**

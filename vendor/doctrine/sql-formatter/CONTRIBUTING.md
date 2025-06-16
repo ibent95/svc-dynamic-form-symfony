@@ -17,7 +17,6 @@ Here is a script to run all checks, you can use it as a git hook:
 ```shell
 #!/bin/bash -eu
 vendor/bin/phpunit --testdox
-vendor/bin/psalm
 echo '' | vendor/bin/phpcs
 vendor/bin/phpstan analyze
 ```

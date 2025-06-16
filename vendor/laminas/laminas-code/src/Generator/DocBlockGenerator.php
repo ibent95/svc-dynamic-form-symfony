@@ -61,7 +61,6 @@ class DocBlockGenerator extends AbstractGenerator
      * @configkey longdescription  string The long description for this doc block
      * @configkey tags             array
      * @throws Exception\InvalidArgumentException
-     * @param  array $array
      * @return DocBlockGenerator
      */
     public static function fromArray(array $array)
