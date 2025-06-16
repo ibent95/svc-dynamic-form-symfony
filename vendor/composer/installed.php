@@ -3,7 +3,7 @@
         'name' => 'ibent95/svc-dynamic-form-symfony',
         'pretty_version' => 'dev-master',
         'version' => 'dev-master',
-        'reference' => 'f47a9b9a8624e93ee879a13d6fec4809d93bd925',
+        'reference' => 'f20d56582d4902fcb0f429494e9ba3dbef6984ac',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -184,7 +184,7 @@
         'ibent95/svc-dynamic-form-symfony' => array(
             'pretty_version' => 'dev-master',
             'version' => 'dev-master',
-            'reference' => 'f47a9b9a8624e93ee879a13d6fec4809d93bd925',
+            'reference' => 'f20d56582d4902fcb0f429494e9ba3dbef6984ac',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
